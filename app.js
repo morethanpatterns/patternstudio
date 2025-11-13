@@ -4029,6 +4029,16 @@ const draftStores = {
 let activePatternKey = "armstrong";
 const svgSerializer = new XMLSerializer();
 const svgDomParser = typeof DOMParser !== "undefined" ? new DOMParser() : null;
+const previewPointers = new Map();
+const previewZoomState = {
+  scale: 1,
+  translateX: 0,
+  translateY: 0,
+  minScale: 0.5,
+  maxScale: 3,
+  pinchStartDistance: 0,
+  pinchStartScale: 1,
+};
 
 function createDraftStore() {
   return {
@@ -4039,6 +4049,8 @@ function createDraftStore() {
 }
 
 let preview = null;
+let previewViewport = null;
+let previewZoomInitialized = false;
 let currentSvg = null;
 let regenTimer = null;
 let patternSelect = null;
@@ -4286,8 +4298,10 @@ function renderDraftList(patternKey) {
 }
 
 function renderDraftPreviews(patternKey, liveSvg = null) {
-  if (!preview) return;
-  preview.innerHTML = "";
+  const target = getPreviewTarget();
+  if (!target) return;
+  target.innerHTML = "";
+  resetPreviewZoom();
   currentSvg = null;
   const store = getDraftStore(patternKey);
   if (!store || !store.drafts.length) {
@@ -4323,7 +4337,7 @@ function renderDraftPreviews(patternKey, liveSvg = null) {
     wrapper.dataset.draftId = draft.id;
     applyDraftColor(svgNode, draft.color, isActive);
     wrapper.appendChild(svgNode);
-    preview.appendChild(wrapper);
+    target.appendChild(wrapper);
     if (isActive) {
       currentSvg = svgNode;
     }
@@ -4499,6 +4513,12 @@ function initApp() {
   appInitialized = true;
 
   preview = document.getElementById("preview");
+  previewViewport = preview ? preview.querySelector("#previewViewport") : null;
+  if (preview) {
+    getPreviewTarget();
+    initPreviewInteractions();
+    resetPreviewZoom();
+  }
   patternSelect = document.getElementById("patternSelect");
   let initialPattern = "armstrong";
   if (typeof window !== "undefined" && window.localStorage) {
@@ -4900,10 +4920,8 @@ function updatePatternVisibility() {
   if (placeholderMessage) {
     placeholderMessage.textContent = `${label} is coming soon.`;
   }
-  if (preview) {
-    preview.innerHTML = "";
-    showPreviewMessage(`${label} is coming soon.`);
-  }
+  clearPreviewContent();
+  showPreviewMessage(`${label} is coming soon.`);
 }
 
 function initLayerTools() {
@@ -5308,12 +5326,219 @@ function applyLayerVisibility(layers, params) {
 }
 
 function showPreviewMessage(text) {
-  if (!preview) return;
+  resetPreviewZoom();
+  const target = getPreviewTarget();
+  if (!target) return;
+  target.innerHTML = "";
   const msg = document.createElement("p");
   msg.className = "preview-message";
   msg.textContent = text;
-  preview.innerHTML = "";
-  preview.appendChild(msg);
+  target.appendChild(msg);
+}
+
+function getPreviewTarget() {
+  if (!preview) return null;
+  if (!previewViewport || previewViewport.parentElement !== preview) {
+    previewViewport = preview.querySelector("#previewViewport");
+    if (!previewViewport) {
+      previewViewport = document.createElement("div");
+      previewViewport.id = "previewViewport";
+      preview.appendChild(previewViewport);
+    }
+  }
+  return previewViewport;
+}
+
+function clearPreviewContent() {
+  const target = getPreviewTarget();
+  if (target) {
+    target.innerHTML = "";
+  }
+}
+
+function resetPreviewZoom() {
+  const target = getPreviewTarget();
+  if (!target) return;
+  previewPointers.clear();
+  previewZoomState.scale = 1;
+  previewZoomState.translateX = 0;
+  previewZoomState.translateY = 0;
+  previewZoomState.pinchStartDistance = 0;
+  previewZoomState.pinchStartScale = 1;
+  target.style.transformOrigin = "center center";
+  applyPreviewTransform();
+}
+
+function clampPreviewTranslation() {
+  if (!preview || !previewViewport) return;
+  const containerWidth = preview.clientWidth || 0;
+  const containerHeight = preview.clientHeight || 0;
+  const contentWidth = previewViewport.scrollWidth || previewViewport.offsetWidth || containerWidth;
+  const contentHeight = previewViewport.scrollHeight || previewViewport.offsetHeight || containerHeight;
+  const scaledWidth = contentWidth * previewZoomState.scale;
+  const scaledHeight = contentHeight * previewZoomState.scale;
+  const extraWidth = Math.max(0, scaledWidth - containerWidth);
+  const extraHeight = Math.max(0, scaledHeight - containerHeight);
+  const margin = 40;
+  const minX = -extraWidth / 2 - margin;
+  const maxX = extraWidth / 2 + margin;
+  const minY = -(extraHeight + margin);
+  const maxY = margin;
+  previewZoomState.translateX = clamp(previewZoomState.translateX, minX, maxX);
+  previewZoomState.translateY = clamp(previewZoomState.translateY, minY, maxY);
+}
+
+function applyPreviewTransform() {
+  const target = getPreviewTarget();
+  if (!target) return;
+  clampPreviewTranslation();
+  const { scale, translateX, translateY } = previewZoomState;
+  target.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function handlePreviewPointerDown(event) {
+  if (!preview || event.pointerType !== "touch") return;
+  const target = getPreviewTarget();
+  if (!target) return;
+  event.preventDefault();
+  const position = getRelativePointerPosition(event, target);
+  previewPointers.set(event.pointerId, {
+    clientX: event.clientX,
+    clientY: event.clientY,
+    relX: position.x,
+    relY: position.y,
+  });
+  if (preview.setPointerCapture) {
+    preview.setPointerCapture(event.pointerId);
+  }
+  if (previewPointers.size === 2) {
+    previewZoomState.pinchStartDistance = getPointerDistance();
+    previewZoomState.pinchStartScale = previewZoomState.scale;
+    updatePreviewOrigin();
+  }
+}
+
+function handlePreviewPointerMove(event) {
+  if (!preview || event.pointerType !== "touch") return;
+  const pointer = previewPointers.get(event.pointerId);
+  if (!pointer) return;
+  event.preventDefault();
+  const target = getPreviewTarget();
+  if (!target) return;
+  const prevClientX = pointer.clientX;
+  const prevClientY = pointer.clientY;
+  const position = getRelativePointerPosition(event, target);
+  pointer.clientX = event.clientX;
+  pointer.clientY = event.clientY;
+  pointer.relX = position.x;
+  pointer.relY = position.y;
+  if (previewPointers.size >= 2) {
+    if (!previewZoomState.pinchStartDistance) {
+      previewZoomState.pinchStartDistance = getPointerDistance();
+      previewZoomState.pinchStartScale = previewZoomState.scale;
+    }
+    const distance = getPointerDistance();
+    if (distance > 0 && previewZoomState.pinchStartDistance) {
+      const scaleFactor = distance / previewZoomState.pinchStartDistance;
+      const clampedScale = clamp(
+        previewZoomState.pinchStartScale * scaleFactor,
+        previewZoomState.minScale,
+        previewZoomState.maxScale
+      );
+      previewZoomState.scale = clampedScale;
+      applyPreviewTransform();
+    }
+    updatePreviewOrigin();
+  } else {
+    previewZoomState.translateX += event.clientX - prevClientX;
+    previewZoomState.translateY += event.clientY - prevClientY;
+    applyPreviewTransform();
+  }
+}
+
+function handlePreviewPointerUp(event) {
+  if (!preview || event.pointerType !== "touch") return;
+  if (previewPointers.has(event.pointerId) && preview.releasePointerCapture) {
+    try {
+      preview.releasePointerCapture(event.pointerId);
+    } catch (releaseErr) {
+      // Ignore release errors
+    }
+  }
+  previewPointers.delete(event.pointerId);
+  if (previewPointers.size < 2) {
+    previewZoomState.pinchStartDistance = 0;
+    previewZoomState.pinchStartScale = previewZoomState.scale;
+    const target = getPreviewTarget();
+    if (target && previewPointers.size === 0) {
+      target.style.transformOrigin = "center center";
+    }
+  }
+}
+
+function handlePreviewWheel(event) {
+  if (!preview || !event.ctrlKey) return;
+  const target = getPreviewTarget();
+  if (!target) return;
+  event.preventDefault();
+  const zoomDelta = event.deltaY < 0 ? 1.05 : 0.95;
+  const newScale = clamp(
+    previewZoomState.scale * zoomDelta,
+    previewZoomState.minScale,
+    previewZoomState.maxScale
+  );
+  previewZoomState.scale = newScale;
+  const rect = target.getBoundingClientRect();
+  const originX = rect.width ? ((event.clientX - rect.left) / rect.width) * 100 : 50;
+  const originY = rect.height ? ((event.clientY - rect.top) / rect.height) * 100 : 50;
+  target.style.transformOrigin = `${originX}% ${originY}%`;
+  applyPreviewTransform();
+}
+
+function getPointerDistance() {
+  if (previewPointers.size < 2) return 0;
+  const entries = Array.from(previewPointers.values()).slice(0, 2);
+  const dx = entries[0].relX - entries[1].relX;
+  const dy = entries[0].relY - entries[1].relY;
+  return Math.hypot(dx, dy);
+}
+
+function updatePreviewOrigin() {
+  if (!previewViewport || previewPointers.size < 2) return;
+  const entries = Array.from(previewPointers.values()).slice(0, 2);
+  const rect = previewViewport.getBoundingClientRect();
+  const midX = (entries[0].relX + entries[1].relX) / 2;
+  const midY = (entries[0].relY + entries[1].relY) / 2;
+  const originX = rect.width ? (midX / rect.width) * 100 : 50;
+  const originY = rect.height ? (midY / rect.height) * 100 : 50;
+  previewViewport.style.transformOrigin = `${originX}% ${originY}%`;
+}
+
+function getRelativePointerPosition(event, target) {
+  const rect = target.getBoundingClientRect();
+  return {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top,
+  };
+}
+
+function initPreviewInteractions() {
+  if (!preview || previewZoomInitialized) return;
+  previewZoomInitialized = true;
+  preview.style.touchAction = "none";
+  preview.addEventListener("pointerdown", handlePreviewPointerDown);
+  preview.addEventListener("pointermove", handlePreviewPointerMove);
+  ["pointerup", "pointercancel", "pointerleave"].forEach((type) => {
+    preview.addEventListener(type, handlePreviewPointerUp);
+  });
+  preview.addEventListener("wheel", handlePreviewWheel, { passive: false });
+  if (typeof window !== "undefined") {
+    window.addEventListener("resize", applyPreviewTransform);
+  }
 }
 
 function computeAldrichFrontNeckDart(bust) {
