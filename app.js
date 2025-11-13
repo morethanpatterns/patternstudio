@@ -184,6 +184,21 @@ const HOFENBITZER_SECONDARY_MEASUREMENTS = [
   { id: "ShoulderDifference", label: "Shoulder Diff. (deg)", defaultValue: HOFENBITZER_DEFAULTS.ShoulderDifference, step: 0.1 },
 ];
 
+const HOFENBITZER_SKIRT_DEFAULTS = Object.freeze({
+  HiC: 97,
+  WaC: 72,
+  HiD: 21,
+  MoL: 50,
+  HipEase: 3,
+  WaistEase: 2,
+  FrontDartLength: 10,
+  BackDartLength1: 14.5,
+  BackDartLength2: 13,
+  HipProfile: "Normal",
+});
+
+const HOFENBITZER_SKIRT_MANUAL_KEYS = ["SideDart", "FrontDart", "BackDart1", "BackDart2"];
+
 const HOFENBITZER_MARKER_RADIUS_CM = 0.25;
 const HOFENBITZER_MIN_HANDLE_LENGTH_CM = 0.5;
 const HOFENBITZER_HIP_LEFT_OFFSET_CM = 2;
@@ -197,6 +212,37 @@ const hofenbitzerUi = {
   fitSelect: null,
   derivedOutputs: null,
 };
+const hofSkirtUi = {
+  initialized: false,
+  manualOverrides: {
+    SideDart: false,
+    FrontDart: false,
+    BackDart1: false,
+    BackDart2: false,
+  },
+  derivedOutputs: null,
+  cachedInputs: null,
+  cachedDerived: null,
+};
+
+function hofSkirtOverrideId(key) {
+  return `hofSkirt${key}Override`;
+}
+
+function hydrateHofSkirtManualOverridesFromDom() {
+  HOFENBITZER_SKIRT_MANUAL_KEYS.forEach((key) => {
+    const overrideInput = document.getElementById(hofSkirtOverrideId(key));
+    hofSkirtUi.manualOverrides[key] = overrideInput ? overrideInput.value === "true" : false;
+  });
+}
+
+function setHofSkirtManualOverride(key, enabled) {
+  hofSkirtUi.manualOverrides[key] = Boolean(enabled);
+  const overrideInput = document.getElementById(hofSkirtOverrideId(key));
+  if (overrideInput) {
+    overrideInput.value = enabled ? "true" : "false";
+  }
+}
 
 function formatHofenbitzerValue(value) {
   return Number.isFinite(value) ? (Math.round(value * 100) / 100).toFixed(2) : "--";
@@ -259,6 +305,86 @@ function updateHofenbitzerDerivedOutputs(values = {}) {
   if (hipShortage) hipShortage.textContent = formatDisplay(values.hipShortage);
   if (hipSpanBack) hipSpanBack.textContent = formatDisplay(values.hipSpanBack);
   if (hipSpanFront) hipSpanFront.textContent = formatDisplay(values.hipSpanFront);
+}
+
+function normalizeHofSkirtProfile(profile = "Normal") {
+  const value = String(profile || "Normal").trim().toLowerCase();
+  if (value.includes("flat")) return "Flat";
+  if (value.includes("curvy")) return "Curvy";
+  return "Normal";
+}
+
+function determineHofSkirtWaistShaping(profile = "Normal") {
+  return normalizeHofSkirtProfile(profile) === "Curvy" ? 1.5 : 1;
+}
+
+function determineHofSkirtSideDartBase(profile = "Normal", waistDiff = 0) {
+  const normalized = normalizeHofSkirtProfile(profile);
+  const base = Math.max(0, waistDiff / 2);
+  if (normalized === "Curvy") return Math.max(0, waistDiff / 2 + 1);
+  if (normalized === "Flat") return Math.max(0, waistDiff / 2 - 1);
+  return base;
+}
+
+function computeHofSkirtDerived(params = {}) {
+  const hipWidth = ((Number(params.HiC) || 0) + (Number(params.HipEase) || 0)) / 2;
+  const waistWidth = ((Number(params.WaC) || 0) + (Number(params.WaistEase) || 0)) / 2;
+  const waistDiffTarget = Math.max(0, hipWidth - waistWidth);
+  const result = {
+    HiW: hipWidth,
+    WaW: waistWidth,
+    WaistDiffTarget: waistDiffTarget,
+  };
+
+  const sideBase = determineHofSkirtSideDartBase(params.HipProfile, waistDiffTarget);
+  const manualSide = Number(params.SideDart);
+  const sideOverride = params.SideDartOverride && Number.isFinite(manualSide);
+  const sideVal = sideOverride ? Math.max(0, manualSide) : Math.max(0, sideBase);
+  result.SideDart = sideVal;
+
+  const frontAuto = Math.min(waistDiffTarget * 0.2, 2.5);
+  const manualFront = Number(params.FrontDart);
+  const frontOverride = params.FrontDartOverride && Number.isFinite(manualFront);
+  const frontVal = frontOverride ? Math.max(0, manualFront) : Math.max(0, frontAuto);
+  result.FrontDart = frontVal;
+
+  const FIRST_BACK_DART_MAX = 4.5;
+  const MIN_SECOND_BACK_DART_CM_TARGET = 1;
+  const manualBack1 = Number(params.BackDart1);
+  const back1Override = params.BackDart1Override && Number.isFinite(manualBack1);
+  let back1Val = back1Override
+    ? Math.max(0, manualBack1)
+    : Math.min(waistDiffTarget * 0.3, FIRST_BACK_DART_MAX);
+
+  let remainder = Math.max(0, waistDiffTarget - sideVal - frontVal - back1Val);
+  const manualBack2 = Number(params.BackDart2);
+  const back2Override = params.BackDart2Override && Number.isFinite(manualBack2);
+  let back2Val = back2Override ? Math.max(0, manualBack2) : Math.max(0, remainder);
+
+  if (!back1Override && !back2Override && back2Val > 0 && back2Val < MIN_SECOND_BACK_DART_CM_TARGET && back1Val < FIRST_BACK_DART_MAX) {
+    const transferable = Math.min(back2Val, FIRST_BACK_DART_MAX - back1Val);
+    if (transferable > 0) {
+      back1Val += transferable;
+      remainder = Math.max(0, remainder - transferable);
+      back2Val = Math.max(0, remainder);
+    }
+  }
+
+  result.BackDart1 = back1Val;
+  result.BackDart2 = back2Val;
+  result.DartSum = Math.max(0, sideVal + frontVal + back1Val + back2Val);
+  result.ManualDartSum = HOFENBITZER_SKIRT_MANUAL_KEYS.reduce((sum, key) => {
+    if (params[`${key}Override`]) {
+      const val = Number(params[key]);
+      return sum + (Number.isFinite(val) ? Math.max(0, val) : 0);
+    }
+    return sum;
+  }, 0);
+  result.WaistShaping = determineHofSkirtWaistShaping(params.HipProfile);
+  result.HiDCons = Number(params.HiD) || 0;
+  result.MoLCons = Number(params.MoL) || 0;
+  result.WaDif = waistDiffTarget - result.ManualDartSum;
+  return result;
 }
 
 function applyHofenbitzerFitProfile(index, options = {}) {
@@ -415,6 +541,127 @@ function initHofenbitzerControls() {
   updateHofenbitzerDerivedOutputs();
 
   hofenbitzerUi.initialized = true;
+}
+
+function captureHofSkirtInputs() {
+  hydrateHofSkirtManualOverridesFromDom();
+  const manual = hofSkirtUi.manualOverrides || {};
+  return {
+    HiC: getNumber("hofSkirtHiC", HOFENBITZER_SKIRT_DEFAULTS.HiC),
+    WaC: getNumber("hofSkirtWaC", HOFENBITZER_SKIRT_DEFAULTS.WaC),
+    HiD: getNumber("hofSkirtHiD", HOFENBITZER_SKIRT_DEFAULTS.HiD),
+    MoL: getNumber("hofSkirtMoL", HOFENBITZER_SKIRT_DEFAULTS.MoL),
+    HipEase: getNumber("hofSkirtHipEase", HOFENBITZER_SKIRT_DEFAULTS.HipEase),
+    WaistEase: getNumber("hofSkirtWaistEase", HOFENBITZER_SKIRT_DEFAULTS.WaistEase),
+    FrontDartLength: getNumber("hofSkirtFrontDartLength", HOFENBITZER_SKIRT_DEFAULTS.FrontDartLength),
+    BackDartLength1: getNumber("hofSkirtBackDartLength1", HOFENBITZER_SKIRT_DEFAULTS.BackDartLength1),
+    BackDartLength2: getNumber("hofSkirtBackDartLength2", HOFENBITZER_SKIRT_DEFAULTS.BackDartLength2),
+    HipProfile: getText("hofSkirtHipProfile", HOFENBITZER_SKIRT_DEFAULTS.HipProfile),
+    SideDart: getNumber("hofSkirtSideDart", 0),
+    FrontDart: getNumber("hofSkirtFrontDart", 0),
+    BackDart1: getNumber("hofSkirtBackDart1", 0),
+    BackDart2: getNumber("hofSkirtBackDart2", 0),
+    SideDartOverride: Boolean(manual.SideDart),
+    FrontDartOverride: Boolean(manual.FrontDart),
+    BackDart1Override: Boolean(manual.BackDart1),
+    BackDart2Override: Boolean(manual.BackDart2),
+    showGuides: getCheckbox("hofSkirtShowGuides", true),
+    showMarkers: getCheckbox("hofSkirtShowMarkers", true),
+  };
+}
+
+function updateHofSkirtDerivedFields() {
+  if (!hofSkirtUi.initialized) return;
+  const snapshot = captureHofSkirtInputs();
+  const derived = computeHofSkirtDerived(snapshot);
+
+  hofSkirtUi.cachedInputs = snapshot;
+  hofSkirtUi.cachedDerived = derived;
+
+  const manual = hofSkirtUi.manualOverrides;
+  const setInputIfAuto = (key, value) => {
+    if (manual[key]) return;
+    const input = document.getElementById(`hofSkirt${key}`);
+    if (!input) return;
+    if (Number.isFinite(value)) {
+      input.value = formatHofenbitzerValue(value);
+    } else {
+      input.value = "";
+    }
+  };
+
+  setInputIfAuto("SideDart", derived.SideDart);
+  setInputIfAuto("FrontDart", derived.FrontDart);
+  setInputIfAuto("BackDart1", derived.BackDart1);
+  setInputIfAuto("BackDart2", derived.BackDart2);
+
+  const outputs = hofSkirtUi.derivedOutputs || {};
+  const formatDisplay = (val) => (Number.isFinite(val) ? `${formatHofenbitzerValue(val)} cm` : "--");
+  if (outputs.hiW) outputs.hiW.textContent = formatDisplay(derived.HiW);
+  if (outputs.waW) outputs.waW.textContent = formatDisplay(derived.WaW);
+  if (outputs.waistDiff) outputs.waistDiff.textContent = formatDisplay(derived.WaistDiffTarget);
+  if (outputs.dartSum) outputs.dartSum.textContent = formatDisplay(derived.DartSum);
+}
+
+function initHofSkirtControls() {
+  if (hofSkirtUi.initialized) return;
+  const derivedPanel = document.getElementById("hofSkirtDerivedPanel");
+  hofSkirtUi.derivedOutputs = {
+    hiW: derivedPanel?.querySelector("#hofSkirtDerivedHiW") || null,
+    waW: derivedPanel?.querySelector("#hofSkirtDerivedWaW") || null,
+    waistDiff: derivedPanel?.querySelector("#hofSkirtDerivedWaistDiff") || null,
+    dartSum: derivedPanel?.querySelector("#hofSkirtDerivedDartSum") || null,
+  };
+  hydrateHofSkirtManualOverridesFromDom();
+
+  const manualInputs = {
+    SideDart: document.getElementById("hofSkirtSideDart"),
+    FrontDart: document.getElementById("hofSkirtFrontDart"),
+    BackDart1: document.getElementById("hofSkirtBackDart1"),
+    BackDart2: document.getElementById("hofSkirtBackDart2"),
+  };
+
+  Object.entries(manualInputs).forEach(([key, input]) => {
+    if (!input) return;
+    input.addEventListener("input", () => {
+      setHofSkirtManualOverride(key, true);
+      updateHofSkirtDerivedFields();
+    });
+  });
+
+  const measurementIds = [
+    "hofSkirtHiC",
+    "hofSkirtWaC",
+    "hofSkirtHiD",
+    "hofSkirtMoL",
+    "hofSkirtHipEase",
+    "hofSkirtWaistEase",
+    "hofSkirtFrontDartLength",
+    "hofSkirtBackDartLength1",
+    "hofSkirtBackDartLength2",
+    "hofSkirtHipProfile",
+  ];
+
+  measurementIds.forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const eventName = el.tagName === "SELECT" ? "change" : "input";
+    el.addEventListener(eventName, () => updateHofSkirtDerivedFields());
+  });
+
+  const resetBtn = document.getElementById("hofSkirtResetDarts");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      HOFENBITZER_SKIRT_MANUAL_KEYS.forEach((key) => {
+        setHofSkirtManualOverride(key, false);
+      });
+      updateHofSkirtDerivedFields();
+      scheduleRegen();
+    });
+  }
+
+  updateHofSkirtDerivedFields();
+  hofSkirtUi.initialized = true;
 }
 
 function createSvgRoot(w = PAGE_WIDTH_MM, h = PAGE_HEIGHT_MM) {
@@ -1893,6 +2140,29 @@ function createHofenbitzerLayerStack(svg) {
   };
 }
 
+function createHofSkirtLayerStack(svg) {
+  const foundation = layer(svg, "Skirt Frame Guides", { asLayer: true, prefix: "hofskirt" });
+  const construction = layer(svg, "Skirt Construction Lines", { asLayer: true, prefix: "hofskirt" });
+  const pattern = layer(svg, "Skirt Pattern", { asLayer: true, prefix: "hofskirt" });
+  const dartsLayer = layer(pattern, "Skirt Darts", { prefix: "hofskirt" });
+  const shapingLayer = layer(pattern, "Skirt Shaping", { prefix: "hofskirt" });
+  const labelsParent = layer(svg, "Skirt Labels & Markers", { asLayer: true, prefix: "hofskirt" });
+  const labels = layer(labelsParent, "Labels", { asLayer: true, prefix: "hofskirt" });
+  const markers = layer(labelsParent, "Markers", { asLayer: true, prefix: "hofskirt" });
+  const numbers = layer(labelsParent, "Numbers", { asLayer: true, prefix: "hofskirt" });
+  return {
+    foundation,
+    pattern: construction,
+    front: pattern,
+    dartsLayer,
+    shapingLayer,
+    labelsParent,
+    labels,
+    markers,
+    numbers,
+  };
+}
+
 function generateHofenbitzerCasualBodice(params) {
   const svg = createSvgRoot();
   svg.appendChild(
@@ -2967,6 +3237,366 @@ function generateHofenbitzerCasualBodice(params) {
   return svg;
 }
 
+function generateHofenbitzerBasicSkirt(params = {}) {
+  const svg = createSvgRoot();
+  svg.appendChild(
+    Object.assign(document.createElementNS(NS, "metadata"), {
+      textContent: JSON.stringify({
+        tool: "HofenbitzerBasicSkirtWeb",
+        units: "cm",
+        source: "Hofenbitzer/Skirt/hofenbitzer_basic_skirt.jsx",
+      }),
+    })
+  );
+
+  const layers = createHofSkirtLayerStack(svg);
+  const bounds = createBounds();
+  const origin = {
+    x: PAGE_MARGIN_MM * 2,
+    y: PAGE_MARGIN_MM * 2,
+  };
+  const cmToMmValue = (value) => value * CM_TO_MM;
+
+  const guideLayer = layers.foundation;
+  const guideAssistLayer = layers.pattern || guideLayer;
+  const patternLayer = layers.front || guideLayer;
+  const dartsLayer = layers.dartsLayer || patternLayer;
+  const shapingLayer = layers.shapingLayer || patternLayer;
+  const labelsLayer = layers.labels;
+  const markersLayer = layers.markers;
+  const numbersLayer = layers.numbers;
+
+  function toSvgCoords(point) {
+    const mapped = {
+      x: origin.x + cmToMmValue(point.x),
+      y: origin.y - cmToMmValue(point.y),
+    };
+    bounds.include(mapped.x, mapped.y);
+    return mapped;
+  }
+
+  function drawLineCm(target, start, end, opts = {}) {
+    if (!target || !start || !end) return null;
+    const s = toSvgCoords(start);
+    const e = toSvgCoords(end);
+    const attrs = {
+      fill: "none",
+      stroke: opts.color || "#111111",
+      "stroke-width": opts.width || 0.6,
+    };
+    if (opts.dashed) {
+      attrs["stroke-dasharray"] = opts.dash || HOFENBITZER_DASH_PATTERN;
+    }
+    if (opts.name) {
+      attrs["data-name"] = opts.name;
+    }
+    const lineEl = path(`M ${s.x} ${s.y} L ${e.x} ${e.y}`, attrs);
+    target.appendChild(lineEl);
+    return lineEl;
+  }
+
+  function drawCurveCm(target, start, startHandle, endHandle, end, opts = {}) {
+    if (!target || !start || !end) return null;
+    const s = toSvgCoords(start);
+    const c1 = toSvgCoords(startHandle || start);
+    const c2 = toSvgCoords(endHandle || end);
+    const e = toSvgCoords(end);
+    const attrs = {
+      fill: "none",
+      stroke: opts.color || "#111111",
+      "stroke-width": opts.width || 0.6,
+    };
+    if (opts.dashed) {
+      attrs["stroke-dasharray"] = opts.dash || HOFENBITZER_DASH_PATTERN;
+    }
+    if (opts.name) {
+      attrs["data-name"] = opts.name;
+    }
+    const curveEl = path(`M ${s.x} ${s.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${e.x} ${e.y}`, attrs);
+    target.appendChild(curveEl);
+    return curveEl;
+  }
+
+  function addLineLabel(text, start, end, options = {}) {
+    if (!labelsLayer || !text || !start || !end) return;
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const length = Math.hypot(dx, dy) || 1;
+    const side = options.side || 1;
+    const offset = options.offset || 0.5;
+    const mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+    const normal = {
+      x: (-dy / length) * offset * side,
+      y: (dx / length) * offset * side,
+    };
+    const labelPoint = { x: mid.x + normal.x, y: mid.y + normal.y };
+    const svgPoint = toSvgCoords(labelPoint);
+    const textEl = textNode(svgPoint.x, svgPoint.y, text, {
+      "font-size": 3,
+      fill: "#475569",
+      "text-anchor": "middle",
+    });
+    const angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
+    textEl.setAttribute("transform", `rotate(${angleDeg}, ${svgPoint.x}, ${svgPoint.y})`);
+    labelsLayer.appendChild(textEl);
+  }
+
+  function placeMarker(point, number) {
+    if (!markersLayer || !point) return;
+    const svgPoint = toSvgCoords(point);
+    const circle = document.createElementNS(NS, "circle");
+    circle.setAttribute("cx", svgPoint.x);
+    circle.setAttribute("cy", svgPoint.y);
+    circle.setAttribute("r", cmToMmValue(HOFENBITZER_MARKER_RADIUS_CM));
+    circle.setAttribute("fill", "#0f172a");
+    circle.setAttribute("stroke", "#0f172a");
+    markersLayer.appendChild(circle);
+    if (numbersLayer && Number.isFinite(number)) {
+      const numberNode = textNode(svgPoint.x, svgPoint.y + 1, String(number), {
+        "font-size": 3,
+        fill: "#ffffff",
+        "text-anchor": "middle",
+        "font-weight": "600",
+      });
+      numbersLayer.appendChild(numberNode);
+    }
+  }
+
+  const safeNumber = (value, fallback = 0) => (Number.isFinite(value) ? value : fallback);
+  const lerpPoint = (a, b, t) => ({
+    x: a.x + (b.x - a.x) * t,
+    y: a.y + (b.y - a.y) * t,
+  });
+  const horizontalIntersection = (a, b, targetY) => {
+    const dy = b.y - a.y;
+    if (Math.abs(dy) < 1e-6) {
+      return { x: a.x, y: targetY };
+    }
+    const t = (targetY - a.y) / dy;
+    return {
+      x: a.x + (b.x - a.x) * t,
+      y: targetY,
+    };
+  };
+
+  const derived = computeHofSkirtDerived(params);
+  const profile = normalizeHofSkirtProfile(params.HipProfile || HOFENBITZER_SKIRT_DEFAULTS.HipProfile);
+  const moL = safeNumber(params.MoL, HOFENBITZER_SKIRT_DEFAULTS.MoL);
+  const hiD = safeNumber(params.HiD, HOFENBITZER_SKIRT_DEFAULTS.HiD);
+  const hiW = safeNumber(derived.HiW, (HOFENBITZER_SKIRT_DEFAULTS.HiC + HOFENBITZER_SKIRT_DEFAULTS.HipEase) / 2);
+  const waistCirc = safeNumber(params.WaC, HOFENBITZER_SKIRT_DEFAULTS.WaC);
+  const waistShaping = Number.isFinite(derived.WaistShaping)
+    ? derived.WaistShaping
+    : determineHofSkirtWaistShaping(profile);
+
+  const P1 = { x: 0, y: 0 };
+  const P2 = { x: 0, y: -moL };
+  const P4 = { x: hiW, y: 0 };
+  const P5 = { x: hiW, y: -moL };
+  const P3 = { x: 0, y: -hiD };
+  const P6 = { x: hiW, y: -hiD };
+  const halfWidth = hiW / 2;
+  const P7 = { x: halfWidth, y: 0 };
+  const P8 = { x: halfWidth, y: -moL };
+  const P9 = { x: halfWidth, y: -hiD };
+  const P10 = { x: halfWidth, y: P7.y + waistShaping };
+
+  const halfSideDart = Math.max(0, derived.SideDart) / 2;
+  const P11 = { x: P10.x - halfSideDart, y: P10.y };
+  const P12 = { x: P10.x + halfSideDart, y: P10.y };
+
+  const waistLineY = 0;
+  const frontHipIntersection = horizontalIntersection(P11, P9, waistLineY);
+  const frontDartAnchorOffset = waistCirc / 10;
+  const P13 = { x: frontHipIntersection.x - frontDartAnchorOffset, y: waistLineY };
+  const P13dashHalf = 2.5;
+  const P13dashOffset = profile === "Curvy" ? 0.7 : 0.5;
+  const P13TopY = P13.y + P13dashOffset;
+  const P13dashLeft = { x: P13.x - P13dashHalf, y: P13TopY };
+  const P13dashRight = { x: P13.x + P13dashHalf, y: P13TopY };
+  const frontDartLength = Math.max(10, safeNumber(params.FrontDartLength, HOFENBITZER_SKIRT_DEFAULTS.FrontDartLength));
+  const P13Base = { x: P13.x, y: P13.y - frontDartLength };
+  const halfFrontDart = Math.max(0, derived.FrontDart) / 2;
+  const P13TopLeft = { x: P13.x - halfFrontDart, y: P13TopY };
+  const P13TopRight = { x: P13.x + halfFrontDart, y: P13TopY };
+
+  const cbWaistPoint = { x: P4.x, y: waistLineY };
+  const backHipWaistPoint = horizontalIntersection(P12, P9, waistLineY);
+  const rawBackDart1 = Math.max(0, derived.BackDart1);
+  const rawBackDart2 = Math.max(0, derived.BackDart2);
+  const hasSecondBackDart = rawBackDart2 > 0.05;
+  const P14 = lerpPoint(cbWaistPoint, backHipWaistPoint, hasSecondBackDart ? 1 / 3 : 0.5);
+  const backDartLength1 = Math.max(0, safeNumber(params.BackDartLength1, HOFENBITZER_SKIRT_DEFAULTS.BackDartLength1));
+  const P14Base = { x: P14.x, y: P14.y - backDartLength1 };
+  const halfBackDart1 = rawBackDart1 / 2;
+  const P14Left = { x: P14.x - halfBackDart1, y: P14.y };
+  const P14Right = { x: P14.x + halfBackDart1, y: P14.y };
+  let P14UpperLeft = { x: P14Left.x, y: P14Left.y };
+  let P14UpperRight = { x: P14Right.x, y: P14Right.y };
+  let singleBackDashLeft = null;
+  let singleBackDashRight = null;
+  if (!hasSecondBackDart) {
+    const singleDashHalf = 2.5;
+    const singleDashOffset = profile === "Curvy" ? 0.5 : 0.3;
+    const singleGuideY = P14.y + singleDashOffset;
+    singleBackDashLeft = { x: P14.x - singleDashHalf, y: singleGuideY };
+    singleBackDashRight = { x: P14.x + singleDashHalf, y: singleGuideY };
+    P14UpperLeft = { x: P14.x - halfBackDart1, y: singleGuideY };
+    P14UpperRight = { x: P14.x + halfBackDart1, y: singleGuideY };
+  }
+
+  let P15 = null;
+  let P15Base = null;
+  let P15Left = null;
+  let P15Right = null;
+  let P15dashLeft = null;
+  let P15dashRight = null;
+  if (hasSecondBackDart) {
+    const halfBackDart2 = rawBackDart2 / 2;
+    const backDartLength2 = Math.max(0, safeNumber(params.BackDartLength2, HOFENBITZER_SKIRT_DEFAULTS.BackDartLength2));
+    const hipCurveWaistPoint = { x: P12.x, y: P12.y };
+    const firstBackDartLeft = P14UpperLeft || P14Left;
+    const midX = (firstBackDartLeft.x + hipCurveWaistPoint.x) / 2;
+    P15 = { x: midX, y: waistLineY };
+    P15Base = { x: P15.x, y: P15.y - backDartLength2 };
+    const secondDashHalf = 2.5;
+    const P15TopOffset = profile === "Curvy" ? 0.5 : 0.3;
+    const P15TopY = P15.y + P15TopOffset;
+    P15dashLeft = { x: P15.x - secondDashHalf, y: P15TopY };
+    P15dashRight = { x: P15.x + secondDashHalf, y: P15TopY };
+    P15Left = { x: P15.x - halfBackDart2, y: P15TopY };
+    P15Right = { x: P15.x + halfBackDart2, y: P15TopY };
+  }
+
+  const labelOffsetCm = 0.5;
+  const drawGuideAndPattern = (start, end, options = {}) => {
+    drawLineCm(guideLayer, start, end, options);
+    return drawLineCm(patternLayer, start, end, options);
+  };
+
+  drawGuideAndPattern(P1, P2, { name: "Centre Front Line" });
+  addLineLabel("Centre Front (CF)", P1, P2, { offset: labelOffsetCm, side: 1 });
+  drawGuideAndPattern(P1, P4, { name: "Waist Line" });
+  addLineLabel("Waist Line", P1, P4, { offset: labelOffsetCm, side: 1 });
+  drawGuideAndPattern(P4, P5, { name: "Centre Back Line" });
+  addLineLabel("Centre Back (CB)", P4, P5, { offset: labelOffsetCm, side: -1 });
+  drawGuideAndPattern(P5, P2, { name: "Hem Line" });
+  addLineLabel("Hem Line", P5, P2, { offset: labelOffsetCm, side: -1 });
+  drawLineCm(guideLayer, P7, P8, { name: "Side Line" });
+  addLineLabel("Side Line", P7, P8, { offset: labelOffsetCm, side: 1 });
+
+  drawLineCm(guideLayer, P3, P6, { name: "Hip Line", dashed: true });
+  drawLineCm(patternLayer, P3, P6, { name: "Hip Line", dashed: true });
+  drawLineCm(patternLayer, P9, P8, { name: "Side Line" });
+
+  drawLineCm(guideLayer, P7, P10, { name: "Waist Shaping Guide" });
+
+  if (halfSideDart > 0) {
+    drawLineCm(dartsLayer, P10, P11, { name: "Side Dart Left" });
+    drawLineCm(dartsLayer, P10, P12, { name: "Side Dart Right" });
+    const hipHandlePoint = { x: P7.x, y: P9.y + 10.5 };
+    drawCurveCm(shapingLayer, P11, { x: P11.x, y: P11.y }, hipHandlePoint, P9, { name: "Front Hip Curve" });
+    drawCurveCm(shapingLayer, P12, hipHandlePoint, { x: P12.x, y: P12.y }, P9, { name: "Back Hip Curve" });
+  }
+
+  const waistGuideLeft = { x: P10.x - 6, y: P10.y };
+  const waistGuideRight = { x: P10.x + 6, y: P10.y };
+  const waistGuideOpts = { dashed: true, name: "Upper Waist Shaping Guide" };
+  drawLineCm(guideAssistLayer, waistGuideLeft, waistGuideRight, waistGuideOpts);
+  drawLineCm(patternLayer, waistGuideLeft, waistGuideRight, waistGuideOpts);
+
+  drawLineCm(dartsLayer, P13dashLeft, P13dashRight, { dashed: true, name: "Front Dart Guide" });
+  drawLineCm(dartsLayer, P13, P13Base, { dashed: true, name: "Front Dart Centre" });
+  if (halfFrontDart > 0) {
+    drawLineCm(dartsLayer, P13TopLeft, P13Base, { name: "Front Dart Left" });
+    drawLineCm(dartsLayer, P13TopRight, P13Base, { name: "Front Dart Right" });
+    addLineLabel("Front Dart", P13TopLeft, P13TopRight, { offset: labelOffsetCm, side: 1 });
+  }
+
+  if (!hasSecondBackDart && singleBackDashLeft && singleBackDashRight) {
+    drawLineCm(dartsLayer, singleBackDashLeft, singleBackDashRight, { dashed: true, name: "Back Waist Raise" });
+  }
+  if (hasSecondBackDart && P15dashLeft && P15dashRight) {
+    drawLineCm(dartsLayer, P15dashLeft, P15dashRight, { dashed: true, name: "Back Waist Raise" });
+  }
+  if (hasSecondBackDart && P15 && P15Base) {
+    drawLineCm(dartsLayer, P15, P15Base, { dashed: true, name: "2nd Back Dart Centre" });
+  }
+  if (hasSecondBackDart && P15Left && P15Right && P15Base) {
+    drawLineCm(dartsLayer, P15Left, P15Base, { name: "Second Back Dart Left" });
+    drawLineCm(dartsLayer, P15Right, P15Base, { name: "Second Back Dart Right" });
+    addLineLabel("2nd Back Dart", P15Left, P15Right, { offset: labelOffsetCm, side: 1 });
+  }
+
+  drawLineCm(dartsLayer, P14, P14Base, { dashed: true, name: "1st Back Dart Centre" });
+  drawLineCm(dartsLayer, P14UpperLeft, P14Base, { name: "First Back Dart Left" });
+  drawLineCm(dartsLayer, P14UpperRight, P14Base, { name: "First Back Dart Right" });
+  addLineLabel("1st Back Dart", P14UpperLeft, P14UpperRight, { offset: labelOffsetCm, side: 1 });
+
+
+  if (P1 && P13TopLeft) {
+    const frontCurveStartHandle = { x: P1.x + 10.6, y: P1.y + 0.3 };
+    const frontCurveEndHandle = { x: P13TopLeft.x - 0.54, y: P13TopLeft.y };
+    drawCurveCm(shapingLayer, P1, frontCurveStartHandle, frontCurveEndHandle, P13TopLeft, { name: "Front Waist Curve" });
+  }
+
+  if (P13TopRight && P11) {
+    const frontHipHandle = { x: P11.x - 0.6, y: P11.y - 0.5 };
+    drawCurveCm(shapingLayer, P13TopRight, { x: P13TopRight.x, y: P13TopRight.y }, frontHipHandle, P11, {
+      name: "Front Hip Transition",
+    });
+  }
+
+  if (!hasSecondBackDart && P12 && P14UpperLeft) {
+    const backCurveStartHandle = { x: P12.x + 0.4, y: P12.y - 0.4 };
+    const backCurveEndHandle = { x: P14UpperLeft.x - 2.95, y: P14UpperLeft.y };
+    drawCurveCm(shapingLayer, P12, backCurveStartHandle, backCurveEndHandle, P14UpperLeft, { name: "Back Waist Curve" });
+    if (P14UpperRight && P4) {
+      const backRightHandle = { x: P14UpperRight.x + 0.5, y: P14UpperRight.y };
+      const backCfHandle = { x: P4.x - 4.25, y: P4.y };
+      drawCurveCm(shapingLayer, P14UpperRight, backRightHandle, backCfHandle, P4, { name: "Back Waist Transition" });
+    }
+  } else if (hasSecondBackDart) {
+    if (P12 && P15Left) {
+      const backCurveStartHandle2 = { x: P12.x + 0.4, y: P12.y - 0.4 };
+      const backCurveEndHandle2 = { x: P15Left.x - 0.6, y: P15Left.y };
+      drawCurveCm(shapingLayer, P12, backCurveStartHandle2, backCurveEndHandle2, P15Left, { name: "Back Waist Curve" });
+    }
+    if (P15Right && P14UpperLeft) {
+      const startHandle = { x: P15Right.x + 0.6, y: P15Right.y };
+      const endHandle = { x: P14UpperLeft.x - 2.4, y: P14UpperLeft.y };
+      drawCurveCm(shapingLayer, P15Right, startHandle, endHandle, P14UpperLeft, { name: "Back Waist Transition" });
+    }
+    if (patternLayer && P4 && P14UpperRight) {
+      drawLineCm(patternLayer, P4, P14UpperRight, { name: "Back Waist CF Segment" });
+    }
+  }
+
+  const markers = [P1, P2, P3, P4, P5, P6, P7, P8, P9, P10];
+  markers.forEach((point, index) => placeMarker(point, index + 1));
+  if (halfSideDart > 0) {
+    placeMarker(P11, 11);
+    placeMarker(P12, 12);
+  }
+  placeMarker(P13, 13);
+  placeMarker(P14, 14);
+  if (hasSecondBackDart && P15) {
+    placeMarker(P15, 15);
+  }
+
+  if (typeof window !== "undefined") {
+    window.hofenbitzerSkirtDraft = {
+      params,
+      derived,
+      points: { P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15 },
+    };
+  }
+
+  applyLayerVisibility(layers, params);
+  fitSvgToBounds(svg, bounds);
+  return svg;
+}
+
 function readArmstrongParams() {
   const bustSpan = getNumber("bustSpan", 4.0625);
   const dartPlacement = getNumber("dartPlacement", 3.4375);
@@ -3053,6 +3683,30 @@ function readHofenbitzerParams() {
     fitIndex: Number.isFinite(fitIndex) ? fitIndex : HOFENBITZER_DEFAULT_FIT_INDEX,
     showGuides: getCheckbox("hofenbitzerShowGuides", true),
     showMarkers: getCheckbox("hofenbitzerShowMarkers", true),
+  };
+}
+
+function readHofSkirtParams() {
+  initHofSkirtControls();
+  updateHofSkirtDerivedFields();
+  const snapshot = captureHofSkirtInputs();
+  const derived = computeHofSkirtDerived(snapshot);
+  const manual = hofSkirtUi.manualOverrides || {};
+  const resolvedValue = (key) => {
+    if (manual[key]) {
+      const value = snapshot[key];
+      return Number.isFinite(value) ? value : derived[key];
+    }
+    return derived[key];
+  };
+  return {
+    ...snapshot,
+    SideDart: resolvedValue("SideDart"),
+    FrontDart: resolvedValue("FrontDart"),
+    BackDart1: resolvedValue("BackDart1"),
+    BackDart2: resolvedValue("BackDart2"),
+    WaistShaping: derived.WaistShaping,
+    derived,
   };
 }
 
@@ -3314,6 +3968,7 @@ const draftStores = {
   armstrong: createDraftStore(),
   aldrich: createDraftStore(),
   hofenbitzerCasual: createDraftStore(),
+  hofenbitzerBasicSkirt: createDraftStore(),
 };
 let activePatternKey = "armstrong";
 const svgSerializer = new XMLSerializer();
@@ -3385,6 +4040,20 @@ const PATTERN_CONFIGS = {
     duplicateId: "duplicateDraftHofenbitzer",
     layerButtonId: "manageLayersHofenbitzer",
     draftListId: "draftListHofenbitzer",
+  },
+  hofenbitzerBasicSkirt: {
+    title: "Hofenbitzer's Basic Skirt",
+    elementId: "hofenbitzerSkirtControls",
+    readParams: readHofSkirtParams,
+    generate: generateHofenbitzerBasicSkirt,
+    downloadId: "downloadHofenbitzerSkirt",
+    downloadAllId: "downloadAllHofenbitzerSkirt",
+    shareId: "shareHofenbitzerSkirt",
+    filename: "hofenbitzer_basic_skirt.svg",
+    stackFilename: "hofenbitzer_basic_skirt_drafts.svg",
+    duplicateId: "duplicateDraftHofenbitzerSkirt",
+    layerButtonId: "manageLayersHofenbitzerSkirt",
+    draftListId: "draftListHofenbitzerSkirt",
   },
 };
 
@@ -3493,6 +4162,11 @@ function applyInputState(patternKey, state = {}) {
       el.value = entry.value ?? "";
     }
   });
+  if (patternKey === "hofenbitzerBasicSkirt") {
+    initHofSkirtControls();
+    hydrateHofSkirtManualOverridesFromDom();
+    updateHofSkirtDerivedFields();
+  }
 }
 
 function applyActiveDraftInputs(patternKey) {
@@ -3792,6 +4466,7 @@ function initApp() {
   enhanceFitProfileSelect();
   initAldrichAutoFields();
   initHofenbitzerControls();
+  initHofSkirtControls();
   initLayerTools();
   initDraftManager();
   Object.entries(PATTERN_CONFIGS).forEach(([key, config]) => {

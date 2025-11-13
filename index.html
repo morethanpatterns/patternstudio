@@ -14,10 +14,10 @@
             <option value="armstrong" selected>Armstrong's Bodice</option>
             <option value="aldrich">Aldrich's Close Fitting Bodice</option>
             <option value="hofenbitzerCasual">Hofenbitzer's Casual Bodice</option>
+            <option value="hofenbitzerBasicSkirt">Hofenbitzer's Basic Skirt</option>
             <optgroup label="Almost Ready">
               <option value="hofenbitzer-trouser" disabled>Hofenbitzer's Standard Trouser (Coming Soon)</option>
               <option value="hofenbitzer-contoured-bodice" disabled>Hofenbitzer's Contoured Bodice (Coming Soon)</option>
-              <option value="hofenbitzer-basic-skirt" disabled>Hofenbitzer's Basic Skirt (Coming Soon)</option>
             </optgroup>
             <optgroup label="Next In Line">
               <option value="kim-skirt-sloper" disabled>Kim's Skirt Sloper (Next Up)</option>
@@ -291,6 +291,122 @@
             <p>Duplicate to compare variations side-by-side.</p>
           </header>
           <div id="draftListHofenbitzer" class="draft-panel__list">
+            <p class="draft-panel__empty">No duplicates yet.</p>
+          </div>
+        </section>
+      </div>
+
+      <div id="hofenbitzerSkirtControls" class="pattern-section" hidden>
+        <h1>Hofenbitzer's Basic Skirt <span class="beta-tag">Beta</span></h1>
+        <p class="hint">All measurements are in centimetres. Defaults reference the size 38 block from <a href="https://www.europa-lehrmittel.de/Patternmaking-for-Fashion-1/63670-1" target="_blank" rel="noopener">Hofenbitzer's book</a>.</p>
+        <p class="note">Need help or want to request a draft? Join the <a href="https://discord.gg/CFvfXfZUTa" target="_blank" rel="noopener">Discord community</a>.</p>
+
+        <div class="hof-card">
+          <h2>Measurements</h2>
+          <div class="form-grid">
+            <label>HiC
+              <input id="hofSkirtHiC" type="number" value="97" step="0.1">
+            </label>
+            <label>WaC
+              <input id="hofSkirtWaC" type="number" value="72" step="0.1">
+            </label>
+            <label>HiD
+              <input id="hofSkirtHiD" type="number" value="21" step="0.1">
+            </label>
+            <label>MoL
+              <input id="hofSkirtMoL" type="number" value="50" step="0.1">
+            </label>
+            <label>Hip Ease (cm)
+              <input id="hofSkirtHipEase" type="number" value="3" step="0.1">
+            </label>
+            <label>Waist Ease (cm)
+              <input id="hofSkirtWaistEase" type="number" value="2" step="0.1">
+            </label>
+            <label>Hip Profile
+              <select id="hofSkirtHipProfile">
+                <option value="Flat">Flat</option>
+                <option value="Normal" selected>Normal</option>
+                <option value="Curvy">Curvy</option>
+              </select>
+            </label>
+          </div>
+
+          <h2>Darts &amp; Lengths</h2>
+          <p class="hint skirt-hint">Dart widths auto-update from your measurements. Editing any value removes the autocalculation until you reset the distribution.</p>
+          <div class="form-grid">
+            <label>Front Dart Length (cm)
+              <input id="hofSkirtFrontDartLength" type="number" value="10" step="0.1" min="0">
+            </label>
+            <label>Back Dart 1 Length (cm)
+              <input id="hofSkirtBackDartLength1" type="number" value="14.5" step="0.1" min="0">
+            </label>
+            <label>Back Dart 2 Length (cm)
+              <input id="hofSkirtBackDartLength2" type="number" value="13" step="0.1" min="0">
+            </label>
+            <label>Side Dart (cm)
+              <input id="hofSkirtSideDart" type="number" value="0" step="0.1" min="0">
+            </label>
+            <label>Front Dart (cm)
+              <input id="hofSkirtFrontDart" type="number" value="0" step="0.1" min="0">
+            </label>
+            <label>1st Back Dart (cm)
+              <input id="hofSkirtBackDart1" type="number" value="0" step="0.1" min="0">
+            </label>
+            <label>2nd Back Dart (cm)
+              <input id="hofSkirtBackDart2" type="number" value="0" step="0.1" min="0">
+            </label>
+          </div>
+          <button id="hofSkirtResetDarts" type="button" class="link-button secondary derived-reset">Reset Darts to Autocalculate</button>
+        </div>
+
+        <div class="derived-panel" id="hofSkirtDerivedPanel">
+          <div class="derived-field">
+            <span class="derived-label">Hip Width (HiW)</span>
+            <span class="derived-value" id="hofSkirtDerivedHiW">48.50 cm</span>
+          </div>
+          <div class="derived-field">
+            <span class="derived-label">Waist Width (WaW)</span>
+            <span class="derived-value" id="hofSkirtDerivedWaW">36.00 cm</span>
+          </div>
+          <div class="derived-field">
+            <span class="derived-label">Waist Difference Target</span>
+            <span class="derived-value" id="hofSkirtDerivedWaistDiff">12.50 cm</span>
+          </div>
+          <div class="derived-field">
+            <span class="derived-label">Auto Dart Sum</span>
+            <span class="derived-value" id="hofSkirtDerivedDartSum">12.50 cm</span>
+          </div>
+        </div>
+        <div class="visually-hidden" aria-hidden="true">
+          <input type="hidden" id="hofSkirtSideDartOverride" value="false">
+          <input type="hidden" id="hofSkirtFrontDartOverride" value="false">
+          <input type="hidden" id="hofSkirtBackDart1Override" value="false">
+          <input type="hidden" id="hofSkirtBackDart2Override" value="false">
+        </div>
+
+        <div class="toggles">
+          <label><input id="hofSkirtShowGuides" type="checkbox" checked>Show Construction Lines</label>
+          <label><input id="hofSkirtShowMarkers" type="checkbox" checked>Show Markers and Numbers</label>
+        </div>
+
+        <div class="actions">
+          <button id="downloadHofenbitzerSkirt" type="button">Download Current (SVG)</button>
+          <button id="downloadAllHofenbitzerSkirt" type="button">Download All (SVG)</button>
+        </div>
+
+        <div class="actions secondary">
+          <button id="duplicateDraftHofenbitzerSkirt" type="button" class="link-button secondary">Duplicate Draft</button>
+          <button id="manageLayersHofenbitzerSkirt" type="button" class="link-button secondary">Manage Layers</button>
+          <button id="shareHofenbitzerSkirt" type="button" class="link-button">Share Link</button>
+          <a class="link-button secondary" href="mailto:morethanpatterns@yahoo.com?subject=PatternKit%20Feedback" rel="noopener">Feedback</a>
+        </div>
+
+        <section class="draft-panel" id="draftPanelHofenbitzerSkirt" aria-label="Saved drafts">
+          <header class="draft-panel__header">
+            <h3>Draft Versions</h3>
+            <p>Duplicate to compare variations side-by-side.</p>
+          </header>
+          <div id="draftListHofenbitzerSkirt" class="draft-panel__list">
             <p class="draft-panel__empty">No duplicates yet.</p>
           </div>
         </section>
