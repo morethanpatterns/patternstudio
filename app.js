@@ -3350,8 +3350,10 @@ const PATTERN_CONFIGS = {
     readParams: readArmstrongParams,
     generate: generateArmstrong,
     downloadId: "download",
+    downloadAllId: "downloadAllArmstrong",
     shareId: "share",
     filename: "armstrong_bodice.svg",
+    stackFilename: "armstrong_bodice_drafts.svg",
     duplicateId: "duplicateDraftArmstrong",
     layerButtonId: "manageLayersArmstrong",
     draftListId: "draftListArmstrong",
@@ -3362,8 +3364,10 @@ const PATTERN_CONFIGS = {
     readParams: readAldrichParams,
     generate: generateAldrich,
     downloadId: "downloadAldrich",
+    downloadAllId: "downloadAllAldrich",
     shareId: "shareAldrich",
     filename: "aldrich_close_fitting_bodice.svg",
+    stackFilename: "aldrich_close_fitting_bodice_drafts.svg",
     duplicateId: "duplicateDraftAldrich",
     layerButtonId: "manageLayersAldrich",
     draftListId: "draftListAldrich",
@@ -3374,8 +3378,10 @@ const PATTERN_CONFIGS = {
     readParams: readHofenbitzerParams,
     generate: generateHofenbitzerCasualBodice,
     downloadId: "downloadHofenbitzer",
+    downloadAllId: "downloadAllHofenbitzer",
     shareId: "shareHofenbitzer",
     filename: "hofenbitzer_casual_bodice.svg",
+    stackFilename: "hofenbitzer_casual_bodice_drafts.svg",
     duplicateId: "duplicateDraftHofenbitzer",
     layerButtonId: "manageLayersHofenbitzer",
     draftListId: "draftListHofenbitzer",
@@ -3796,6 +3802,13 @@ function initApp() {
         ensurePatternSelection(key);
         if (!currentSvg) regen();
         if (currentSvg) downloadSVG(currentSvg, config.filename || `${key}.svg`);
+      });
+    }
+    const downloadAllButton = config.downloadAllId ? document.getElementById(config.downloadAllId) : null;
+    if (downloadAllButton) {
+      downloadAllButton.addEventListener("click", () => {
+        ensurePatternSelection(key);
+        downloadAllDrafts(key);
       });
     }
 
@@ -4408,6 +4421,73 @@ function duplicateLayer(layerId) {
   recolorLayer(clone, pickDuplicateColor(copyIndex));
   hydrateLayerTools(currentSvg);
   persistActiveDraftSvg();
+}
+
+function downloadAllDrafts(patternKey) {
+  ensurePatternSelection(patternKey);
+  const store = getDraftStore(patternKey);
+  if (!store || !store.drafts.length) {
+    alert("Generate a draft before downloading all versions.");
+    return;
+  }
+  persistActiveDraftSvg();
+  const draftsWithMarkup = store.drafts.filter((draft) => draft.svgMarkup);
+  if (!draftsWithMarkup.length) {
+    alert("Generate each draft before downloading all versions.");
+    return;
+  }
+  const templateSvg = importSvgMarkup(draftsWithMarkup[0].svgMarkup);
+  if (!templateSvg) {
+    alert("Unable to prepare the combined SVG.");
+    return;
+  }
+  const combinedSvg = templateSvg.cloneNode(false);
+  const combinedDefs = document.createElementNS(NS, "defs");
+  let defsAdded = false;
+  const appendDefsFrom = (svgNode) => {
+    if (!svgNode) return;
+    svgNode.querySelectorAll("defs").forEach((defsNode) => {
+      Array.from(defsNode.childNodes || []).forEach((child) => {
+        combinedDefs.appendChild(child.cloneNode(true));
+        defsAdded = true;
+      });
+    });
+  };
+  draftsWithMarkup.forEach((draft) => {
+    const svgNode = importSvgMarkup(draft.svgMarkup);
+    if (!svgNode) return;
+    appendDefsFrom(svgNode);
+    const layerGroup = document.createElementNS(NS, "g");
+    const label = draft.name || draft.id;
+    layerGroup.setAttribute("data-draft-id", draft.id);
+    layerGroup.setAttribute("data-draft-name", label);
+    layerGroup.setAttributeNS(INKSCAPE_NS, "inkscape:groupmode", "layer");
+    layerGroup.setAttributeNS(INKSCAPE_NS, "inkscape:label", label);
+    if (draft.visible === false) {
+      layerGroup.setAttribute("display", "none");
+    }
+    Array.from(svgNode.childNodes || []).forEach((child) => {
+      if (child.nodeType !== 1) {
+        if (child.nodeType === 3 && !(child.textContent || "").trim()) {
+          return;
+        }
+        layerGroup.appendChild(child.cloneNode(true));
+        return;
+      }
+      const tag = child.tagName ? child.tagName.toLowerCase() : "";
+      if (tag === "defs") {
+        return;
+      }
+      layerGroup.appendChild(child.cloneNode(true));
+    });
+    combinedSvg.appendChild(layerGroup);
+  });
+  if (defsAdded) {
+    combinedSvg.insertBefore(combinedDefs, combinedSvg.firstChild);
+  }
+  const filename =
+    PATTERN_CONFIGS[patternKey]?.stackFilename || `${patternKey}_drafts.svg`;
+  downloadSVG(combinedSvg, filename);
 }
 
 function exportVisibleLayers() {
