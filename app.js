@@ -2141,19 +2141,20 @@ function createHofenbitzerLayerStack(svg) {
 }
 
 function createHofSkirtLayerStack(svg) {
-  const foundation = layer(svg, "Skirt Frame Guides", { asLayer: true, prefix: "hofskirt" });
-  const construction = layer(svg, "Skirt Construction Lines", { asLayer: true, prefix: "hofskirt" });
+  const foundation = layer(svg, "Basic Frame", { asLayer: true, prefix: "hofskirt" });
   const pattern = layer(svg, "Skirt Pattern", { asLayer: true, prefix: "hofskirt" });
-  const dartsLayer = layer(pattern, "Skirt Darts", { prefix: "hofskirt" });
-  const shapingLayer = layer(pattern, "Skirt Shaping", { prefix: "hofskirt" });
-  const labelsParent = layer(svg, "Skirt Labels & Markers", { asLayer: true, prefix: "hofskirt" });
+  const dartsParent = layer(svg, "Darts & Shaping", { asLayer: true, prefix: "hofskirt" });
+  const dartsLayer = layer(dartsParent, "Darts", { prefix: "hofskirt" });
+  const shapingLayer = layer(dartsParent, "Shaping", { prefix: "hofskirt" });
+  const labelsParent = layer(svg, "Labels, Markers & Numbers", { asLayer: true, prefix: "hofskirt" });
   const labels = layer(labelsParent, "Labels", { asLayer: true, prefix: "hofskirt" });
   const markers = layer(labelsParent, "Markers", { asLayer: true, prefix: "hofskirt" });
   const numbers = layer(labelsParent, "Numbers", { asLayer: true, prefix: "hofskirt" });
   return {
     foundation,
-    pattern: construction,
+    pattern,
     front: pattern,
+    dartsParent,
     dartsLayer,
     shapingLayer,
     labelsParent,
@@ -3258,8 +3259,7 @@ function generateHofenbitzerBasicSkirt(params = {}) {
   const cmToMmValue = (value) => value * CM_TO_MM;
 
   const guideLayer = layers.foundation;
-  const guideAssistLayer = layers.pattern || guideLayer;
-  const patternLayer = layers.front || guideLayer;
+  const patternLayer = layers.pattern || layers.front || guideLayer;
   const dartsLayer = layers.dartsLayer || patternLayer;
   const shapingLayer = layers.shapingLayer || patternLayer;
   const labelsLayer = layers.labels;
@@ -3366,6 +3366,47 @@ function generateHofenbitzerBasicSkirt(params = {}) {
       });
       numbersLayer.appendChild(numberNode);
     }
+  }
+
+  function copyLineToPattern(start, end, opts = {}, overrides = {}) {
+    if (!patternLayer) return;
+    const patternOpts = { ...opts, ...overrides };
+    if (!overrides.keepDash) {
+      delete patternOpts.dashed;
+    }
+    if (patternOpts.patternName) {
+      patternOpts.name = patternOpts.patternName;
+      delete patternOpts.patternName;
+    }
+    drawLineCm(patternLayer, start, end, patternOpts);
+  }
+
+  function copyCurveToPattern(start, startHandle, endHandle, end, opts = {}, overrides = {}) {
+    if (!patternLayer) return;
+    const patternOpts = { ...opts, ...overrides };
+    if (patternOpts.patternName) {
+      patternOpts.name = patternOpts.patternName;
+      delete patternOpts.patternName;
+    }
+    drawCurveCm(patternLayer, start, startHandle, endHandle, end, patternOpts);
+  }
+
+  function drawConstructionLine(layer, start, end, opts = {}, patternCopy = null) {
+    const line = drawLineCm(layer, start, end, opts);
+    if (patternCopy) {
+      const overrides = patternCopy === true ? {} : patternCopy;
+      copyLineToPattern(start, end, opts, overrides);
+    }
+    return line;
+  }
+
+  function drawConstructionCurve(layer, start, startHandle, endHandle, end, opts = {}, patternCopy = null) {
+    const curve = drawCurveCm(layer, start, startHandle, endHandle, end, opts);
+    if (patternCopy) {
+      const overrides = patternCopy === true ? {} : patternCopy;
+      copyCurveToPattern(start, startHandle, endHandle, end, opts, overrides);
+    }
+    return curve;
   }
 
   const safeNumber = (value, fallback = 0) => (Number.isFinite(value) ? value : fallback);
@@ -3475,18 +3516,20 @@ function generateHofenbitzerBasicSkirt(params = {}) {
   }
 
   const labelOffsetCm = 0.5;
-  const drawGuideAndPattern = (start, end, options = {}) => {
+  const drawGuideLine = (start, end, options = {}, copyToPattern = true) => {
     drawLineCm(guideLayer, start, end, options);
-    return drawLineCm(patternLayer, start, end, options);
+    if (copyToPattern && patternLayer) {
+      drawLineCm(patternLayer, start, end, options);
+    }
   };
 
-  drawGuideAndPattern(P1, P2, { name: "Centre Front Line" });
+  drawGuideLine(P1, P2, { name: "Centre Front Line" });
   addLineLabel("Centre Front (CF)", P1, P2, { offset: labelOffsetCm, side: 1 });
-  drawGuideAndPattern(P1, P4, { name: "Waist Line" });
+  drawGuideLine(P1, P4, { name: "Waist Line" }, false);
   addLineLabel("Waist Line", P1, P4, { offset: labelOffsetCm, side: 1 });
-  drawGuideAndPattern(P4, P5, { name: "Centre Back Line" });
+  drawGuideLine(P4, P5, { name: "Centre Back Line" });
   addLineLabel("Centre Back (CB)", P4, P5, { offset: labelOffsetCm, side: -1 });
-  drawGuideAndPattern(P5, P2, { name: "Hem Line" });
+  drawGuideLine(P5, P2, { name: "Hem Line" });
   addLineLabel("Hem Line", P5, P2, { offset: labelOffsetCm, side: -1 });
   drawLineCm(guideLayer, P7, P8, { name: "Side Line" });
   addLineLabel("Side Line", P7, P8, { offset: labelOffsetCm, side: 1 });
@@ -3498,24 +3541,23 @@ function generateHofenbitzerBasicSkirt(params = {}) {
   drawLineCm(guideLayer, P7, P10, { name: "Waist Shaping Guide" });
 
   if (halfSideDart > 0) {
-    drawLineCm(dartsLayer, P10, P11, { name: "Side Dart Left" });
-    drawLineCm(dartsLayer, P10, P12, { name: "Side Dart Right" });
+    drawConstructionLine(dartsLayer, P10, P11, { name: "Side Dart Left" }, false);
+    drawConstructionLine(dartsLayer, P10, P12, { name: "Side Dart Right" }, false);
     const hipHandlePoint = { x: P7.x, y: P9.y + 10.5 };
-    drawCurveCm(shapingLayer, P11, { x: P11.x, y: P11.y }, hipHandlePoint, P9, { name: "Front Hip Curve" });
-    drawCurveCm(shapingLayer, P12, { x: P12.x, y: P12.y }, hipHandlePoint, P9, { name: "Back Hip Curve" });
+    drawConstructionCurve(shapingLayer, P11, { x: P11.x, y: P11.y }, hipHandlePoint, P9, { name: "Front Hip Curve" }, true);
+    drawConstructionCurve(shapingLayer, P12, { x: P12.x, y: P12.y }, hipHandlePoint, P9, { name: "Back Hip Curve" }, true);
   }
 
   const waistGuideLeft = { x: P10.x - 6, y: P10.y };
   const waistGuideRight = { x: P10.x + 6, y: P10.y };
   const waistGuideOpts = { dashed: true, name: "Upper Waist Shaping Guide" };
-  drawLineCm(guideAssistLayer, waistGuideLeft, waistGuideRight, waistGuideOpts);
-  drawLineCm(patternLayer, waistGuideLeft, waistGuideRight, waistGuideOpts);
+  drawLineCm(guideLayer, waistGuideLeft, waistGuideRight, waistGuideOpts);
 
   drawLineCm(dartsLayer, P13dashLeft, P13dashRight, { dashed: true, name: "Front Dart Guide" });
   drawLineCm(dartsLayer, P13, P13Base, { dashed: true, name: "Front Dart Centre" });
   if (halfFrontDart > 0) {
-    drawLineCm(dartsLayer, P13TopLeft, P13Base, { name: "Front Dart Left" });
-    drawLineCm(dartsLayer, P13TopRight, P13Base, { name: "Front Dart Right" });
+    drawConstructionLine(dartsLayer, P13TopLeft, P13Base, { name: "Front Dart Left" }, true);
+    drawConstructionLine(dartsLayer, P13TopRight, P13Base, { name: "Front Dart Right" }, true);
     addLineLabel("Front Dart", P13TopLeft, P13TopRight, { offset: labelOffsetCm, side: 1 });
   }
 
@@ -3529,49 +3571,57 @@ function generateHofenbitzerBasicSkirt(params = {}) {
     drawLineCm(dartsLayer, P15, P15Base, { dashed: true, name: "2nd Back Dart Centre" });
   }
   if (hasSecondBackDart && P15Left && P15Right && P15Base) {
-    drawLineCm(dartsLayer, P15Left, P15Base, { name: "Second Back Dart Left" });
-    drawLineCm(dartsLayer, P15Right, P15Base, { name: "Second Back Dart Right" });
+    drawConstructionLine(dartsLayer, P15Left, P15Base, { name: "Second Back Dart Left" }, true);
+    drawConstructionLine(dartsLayer, P15Right, P15Base, { name: "Second Back Dart Right" }, true);
     addLineLabel("2nd Back Dart", P15Left, P15Right, { offset: labelOffsetCm, side: 1 });
   }
 
   drawLineCm(dartsLayer, P14, P14Base, { dashed: true, name: "1st Back Dart Centre" });
-  drawLineCm(dartsLayer, P14UpperLeft, P14Base, { name: "First Back Dart Left" });
-  drawLineCm(dartsLayer, P14UpperRight, P14Base, { name: "First Back Dart Right" });
+  drawConstructionLine(dartsLayer, P14UpperLeft, P14Base, { name: "First Back Dart Left" }, true);
+  drawConstructionLine(dartsLayer, P14UpperRight, P14Base, { name: "First Back Dart Right" }, true);
   addLineLabel("1st Back Dart", P14UpperLeft, P14UpperRight, { offset: labelOffsetCm, side: 1 });
 
 
   if (P1 && P13TopLeft) {
     const frontCurveStartHandle = { x: P1.x + 10.6, y: P1.y + 0.3 };
     const frontCurveEndHandle = { x: P13TopLeft.x - 0.54, y: P13TopLeft.y };
-    drawCurveCm(shapingLayer, P1, frontCurveStartHandle, frontCurveEndHandle, P13TopLeft, { name: "Front Waist Curve" });
+    drawConstructionCurve(shapingLayer, P1, frontCurveStartHandle, frontCurveEndHandle, P13TopLeft, { name: "Front Waist Curve" }, true);
   }
 
   if (P13TopRight && P11) {
     const frontHipHandle = { x: P11.x - 0.6, y: P11.y - 0.5 };
-    drawCurveCm(shapingLayer, P13TopRight, { x: P13TopRight.x, y: P13TopRight.y }, frontHipHandle, P11, {
-      name: "Front Hip Transition",
-    });
+    drawConstructionCurve(
+      shapingLayer,
+      P13TopRight,
+      { x: P13TopRight.x, y: P13TopRight.y },
+      frontHipHandle,
+      P11,
+      {
+        name: "Front Hip Transition",
+      },
+      true
+    );
   }
 
   if (!hasSecondBackDart && P12 && P14UpperLeft) {
     const backCurveStartHandle = { x: P12.x + 0.4, y: P12.y - 0.4 };
     const backCurveEndHandle = { x: P14UpperLeft.x - 2.95, y: P14UpperLeft.y };
-    drawCurveCm(shapingLayer, P12, backCurveStartHandle, backCurveEndHandle, P14UpperLeft, { name: "Back Waist Curve" });
+    drawConstructionCurve(shapingLayer, P12, backCurveStartHandle, backCurveEndHandle, P14UpperLeft, { name: "Back Waist Curve" }, true);
     if (P14UpperRight && P4) {
       const backRightHandle = { x: P14UpperRight.x + 0.5, y: P14UpperRight.y };
       const backCfHandle = { x: P4.x - 4.25, y: P4.y };
-      drawCurveCm(shapingLayer, P14UpperRight, backRightHandle, backCfHandle, P4, { name: "Back Waist Transition" });
+      drawConstructionCurve(shapingLayer, P14UpperRight, backRightHandle, backCfHandle, P4, { name: "Back Waist Transition" }, true);
     }
   } else if (hasSecondBackDart) {
     if (P12 && P15Left) {
       const backCurveStartHandle2 = { x: P12.x + 0.4, y: P12.y - 0.4 };
       const backCurveEndHandle2 = { x: P15Left.x - 0.6, y: P15Left.y };
-      drawCurveCm(shapingLayer, P12, backCurveStartHandle2, backCurveEndHandle2, P15Left, { name: "Back Waist Curve" });
+      drawConstructionCurve(shapingLayer, P12, backCurveStartHandle2, backCurveEndHandle2, P15Left, { name: "Back Waist Curve" }, true);
     }
     if (P15Right && P14UpperLeft) {
       const startHandle = { x: P15Right.x + 0.6, y: P15Right.y };
       const endHandle = { x: P14UpperLeft.x - 2.4, y: P14UpperLeft.y };
-      drawCurveCm(shapingLayer, P15Right, startHandle, endHandle, P14UpperLeft, { name: "Back Waist Transition" });
+      drawConstructionCurve(shapingLayer, P15Right, startHandle, endHandle, P14UpperLeft, { name: "Back Waist Transition" }, true);
     }
     if (patternLayer && P4 && P14UpperRight) {
       drawLineCm(patternLayer, P4, P14UpperRight, { name: "Back Waist CF Segment" });
@@ -5237,7 +5287,7 @@ function applyLayerVisibility(layers, params) {
   const showGuides = params.showGuides !== false;
   const showMarkers = params.showMarkers !== false;
   const guideDisplay = showGuides ? null : "none";
-  [layers.foundation, layers.foundationFront, layers.foundationBack, layers.pattern].forEach((layer) => {
+  [layers.foundation, layers.foundationFront, layers.foundationBack, layers.dartsParent, layers.dartsLayer, layers.shapingLayer].forEach((layer) => {
     if (!layer) return;
     if (guideDisplay) {
       layer.setAttribute("display", guideDisplay);
