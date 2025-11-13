@@ -3496,7 +3496,7 @@ function generateHofenbitzerBasicSkirt(params = {}) {
     drawLineCm(dartsLayer, P10, P12, { name: "Side Dart Right" });
     const hipHandlePoint = { x: P7.x, y: P9.y + 10.5 };
     drawCurveCm(shapingLayer, P11, { x: P11.x, y: P11.y }, hipHandlePoint, P9, { name: "Front Hip Curve" });
-    drawCurveCm(shapingLayer, P12, hipHandlePoint, { x: P12.x, y: P12.y }, P9, { name: "Back Hip Curve" });
+    drawCurveCm(shapingLayer, P12, { x: P12.x, y: P12.y }, hipHandlePoint, P9, { name: "Back Hip Curve" });
   }
 
   const waistGuideLeft = { x: P10.x - 6, y: P10.y };
