@@ -429,8 +429,6 @@ body {
 .derived-label {
   font-size: 0.8rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: #475569;
 }
 

@@ -3332,11 +3332,17 @@ function generateHofenbitzerBasicSkirt(params = {}) {
     const labelPoint = { x: mid.x + normal.x, y: mid.y + normal.y };
     const svgPoint = toSvgCoords(labelPoint);
     const textEl = textNode(svgPoint.x, svgPoint.y, text, {
-      "font-size": 3,
-      fill: "#475569",
+      "font-size": 3.2,
+      fill: "#0f172a",
+      "font-weight": "600",
       "text-anchor": "middle",
     });
-    const angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
+    let angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
+    if (angleDeg < -90) {
+      angleDeg += 180;
+    } else if (angleDeg > 90) {
+      angleDeg -= 180;
+    }
     textEl.setAttribute("transform", `rotate(${angleDeg}, ${svgPoint.x}, ${svgPoint.y})`);
     labelsLayer.appendChild(textEl);
   }
