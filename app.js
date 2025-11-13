@@ -5354,6 +5354,7 @@ function clearPreviewContent() {
   if (target) {
     target.innerHTML = "";
   }
+  resetPreviewZoom();
 }
 
 function resetPreviewZoom() {
@@ -5365,7 +5366,6 @@ function resetPreviewZoom() {
   previewZoomState.translateY = 0;
   previewZoomState.pinchStartDistance = 0;
   previewZoomState.pinchStartScale = 1;
-  target.style.transformOrigin = "center center";
   applyPreviewTransform();
 }
 
@@ -5373,8 +5373,8 @@ function clampPreviewTranslation() {
   if (!preview || !previewViewport) return;
   const containerWidth = preview.clientWidth || 0;
   const containerHeight = preview.clientHeight || 0;
-  const contentWidth = previewViewport.scrollWidth || previewViewport.offsetWidth || containerWidth;
-  const contentHeight = previewViewport.scrollHeight || previewViewport.offsetHeight || containerHeight;
+  const contentWidth = previewViewport.offsetWidth || containerWidth;
+  const contentHeight = previewViewport.offsetHeight || containerHeight;
   const scaledWidth = contentWidth * previewZoomState.scale;
   const scaledHeight = contentHeight * previewZoomState.scale;
   const extraWidth = Math.max(0, scaledWidth - containerWidth);
@@ -5400,12 +5400,44 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
+function getPinchAnchor() {
+  if (!previewPointers.size || !preview) return null;
+  let sumX = 0;
+  let sumY = 0;
+  previewPointers.forEach((pointer) => {
+    sumX += pointer.relX;
+    sumY += pointer.relY;
+  });
+  const count = previewPointers.size;
+  return {
+    x: sumX / count,
+    y: sumY / count,
+  };
+}
+
+function adjustScaleAtPoint(requestedScale, anchor) {
+  const target = getPreviewTarget();
+  if (!target) return;
+  const previousScale = previewZoomState.scale;
+  const clampedScale = clamp(requestedScale, previewZoomState.minScale, previewZoomState.maxScale);
+  if (!anchor) {
+    anchor = {
+      x: (preview?.clientWidth || 0) / 2,
+      y: (preview?.clientHeight || 0) / 2,
+    };
+  }
+  previewZoomState.scale = clampedScale;
+  previewZoomState.translateX += (anchor.x) * (previousScale - clampedScale);
+  previewZoomState.translateY += (anchor.y) * (previousScale - clampedScale);
+  applyPreviewTransform();
+}
+
 function handlePreviewPointerDown(event) {
   if (!preview || event.pointerType !== "touch") return;
   const target = getPreviewTarget();
   if (!target) return;
   event.preventDefault();
-  const position = getRelativePointerPosition(event, target);
+  const position = getRelativePointerPosition(event, preview);
   previewPointers.set(event.pointerId, {
     clientX: event.clientX,
     clientY: event.clientY,
@@ -5418,7 +5450,6 @@ function handlePreviewPointerDown(event) {
   if (previewPointers.size === 2) {
     previewZoomState.pinchStartDistance = getPointerDistance();
     previewZoomState.pinchStartScale = previewZoomState.scale;
-    updatePreviewOrigin();
   }
 }
 
@@ -5431,7 +5462,7 @@ function handlePreviewPointerMove(event) {
   if (!target) return;
   const prevClientX = pointer.clientX;
   const prevClientY = pointer.clientY;
-  const position = getRelativePointerPosition(event, target);
+  const position = getRelativePointerPosition(event, preview);
   pointer.clientX = event.clientX;
   pointer.clientY = event.clientY;
   pointer.relX = position.x;
@@ -5444,15 +5475,10 @@ function handlePreviewPointerMove(event) {
     const distance = getPointerDistance();
     if (distance > 0 && previewZoomState.pinchStartDistance) {
       const scaleFactor = distance / previewZoomState.pinchStartDistance;
-      const clampedScale = clamp(
-        previewZoomState.pinchStartScale * scaleFactor,
-        previewZoomState.minScale,
-        previewZoomState.maxScale
-      );
-      previewZoomState.scale = clampedScale;
-      applyPreviewTransform();
+      const requestedScale = previewZoomState.pinchStartScale * scaleFactor;
+      const anchor = getPinchAnchor();
+      adjustScaleAtPoint(requestedScale, anchor);
     }
-    updatePreviewOrigin();
   } else {
     previewZoomState.translateX += event.clientX - prevClientX;
     previewZoomState.translateY += event.clientY - prevClientY;
@@ -5473,10 +5499,6 @@ function handlePreviewPointerUp(event) {
   if (previewPointers.size < 2) {
     previewZoomState.pinchStartDistance = 0;
     previewZoomState.pinchStartScale = previewZoomState.scale;
-    const target = getPreviewTarget();
-    if (target && previewPointers.size === 0) {
-      target.style.transformOrigin = "center center";
-    }
   }
 }
 
@@ -5486,36 +5508,17 @@ function handlePreviewWheel(event) {
   if (!target) return;
   event.preventDefault();
   const zoomDelta = event.deltaY < 0 ? 1.05 : 0.95;
-  const newScale = clamp(
-    previewZoomState.scale * zoomDelta,
-    previewZoomState.minScale,
-    previewZoomState.maxScale
-  );
-  previewZoomState.scale = newScale;
-  const rect = target.getBoundingClientRect();
-  const originX = rect.width ? ((event.clientX - rect.left) / rect.width) * 100 : 50;
-  const originY = rect.height ? ((event.clientY - rect.top) / rect.height) * 100 : 50;
-  target.style.transformOrigin = `${originX}% ${originY}%`;
-  applyPreviewTransform();
+  const requestedScale = previewZoomState.scale * zoomDelta;
+  const anchor = getRelativePointerPosition(event, preview);
+  adjustScaleAtPoint(requestedScale, anchor);
 }
 
 function getPointerDistance() {
   if (previewPointers.size < 2) return 0;
   const entries = Array.from(previewPointers.values()).slice(0, 2);
-  const dx = entries[0].relX - entries[1].relX;
-  const dy = entries[0].relY - entries[1].relY;
+  const dx = entries[0].clientX - entries[1].clientX;
+  const dy = entries[0].clientY - entries[1].clientY;
   return Math.hypot(dx, dy);
-}
-
-function updatePreviewOrigin() {
-  if (!previewViewport || previewPointers.size < 2) return;
-  const entries = Array.from(previewPointers.values()).slice(0, 2);
-  const rect = previewViewport.getBoundingClientRect();
-  const midX = (entries[0].relX + entries[1].relX) / 2;
-  const midY = (entries[0].relY + entries[1].relY) / 2;
-  const originX = rect.width ? (midX / rect.width) * 100 : 50;
-  const originY = rect.height ? (midY / rect.height) * 100 : 50;
-  previewViewport.style.transformOrigin = `${originX}% ${originY}%`;
 }
 
 function getRelativePointerPosition(event, target) {
