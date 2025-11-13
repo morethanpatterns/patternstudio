@@ -10,7 +10,7 @@ const MARKER_RADIUS_MM = 2.6;
 const LABEL_FONT_SIZE_MM = 4;
 const BACK_GAP_CM = 10;
 const BACK_OFFSET_IN = BACK_GAP_CM / 2.54;
-const SHARE_URL = "https://morethanpatterns.github.io/patternhub/webdrafts/index.html";
+const SHARE_URL = "https://studio.morethanpatterns.com/";
 const BUST_CUP_OFFSETS = {
   A: 0.875,
   B: 1.25,
