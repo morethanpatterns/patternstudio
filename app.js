@@ -3589,7 +3589,7 @@ function generateHofenbitzerBasicSkirt(params = {}) {
   }
 
   if (P13TopRight && P11) {
-    const frontHipHandle = { x: P11.x - 0.6, y: P11.y - 0.5 };
+    const frontHipHandle = { x: P11.x - 0.6, y: P11.y - 0.3 };
     drawConstructionCurve(
       shapingLayer,
       P13TopRight,
@@ -3604,7 +3604,7 @@ function generateHofenbitzerBasicSkirt(params = {}) {
   }
 
   if (!hasSecondBackDart && P12 && P14UpperLeft) {
-    const backCurveStartHandle = { x: P12.x + 0.4, y: P12.y - 0.4 };
+    const backCurveStartHandle = { x: P12.x + 0.4, y: P12.y - 0.2 };
     const backCurveEndHandle = { x: P14UpperLeft.x - 2.95, y: P14UpperLeft.y };
     drawConstructionCurve(shapingLayer, P12, backCurveStartHandle, backCurveEndHandle, P14UpperLeft, { name: "Back Waist Curve" }, true);
     if (P14UpperRight && P4) {
@@ -3614,7 +3614,7 @@ function generateHofenbitzerBasicSkirt(params = {}) {
     }
   } else if (hasSecondBackDart) {
     if (P12 && P15Left) {
-      const backCurveStartHandle2 = { x: P12.x + 0.4, y: P12.y - 0.4 };
+      const backCurveStartHandle2 = { x: P12.x + 0.4, y: P12.y - 0.2 };
       const backCurveEndHandle2 = { x: P15Left.x - 0.6, y: P15Left.y };
       drawConstructionCurve(shapingLayer, P12, backCurveStartHandle2, backCurveEndHandle2, P15Left, { name: "Back Waist Curve" }, true);
     }
