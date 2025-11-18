@@ -2994,7 +2994,7 @@ function generateHofenbitzerCasualBodice(params) {
     }
     if (point25) {
       registerPoint("25", point25, "25");
-      drawCasualLine(point11, point25, { dashed: true, name: "Back Side Straightening" });
+      drawGuide(point11, point25, { dashed: true, name: "Back Side Straightening", back: true });
     }
 
     const point26 = point11
@@ -3197,9 +3197,10 @@ function generateHofenbitzerCasualBodice(params) {
     }
 
     if (hemLineStart && point14) {
-      drawCasualLine({ x: point6a ? point6a.x : point6.x, y: hipLineStart.y }, point19a || point14, {
+      drawSegment(guideLayer, { x: point6a ? point6a.x : point6.x, y: hipLineStart.y }, point19a || point14, {
         dashed: true,
         name: "Hem Line",
+        color: HOFENBITZER_GUIDE_COLOR,
       });
     }
 
@@ -3440,7 +3441,7 @@ function generateHofenbitzerCasualBodice(params) {
     if (point14 && point12) {
       drawFrontLine(point14, point12, { name: "14-12", dashed: true });
     }
-    drawCasualLine(hemLineStart, hemEnd, { name: "Hem Line", dashed: true });
+    drawSegment(guideLayer, hemLineStart, hemEnd, { name: "Hem Line", dashed: true, color: HOFENBITZER_GUIDE_COLOR });
 
     const frontBustEnd = point12 ? { x: point12.x, y: bustLineY } : bustEnd;
     const frontBustLinePath = frontBustEnd
