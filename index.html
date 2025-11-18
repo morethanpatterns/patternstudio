@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <title>Pattern Studio</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' ry='12' fill='%232563eb'/%3E%3Ctext x='50%' y='58%' text-anchor='middle' font-size='36' font-family='Arial, sans-serif' fill='white'%3EP%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,6 +16,7 @@
             <option value="aldrich">Aldrich's Close Fitting Bodice</option>
             <option value="hofenbitzerCasual">Hofenbitzer's Casual Bodice</option>
             <option value="hofenbitzerBasicSkirt">Hofenbitzer's Basic Skirt</option>
+            <option value="hofenbitzerWideSleeve">Hofenbitzer's Wide Basic Sleeve</option>
             <optgroup label="Almost Ready">
               <option value="hofenbitzer-trouser" disabled>Hofenbitzer's Standard Trouser (Coming Soon)</option>
               <option value="hofenbitzer-contoured-bodice" disabled>Hofenbitzer's Contoured Bodice (Coming Soon)</option>
@@ -291,6 +293,62 @@
             <p>Duplicate to compare variations side-by-side.</p>
           </header>
           <div id="draftListHofenbitzer" class="draft-panel__list">
+            <p class="draft-panel__empty">No duplicates yet.</p>
+          </div>
+        </section>
+      </div>
+
+      <div id="hofenbitzerSleeveControls" class="pattern-section" hidden>
+        <h1>Hofenbitzer's Wide Basic Sleeve <span class="beta-tag">Beta</span></h1>
+        <p class="hint">All measurements are in centimetres. Defaults reference the size 38 sleeve block from Hofenbitzer's book – please have it handy when entering your own measurements.</p>
+        <p class="note">Need help or want to request a draft? Join the <a href="https://discord.gg/CFvfXfZUTa" target="_blank" rel="noopener">Discord community</a>.</p>
+
+        <div class="hof-card">
+          <h2>Measurements</h2>
+          <div id="hofSleeveMeasurements" class="hofenbitzer-measure-grid"></div>
+          <div class="derived-panel" id="hofSleeveDerivedPanel">
+            <div class="derived-field">
+              <span class="derived-label">Cap Line</span>
+              <span class="derived-value" id="hofSleeveDerivedCapLine">-- cm</span>
+            </div>
+            <div class="derived-field">
+              <span class="derived-label">Sleeve Width</span>
+              <span class="derived-value" id="hofSleeveDerivedWidth">-- cm</span>
+            </div>
+            <div class="derived-field">
+              <span class="derived-label">Elbow Width</span>
+              <span class="derived-value" id="hofSleeveDerivedElbow">-- cm</span>
+            </div>
+            <div class="derived-field">
+              <span class="derived-label">Sleeve Cap</span>
+              <span class="derived-value" id="hofSleeveDerivedCap">-- cm</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="toggles">
+          <label><input id="hofSleeveShowGuides" type="checkbox" checked>Show Construction Lines</label>
+          <label><input id="hofSleeveShowMarkers" type="checkbox" checked>Show Markers and Numbers</label>
+        </div>
+
+        <div class="actions">
+          <button id="downloadHofenbitzerSleeve" type="button">Download Current (SVG)</button>
+          <button id="downloadAllHofenbitzerSleeve" type="button">Download All (SVG)</button>
+        </div>
+
+        <div class="actions secondary">
+          <button id="duplicateDraftHofenbitzerSleeve" type="button" class="link-button secondary">Duplicate Draft</button>
+          <button id="manageLayersHofenbitzerSleeve" type="button" class="link-button secondary">Manage Layers</button>
+          <button id="shareHofenbitzerSleeve" type="button" class="link-button">Share Link</button>
+          <a class="link-button secondary" href="mailto:morethanpatterns@yahoo.com?subject=PatternKit%20Feedback" rel="noopener">Feedback</a>
+        </div>
+
+        <section class="draft-panel" id="draftPanelHofenbitzerSleeve" aria-label="Saved drafts">
+          <header class="draft-panel__header">
+            <h3>Draft Versions</h3>
+            <p>Duplicate to compare variations side-by-side.</p>
+          </header>
+          <div id="draftListHofenbitzerSleeve" class="draft-panel__list">
             <p class="draft-panel__empty">No duplicates yet.</p>
           </div>
         </section>

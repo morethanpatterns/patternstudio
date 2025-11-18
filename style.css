@@ -411,8 +411,8 @@ body {
 
 .derived-panel {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px 16px;
   margin: 24px 0;
   padding: 16px;
   border: 1px solid #dbeafe;

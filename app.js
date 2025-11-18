@@ -184,6 +184,42 @@ const HOFENBITZER_SECONDARY_MEASUREMENTS = [
   { id: "ShoulderDifference", label: "Shoulder Diff. (deg)", defaultValue: HOFENBITZER_DEFAULTS.ShoulderDifference, step: 0.1 },
 ];
 
+const HOFENBITZER_SLEEVE_DEFAULTS = Object.freeze({
+  AhH: 20,
+  AhHEase: 0,
+  fAh: 19.6,
+  bAh: 23.9,
+  AhC: null,
+  fAhEase: 0,
+  bAhEase: 0,
+  AL: 60,
+  ALEase: 0,
+  upAC: 28,
+  upACEase: 9,
+  WrC: 16,
+  WrCEase: 6,
+  CapEasePct: 3,
+  CapEasePctEase: 0,
+  CapLineEase: 0,
+  fAP: 4.5,
+  bAP: 8.6,
+});
+
+const HOFENBITZER_SLEEVE_MEASUREMENTS = [
+  { id: "AhH", label: "AhH", easeKey: "AhHEase", derivedKey: "AhHConstruction", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.AhH },
+  { id: "fAh", label: "fAh", easeKey: "fAhEase", derivedKey: "fAhConstruction", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.fAh },
+  { id: "bAh", label: "bAh", easeKey: "bAhEase", derivedKey: "bAhConstruction", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.bAh },
+  { id: "AhC", label: "AhC", derivedKey: "AhCConstruction", readOnly: true },
+  { id: "AL", label: "AL", easeKey: "ALEase", derivedKey: "SlL", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.AL },
+  { id: "upAC", label: "upAC", easeKey: "upACEase", derivedKey: "SlW", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.upAC },
+  { id: "WrC", label: "WrC", easeKey: "WrCEase", derivedKey: "HeW", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.WrC },
+  { id: "CapEasePct", label: "Cap Ease (%)", derivedKey: "CapEaseCm", derivedLabel: "Cap Ease (cm)", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.CapEasePct, hasEase: false },
+  { id: "CapC", label: "CapC", derivedKey: "CapC", readOnly: true, hasEase: false },
+  { id: "CapLineEase", label: "Cap Line Ease", derivedKey: "CapLineEase", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.CapLineEase },
+  { id: "fAP", label: "fAP", derivedKey: "fAPFinal", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.fAP, hasEase: false },
+  { id: "bAP", label: "bAP", derivedKey: "bAPFinal", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.bAP, hasEase: false },
+];
+
 const HOFENBITZER_SKIRT_DEFAULTS = Object.freeze({
   HiC: 97,
   WaC: 72,
@@ -211,6 +247,12 @@ const hofenbitzerUi = {
   secondaryRows: {},
   fitSelect: null,
   derivedOutputs: null,
+};
+const hofSleeveUi = {
+  initialized: false,
+  initializing: false,
+  rows: {},
+  lastMeasured: {},
 };
 const hofSkirtUi = {
   initialized: false,
@@ -664,6 +706,205 @@ function initHofSkirtControls() {
   hofSkirtUi.initialized = true;
 }
 
+function computeHofenbitzerSleeveDerived(data = {}) {
+  const toNumber = (value) => {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  const derived = {};
+  const ahh = toNumber(data.AhH);
+  derived.AhHConstruction = ahh + toNumber(data.AhHEase);
+
+  const fAh = toNumber(data.fAh);
+  const bAh = toNumber(data.bAh);
+  derived.fAhConstruction = fAh + toNumber(data.fAhEase);
+  derived.bAhConstruction = bAh + toNumber(data.bAhEase);
+  const manualAhC =
+    data.AhC !== null && data.AhC !== undefined && data.AhC !== ""
+      ? toNumber(data.AhC)
+      : fAh + bAh;
+  derived.AhC = manualAhC;
+  derived.AhCConstruction = manualAhC + toNumber(data.AhCEase);
+
+  const al = toNumber(data.AL);
+  derived.SlL = al + toNumber(data.ALEase);
+  const upper = toNumber(data.upAC);
+  derived.SlW = upper + toNumber(data.upACEase);
+  const wrist = toNumber(data.WrC);
+  derived.HeW = wrist + toNumber(data.WrCEase);
+  derived.CapLineEase = toNumber(data.CapLineEase);
+
+  derived.CapEasePct = toNumber(data.CapEasePct);
+  derived.CapEasePctConstruction = derived.CapEasePct;
+  derived.CapEaseCm = (derived.AhCConstruction * derived.CapEasePctConstruction) / 100;
+  derived.CapC = derived.AhCConstruction + derived.CapEaseCm;
+  derived.fAP = toNumber(data.fAP);
+  derived.bAP = toNumber(data.bAP);
+  derived.fAPFinal = derived.fAP;
+  derived.bAPFinal = derived.bAP;
+  return derived;
+}
+
+function initHofSleeveControls() {
+  if (hofSleeveUi.initialized || hofSleeveUi.initializing) return;
+  hofSleeveUi.initializing = true;
+  const host = document.getElementById("hofSleeveMeasurements");
+  if (!host) {
+    hofSleeveUi.initializing = false;
+    return;
+  }
+  hofSleeveUi.rows = {};
+  host.innerHTML = "";
+
+  HOFENBITZER_SLEEVE_MEASUREMENTS.forEach((def) => {
+    const row = document.createElement("section");
+    row.className = "measure-block";
+    const rowContent = document.createElement("div");
+    rowContent.className = "measure-row";
+    row.appendChild(rowContent);
+
+    let measurementInput = null;
+    if (def.readOnly) {
+      const emptyMeasurement = document.createElement("input");
+      emptyMeasurement.type = "text";
+      emptyMeasurement.readOnly = true;
+      emptyMeasurement.value = "--";
+      emptyMeasurement.tabIndex = -1;
+      rowContent.appendChild(createHofenbitzerField(def.label, emptyMeasurement, { empty: true }));
+    } else {
+      measurementInput = document.createElement("input");
+      measurementInput.type = "number";
+      measurementInput.step = def.step || 0.1;
+      if (Number.isFinite(def.defaultValue)) {
+        measurementInput.value = formatHofenbitzerValue(def.defaultValue);
+      }
+      measurementInput.inputMode = "decimal";
+      rowContent.appendChild(createHofenbitzerField(def.label, measurementInput));
+    }
+
+    let easeInput = null;
+    if (def.easeKey) {
+      easeInput = document.createElement("input");
+      easeInput.type = "number";
+      easeInput.step = def.easeStep || 0.1;
+      const easeDefault =
+        def.easeDefault != null ? def.easeDefault : HOFENBITZER_SLEEVE_DEFAULTS[def.easeKey];
+      if (Number.isFinite(easeDefault)) {
+        easeInput.value = formatHofenbitzerValue(easeDefault);
+      }
+      easeInput.inputMode = "decimal";
+      rowContent.appendChild(createHofenbitzerField("Ease", easeInput));
+    } else {
+      const emptyEase = document.createElement("input");
+      emptyEase.type = "text";
+      emptyEase.readOnly = true;
+      emptyEase.value = "--";
+      emptyEase.tabIndex = -1;
+      rowContent.appendChild(createHofenbitzerField("Ease", emptyEase, { empty: true }));
+    }
+
+    let finalOutput = null;
+    if (def.derivedKey) {
+      const finalField = createHofenbitzerFinalField(def.derivedLabel || def.label || "Final", "--");
+      rowContent.appendChild(finalField.field);
+      finalOutput = finalField.output;
+    } else {
+      const emptyFinal = document.createElement("input");
+      emptyFinal.type = "text";
+      emptyFinal.readOnly = true;
+      emptyFinal.value = "--";
+      emptyFinal.tabIndex = -1;
+      rowContent.appendChild(createHofenbitzerField("Final", emptyFinal, { empty: true }));
+    }
+
+    const ref = {
+      def,
+      measurementInput,
+      easeInput,
+      finalOutput,
+    };
+    hofSleeveUi.rows[def.id] = ref;
+
+    const onChange = () => {
+      updateHofSleeveDerivedFields();
+      scheduleRegen();
+    };
+    if (measurementInput) measurementInput.addEventListener("input", onChange);
+    if (easeInput) easeInput.addEventListener("input", onChange);
+    host.appendChild(row);
+  });
+
+  hofSleeveUi.initialized = true;
+  hofSleeveUi.initializing = false;
+  hofSleeveUi.derivedOutputs = {
+    capLineEl: document.getElementById("hofSleeveDerivedCapLine"),
+    widthEl: document.getElementById("hofSleeveDerivedWidth"),
+    elbowEl: document.getElementById("hofSleeveDerivedElbow"),
+    capEl: document.getElementById("hofSleeveDerivedCap"),
+  };
+  hofSleeveUi.lastMeasured = {};
+  updateHofSleeveDerivedFields();
+}
+
+function collectHofSleeveParams(skipInit = false) {
+  if (!skipInit) initHofSleeveControls();
+  else if (!hofSleeveUi.initialized && !hofSleeveUi.initializing) initHofSleeveControls();
+  const params = {};
+  HOFENBITZER_SLEEVE_MEASUREMENTS.forEach((def) => {
+    const ref = hofSleeveUi.rows[def.id];
+    if (ref?.measurementInput) {
+      const measurementValue = Number.parseFloat(ref.measurementInput.value);
+      params[def.id] = Number.isFinite(measurementValue)
+        ? measurementValue
+        : HOFENBITZER_SLEEVE_DEFAULTS[def.id];
+    } else if (Object.prototype.hasOwnProperty.call(HOFENBITZER_SLEEVE_DEFAULTS, def.id)) {
+      params[def.id] = HOFENBITZER_SLEEVE_DEFAULTS[def.id];
+    }
+    if (def.easeKey && ref?.easeInput) {
+      const easeValue = Number.parseFloat(ref.easeInput.value);
+      params[def.easeKey] = Number.isFinite(easeValue)
+        ? easeValue
+        : HOFENBITZER_SLEEVE_DEFAULTS[def.easeKey];
+    }
+  });
+  params.showGuides = getCheckbox("hofSleeveShowGuides", true);
+  params.showMarkers = getCheckbox("hofSleeveShowMarkers", true);
+  return params;
+}
+
+function updateHofSleeveDerivedFields() {
+  const snapshot = collectHofSleeveParams(true);
+  const derived = computeHofenbitzerSleeveDerived(snapshot);
+  hofSleeveUi.derivedOutputs = hofSleeveUi.derivedOutputs || {};
+  const { widthEl, elbowEl, capEl, capLineEl } = hofSleeveUi.derivedOutputs;
+  HOFENBITZER_SLEEVE_MEASUREMENTS.forEach((def) => {
+    if (!def.derivedKey) return;
+    const ref = hofSleeveUi.rows[def.id];
+    if (!ref || !ref.finalOutput) return;
+    const value = derived[def.derivedKey];
+    ref.finalOutput.value = formatHofenbitzerValue(value);
+  });
+  const measured = hofSleeveUi.lastMeasured || {};
+  const capLineVal =
+    measured.CapLineCm != null && Number.isFinite(measured.CapLineCm)
+      ? measured.CapLineCm
+      : (derived.SlW || 0) + (derived.CapLineEase || 0);
+  const widthVal =
+    measured.SleeveWidthMeasured != null && Number.isFinite(measured.SleeveWidthMeasured)
+      ? measured.SleeveWidthMeasured
+      : derived.SlW;
+  const elbowVal =
+    measured.ElbowWidthMeasured != null && Number.isFinite(measured.ElbowWidthMeasured)
+      ? measured.ElbowWidthMeasured
+      : derived.HeW;
+  const capVal = measured.CapCurveLengthCm;
+  if (capLineEl)
+    capLineEl.textContent = Number.isFinite(capLineVal) ? `${formatHofenbitzerValue(capLineVal)} cm` : "-- cm";
+  if (widthEl) widthEl.textContent = Number.isFinite(widthVal) ? `${formatHofenbitzerValue(widthVal)} cm` : "-- cm";
+  if (elbowEl) elbowEl.textContent = Number.isFinite(elbowVal) ? `${formatHofenbitzerValue(elbowVal)} cm` : "-- cm";
+  if (capEl) capEl.textContent = Number.isFinite(capVal) ? `${formatHofenbitzerValue(capVal)} cm` : "-- cm";
+}
+
 function createSvgRoot(w = PAGE_WIDTH_MM, h = PAGE_HEIGHT_MM) {
   const svg = document.createElementNS(NS, "svg");
   svg.setAttribute("xmlns", NS);
@@ -702,6 +943,9 @@ function textNode(x, y, str, attrs = {}) {
   t.setAttribute("x", x);
   t.setAttribute("y", y);
   t.setAttribute("font-size", attrs["font-size"] || LABEL_FONT_SIZE_MM);
+  if (!Object.prototype.hasOwnProperty.call(attrs, "fill")) {
+    t.setAttribute("fill", "#111");
+  }
   t.textContent = str;
   Object.entries(attrs).forEach(([k, v]) => {
     if (k !== "font-size") t.setAttribute(k, v);
@@ -951,8 +1195,8 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
     circle.setAttribute("cx", svgCoords.x);
     circle.setAttribute("cy", svgCoords.y);
     circle.setAttribute("r", MARKER_RADIUS_MM);
-    circle.setAttribute("fill", "#0f172a");
-    circle.setAttribute("stroke", "#0f172a");
+    circle.setAttribute("fill", "#000");
+    circle.setAttribute("stroke", "#000");
     circle.setAttribute("stroke-width", 0.2);
     layers.markers.appendChild(circle);
     bounds.include(svgCoords.x - MARKER_RADIUS_MM, svgCoords.y - MARKER_RADIUS_MM);
@@ -1547,8 +1791,8 @@ function generateAldrich(params) {
     circle.setAttribute("cx", anchor.x);
     circle.setAttribute("cy", anchor.y);
     circle.setAttribute("r", radius);
-    circle.setAttribute("fill", "#111");
-    circle.setAttribute("stroke", "#111");
+    circle.setAttribute("fill", "#000");
+    circle.setAttribute("stroke", "#000");
     circle.setAttribute("stroke-width", 0.25);
     layers.markers.appendChild(circle);
 
@@ -2163,6 +2407,37 @@ function createHofSkirtLayerStack(svg) {
     numbers,
   };
 }
+
+function createHofSleeveLayerStack(svg) {
+  const foundation = layer(svg, "Basic Frame", { asLayer: true, prefix: "hofsleeve" });
+  const capShaping = layer(svg, "Cap Shaping", { asLayer: true, prefix: "hofsleeve" });
+  const sleeveBlock = layer(svg, "Sleeve Block", { asLayer: true, prefix: "hofsleeve" });
+  const labelsParent = layer(svg, "Numbers, Markers & Labels", { asLayer: true, prefix: "hofsleeve" });
+  const labels = layer(labelsParent, "Labels", { asLayer: true, prefix: "hofsleeve" });
+  const markers = layer(labelsParent, "Markers", { asLayer: true, prefix: "hofsleeve" });
+  const numbers = layer(labelsParent, "Numbers", { asLayer: true, prefix: "hofsleeve" });
+  return {
+    foundation,
+    capShaping,
+    sleeveBlock,
+    labelsParent,
+    labels,
+    markers,
+    numbers,
+    front: sleeveBlock,
+    back: sleeveBlock,
+  };
+}
+
+const HOF_SLEEVE_DASH = "8.8 4.2";
+const HOF_SLEEVE_ARC_TARGET_CM = 20;
+const HOF_SLEEVE_ARC_MAX_CM = 22;
+const HOF_SLEEVE_ARC_MIN_SWEEP = 0.01;
+const HOF_SLEEVE_ARC_MIN_START = -Math.PI / 2;
+const HOF_SLEEVE_ARC_END = Math.PI / 2;
+const HOF_SLEEVE_ARC_UP_RATIO = 3;
+const HOF_SLEEVE_ARC_DOWN_RATIO = 2;
+const HOF_SLEEVE_LABEL_OFFSET_CM = 0.5;
 
 function generateHofenbitzerCasualBodice(params) {
   const svg = createSvgRoot();
@@ -3238,6 +3513,1103 @@ function generateHofenbitzerCasualBodice(params) {
   return svg;
 }
 
+function generateHofenbitzerWideBasicSleeve(params = {}) {
+  const svg = createSvgRoot();
+  svg.appendChild(
+    Object.assign(document.createElementNS(NS, "metadata"), {
+      textContent: JSON.stringify({
+        tool: "HofenbitzerWideBasicSleeveWeb",
+        units: "cm",
+        source: "Hofenbitzer/Sleeve/wide_basic_sleeve.jsx",
+      }),
+    })
+  );
+
+  const layers = createHofSleeveLayerStack(svg);
+  const bounds = createBounds();
+  const origin = { x: PAGE_MARGIN_MM * 2.5, y: PAGE_MARGIN_MM * 2.5 };
+  const cmToMm = (value) => value * CM_TO_MM;
+  const dashValue = HOF_SLEEVE_DASH;
+  const derived = computeHofenbitzerSleeveDerived(params);
+  const baselineLengthCm = Math.max((derived.SlW || 0) + (derived.CapLineEase || 0), 0);
+  derived.CapLineCm = baselineLengthCm;
+  if (!hofSleeveUi.lastMeasured) hofSleeveUi.lastMeasured = {};
+  hofSleeveUi.lastMeasured.CapLineCm = baselineLengthCm;
+
+  function toSvgCoords(pt) {
+    const mapped = {
+      x: origin.x + (pt[0] || 0) * CM_TO_MM,
+      y: origin.y - (pt[1] || 0) * CM_TO_MM,
+    };
+    bounds.include(mapped.x, mapped.y);
+    return mapped;
+  }
+
+  function drawLineCm(target, start, end, opts = {}) {
+    if (!target || !start || !end) return null;
+    const s = toSvgCoords(start);
+    const e = toSvgCoords(end);
+    const attrs = {
+      fill: "none",
+      stroke: opts.color || "#111111",
+      "stroke-width": opts.width || 0.6,
+      "stroke-linecap": "butt",
+    };
+    if (opts.dashed) {
+      attrs["stroke-dasharray"] = opts.dash || dashValue;
+    }
+    if (opts.name) {
+      attrs["data-name"] = opts.name;
+    }
+    const lineEl = path(`M ${s.x} ${s.y} L ${e.x} ${e.y}`, attrs);
+    target.appendChild(lineEl);
+    if (opts.labelLayer && opts.labelText) {
+      addLineLabel(opts.labelLayer, start, end, opts.labelText, opts.labelOffsetCm, opts.labelSide);
+    }
+    return lineEl;
+  }
+
+  function drawCurveCm(target, start, startHandle, endHandle, end, opts = {}) {
+    if (!target || !start || !end) return null;
+    const s = toSvgCoords(start);
+    const c1 = toSvgCoords(startHandle || start);
+    const c2 = toSvgCoords(endHandle || end);
+    const e = toSvgCoords(end);
+    const attrs = {
+      fill: "none",
+      stroke: opts.color || "#111111",
+      "stroke-width": opts.width || 0.6,
+      "stroke-linecap": "butt",
+    };
+    if (opts.dashed) {
+      attrs["stroke-dasharray"] = opts.dash || dashValue;
+    }
+    if (opts.name) {
+      attrs["data-name"] = opts.name;
+    }
+    const curveEl = path(`M ${s.x} ${s.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${e.x} ${e.y}`, attrs);
+    target.appendChild(curveEl);
+    if (opts.labelLayer && opts.labelText) {
+      addLineLabel(opts.labelLayer, start, end, opts.labelText, opts.labelOffsetCm, opts.labelSide);
+    }
+    return curveEl;
+  }
+
+  function addLineLabel(targetLayer, start, end, text, offsetCm = HOF_SLEEVE_LABEL_OFFSET_CM, side = 1) {
+    if (!targetLayer || !start || !end || !text) return;
+    const startSvg = toSvgCoords(start);
+    const endSvg = toSvgCoords(end);
+    const dx = endSvg.x - startSvg.x;
+    const dy = endSvg.y - startSvg.y;
+    const length = Math.hypot(dx, dy) || 1;
+    const mid = { x: (startSvg.x + endSvg.x) / 2, y: (startSvg.y + endSvg.y) / 2 };
+    const normal = {
+      x: (-dy / length) * offsetCm * CM_TO_MM * side,
+      y: (dx / length) * offsetCm * CM_TO_MM * side,
+    };
+    const labelPoint = { x: mid.x + normal.x, y: mid.y + normal.y };
+    const textEl = textNode(labelPoint.x, labelPoint.y, text, {
+      "font-size": 3.2,
+      fill: "#0f172a",
+      "font-weight": "600",
+      "text-anchor": "middle",
+    });
+    let angleDeg = (Math.atan2(dy, dx) * 180) / Math.PI;
+    if (angleDeg < -90) {
+      angleDeg += 180;
+    } else if (angleDeg > 90) {
+      angleDeg -= 180;
+    }
+    textEl.setAttribute("transform", `rotate(${angleDeg}, ${labelPoint.x}, ${labelPoint.y})`);
+    targetLayer.appendChild(textEl);
+    bounds.include(labelPoint.x, labelPoint.y);
+  }
+
+  function placeMarker(point, label) {
+    if (!layers.markers || !point) return;
+    const svgPoint = toSvgCoords(point);
+    const circle = document.createElementNS(NS, "circle");
+    circle.setAttribute("cx", svgPoint.x);
+    circle.setAttribute("cy", svgPoint.y);
+    circle.setAttribute("r", cmToMm(HOFENBITZER_MARKER_RADIUS_CM));
+    circle.setAttribute("fill", "#000");
+    circle.setAttribute("stroke", "#000");
+    layers.markers.appendChild(circle);
+    if (layers.numbers && (label || label === 0)) {
+      const numberNode = textNode(svgPoint.x, svgPoint.y + 1, String(label), {
+        "font-size": 3,
+        fill: "#ffffff",
+        "text-anchor": "middle",
+        "font-weight": "600",
+      });
+      layers.numbers.appendChild(numberNode);
+    }
+  }
+
+  function drawDashedLine(target, start, end, opts = {}) {
+    return drawLineCm(target, start, end, { ...opts, dashed: true });
+  }
+
+  function drawSolidLine(target, start, end, opts = {}) {
+    return drawLineCm(target, start, end, { ...opts, dashed: false });
+  }
+
+  function drawArcPath(targetLayer, arcInfo) {
+    if (!targetLayer || !arcInfo || !arcInfo.startPoint || !arcInfo.endPoint) return null;
+    return drawCurveCm(
+      targetLayer,
+      arcInfo.startPoint,
+      arcInfo.startHandle || arcInfo.startPoint,
+      arcInfo.endHandle || arcInfo.endPoint,
+      arcInfo.endPoint,
+      { name: "Arc" }
+    );
+  }
+
+  function drawBezierSegment(targetLayer, start, end, startHandle, endHandle, name) {
+    return drawCurveCm(targetLayer, start, startHandle, endHandle, end, { name, dashed: false });
+  }
+
+  function drawBezierChain(targetLayer, nodes, name) {
+    if (!targetLayer || !nodes || nodes.length < 2) return null;
+    const commands = [];
+    const first = nodes[0] || {};
+    const start = first.anchor || first;
+    const startSvg = toSvgCoords(start);
+    commands.push(`M ${startSvg.x} ${startSvg.y}`);
+    for (let i = 1; i < nodes.length; i += 1) {
+      const prev = nodes[i - 1] || {};
+      const curr = nodes[i] || {};
+      const p0 = prev.anchor || prev;
+      const c1 = prev.right || p0;
+      const c2 = curr.left || curr.anchor || curr;
+      const p3 = curr.anchor || curr;
+      const c1Svg = toSvgCoords(c1);
+      const c2Svg = toSvgCoords(c2);
+      const endSvg = toSvgCoords(p3);
+      commands.push(`C ${c1Svg.x} ${c1Svg.y} ${c2Svg.x} ${c2Svg.y} ${endSvg.x} ${endSvg.y}`);
+    }
+    const pathEl = path(commands.join(" "), {
+      fill: "none",
+      stroke: "#111111",
+      "stroke-width": 0.6,
+      "stroke-linecap": "butt",
+    });
+    if (name) pathEl.setAttribute("data-name", name);
+    targetLayer.appendChild(pathEl);
+    return pathEl;
+  }
+
+  function pointDistanceCm(ptA, ptB) {
+    if (!ptA || !ptB) return null;
+    const dx = ptA[0] - ptB[0];
+    const dy = ptA[1] - ptB[1];
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    return Number.isFinite(dist) ? dist : null;
+  }
+
+  function midpoint(a, b) {
+    if (!a || !b) return null;
+    return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  }
+
+  function normalizeVector(vec) {
+    if (!vec) return [1, 0];
+    const len = Math.hypot(vec[0], vec[1]);
+    if (!Number.isFinite(len) || len === 0) return [1, 0];
+    return [vec[0] / len, vec[1] / len];
+  }
+
+  function ensureRightFacing(vec) {
+    if (!vec) return [1, 0];
+    if (vec[0] < 0 || (Math.abs(vec[0]) < 0.00001 && vec[1] < 0)) {
+      return [-vec[0], -vec[1]];
+    }
+    return vec;
+  }
+
+  function buildLineLabelOptions(name, lengthCm, labelsLayer) {
+    if (!labelsLayer) return { name };
+    const value = Number.isFinite(lengthCm) && lengthCm > 0 ? formatHofenbitzerValue(lengthCm) : "-";
+    return {
+      name,
+      labelLayer: labelsLayer,
+      labelText: `${name} (${value} cm)`,
+      labelOffsetCm: HOF_SLEEVE_LABEL_OFFSET_CM,
+    };
+  }
+
+  function addNotchOnPath(startPt, endPt, startHandle, endHandle, distanceCm, targetLayer, notchName, offsetNormalCm) {
+    if (!startPt || !endPt || !targetLayer) return null;
+    const distance = distanceCm || 0;
+    if (!Number.isFinite(distance) || distance <= 0) return null;
+    const totalLen = approximateBezierLength(startPt, startHandle || startPt, endHandle || endPt, endPt);
+    if (!Number.isFinite(totalLen) || totalLen <= 0) return null;
+    const clampedDist = Math.min(distance, totalLen);
+    const t = findParameterForLength(startPt, startHandle || startPt, endHandle || endPt, endPt, clampedDist, totalLen);
+    if (!Number.isFinite(t)) return null;
+    const point = evaluateBezierPoint(startPt, startHandle || startPt, endHandle || endPt, endPt, t);
+    const tangent = evaluateBezierTangent(startPt, startHandle || startPt, endHandle || endPt, endPt, t);
+    const norm = normalizeVector([-tangent[1], tangent[0]]);
+    const offset = offsetNormalCm || 0;
+    const basePoint = [point[0] + norm[0] * offset, point[1] + norm[1] * offset];
+    drawNotchAtPoint(targetLayer, basePoint, norm, notchName);
+    return { point: basePoint, normal: norm };
+  }
+
+  function drawNotchAtPoint(layer, center, normal, notchName) {
+    if (!layer || !center || !normal) return;
+    const notchHalf = 0.25;
+    const notchStart = [center[0] - normal[0] * notchHalf, center[1] - normal[1] * notchHalf];
+    const notchEnd = [center[0] + normal[0] * notchHalf, center[1] + normal[1] * notchHalf];
+    drawDashedLine(layer, notchStart, notchEnd, { name: notchName || "" });
+  }
+
+  function evaluateBezierPoint(p0, p1, p2, p3, t) {
+    const u = 1 - t;
+    const tt = t * t;
+    const uu = u * u;
+    const uuu = uu * u;
+    const ttt = tt * t;
+    const f0 = uuu;
+    const f1 = 3 * uu * t;
+    const f2 = 3 * u * tt;
+    const f3 = ttt;
+    return [
+      f0 * p0[0] + f1 * p1[0] + f2 * p2[0] + f3 * p3[0],
+      f0 * p0[1] + f1 * p1[1] + f2 * p2[1] + f3 * p3[1],
+    ];
+  }
+
+  function evaluateBezierTangent(p0, p1, p2, p3, t) {
+    const u = 1 - t;
+    const tt = t * t;
+    const uu = u * u;
+    const d0 = -3 * uu;
+    const d1 = 3 * uu - 6 * u * t;
+    const d2 = 6 * u * t - 3 * tt;
+    const d3 = 3 * tt;
+    return [
+      d0 * p0[0] + d1 * p1[0] + d2 * p2[0] + d3 * p3[0],
+      d0 * p0[1] + d1 * p1[1] + d2 * p2[1] + d3 * p3[1],
+    ];
+  }
+
+  function approximateBezierLength(p0, p1, p2, p3, uptoT = 1) {
+    let length = 0;
+    let prev = p0;
+    const span = uptoT;
+    const steps = Math.max(5, Math.round(40 * span));
+    for (let i = 1; i <= steps; i += 1) {
+      const t = span * (i / steps);
+      const pt = evaluateBezierPoint(p0, p1, p2, p3, t);
+      const dx = pt[0] - prev[0];
+      const dy = pt[1] - prev[1];
+      length += Math.sqrt(dx * dx + dy * dy);
+      prev = pt;
+    }
+    return length;
+  }
+
+  function findParameterForLength(p0, p1, p2, p3, targetLen, totalLen) {
+    if (targetLen <= 0) return 0;
+    if (targetLen >= totalLen) return 1;
+    let low = 0;
+    let high = 1;
+    for (let iter = 0; iter < 20; iter += 1) {
+      const mid = (low + high) / 2;
+      const len = approximateBezierLength(p0, p1, p2, p3, mid);
+      if (len < targetLen) {
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+    return (low + high) / 2;
+  }
+
+  function findHorizontalIntersection(a, b, targetY) {
+    if (!a || !b || targetY === null || targetY === undefined) return null;
+    const dy = b[1] - a[1];
+    if (Math.abs(dy) < 1e-6) return [a[0], targetY];
+    const t = (targetY - a[1]) / dy;
+    return [a[0] + (b[0] - a[0]) * t, targetY];
+  }
+
+  function projectHorizontalOntoLine(a, b, targetY) {
+    if (!a || !b || targetY === null || targetY === undefined) return null;
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    if (Math.abs(dy) < 1e-6) return [a[0], targetY];
+    const t = (targetY - a[1]) / dy;
+    const x = a[0] + dx * t;
+    return [x, targetY];
+  }
+
+  function evaluateBezierPointWithHandles(start, startHandle, endHandle, end, t) {
+    const p0 = start || [0, 0];
+    const p1 = startHandle || p0;
+    const p2 = endHandle || end || [0, 0];
+    const p3 = end || [0, 0];
+    return evaluateBezierPoint(p0, p1, p2, p3, t);
+  }
+
+  function findBezierHorizontalIntersection(start, startHandle, endHandle, end, targetY) {
+    if (!start || !end || targetY === null || targetY === undefined) return null;
+    const steps = 40;
+    let prevT = 0;
+    let prevPoint = evaluateBezierPointWithHandles(start, startHandle, endHandle, end, 0);
+    for (let i = 1; i <= steps; i += 1) {
+      const t = i / steps;
+      const point = evaluateBezierPointWithHandles(start, startHandle, endHandle, end, t);
+      if ((prevPoint[1] - targetY) * (point[1] - targetY) <= 0) {
+        const ratio = Math.abs((targetY - prevPoint[1]) / (point[1] - prevPoint[1] || 1));
+        return [
+          prevPoint[0] + (point[0] - prevPoint[0]) * ratio,
+          targetY,
+          prevT + (t - prevT) * ratio,
+        ];
+      }
+      prevT = t;
+      prevPoint = point;
+    }
+    return null;
+  }
+
+  function computePerpendicularProjection(lineStart, lineEnd, targetPoint) {
+    if (!lineStart || !lineEnd || !targetPoint) return null;
+    const dx = lineEnd[0] - lineStart[0];
+    const dy = lineEnd[1] - lineStart[1];
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq === 0) return null;
+    const t = ((targetPoint[0] - lineStart[0]) * dx + (targetPoint[1] - lineStart[1]) * dy) / lenSq;
+    const clampedT = Math.max(0, Math.min(1, t));
+    const proj = [lineStart[0] + dx * clampedT, lineStart[1] + dy * clampedT];
+    return { projectPoint: proj, t: clampedT };
+  }
+
+  function lineIntersection(p1, p2, p3, p4) {
+    if (!p1 || !p2 || !p3 || !p4) return null;
+    const [x1, y1] = p1;
+    const [x2, y2] = p2;
+    const [x3, y3] = p3;
+    const [x4, y4] = p4;
+    const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+    if (Math.abs(denom) < 1e-6) return null;
+    const det1 = x1 * y2 - y1 * x2;
+    const det2 = x3 * y4 - y3 * x4;
+    const x = (det1 * (x3 - x4) - (x1 - x2) * det2) / denom;
+    const y = (det1 * (y3 - y4) - (y1 - y2) * det2) / denom;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    return [x, y];
+  }
+
+  function addPerpendicularFromLine(capLayer, markerLayer, numberLayer, lineStart, lineEnd, targetPoint, labelChar, pathName) {
+    if (!capLayer || !markerLayer || !numberLayer || !lineStart || !lineEnd || !targetPoint) return;
+    const projection = computePerpendicularProjection(lineStart, lineEnd, targetPoint);
+    if (!projection || !projection.projectPoint) return;
+    drawDashedLine(capLayer, projection.projectPoint, targetPoint, { name: pathName || "" });
+    placeMarker(projection.projectPoint, labelChar || "");
+  }
+
+  function computeCapMarkerPoints(mark1, mark2, mark4Point, derivedValues) {
+    if (!mark1 || !mark2 || !mark4Point || !derivedValues) return null;
+    let capLenPt = derivedValues.CapLineCm || 0;
+    if (!Number.isFinite(capLenPt) || capLenPt <= 0) {
+      capLenPt = Math.abs((mark2[0] || 0) - (mark1[0] || 0));
+    }
+    if (!Number.isFinite(capLenPt) || capLenPt <= 0) return null;
+    return {
+      mark11: [mark4Point[0] - capLenPt / 8, mark4Point[1]],
+      mark12: [mark4Point[0] + capLenPt / 5, mark4Point[1]],
+      mark13: [mark2[0] - capLenPt / 14, mark2[1]],
+      mark14: [mark1[0] + capLenPt / 12, mark1[1]],
+    };
+  }
+
+  function addCapMarkers(capLayer, markerLayer, numberLayer, mark1, mark2, mark4Point, derivedValues) {
+    if (!capLayer || !markerLayer || !numberLayer) return;
+    const points = computeCapMarkerPoints(mark1, mark2, mark4Point, derivedValues);
+    if (!points) return;
+    const segments = [
+      { start: mark4Point, end: points.mark11, label: 11, drawLine: true, name: "4-11" },
+      { start: mark4Point, end: points.mark12, label: 12, drawLine: true, name: "4-12" },
+      { start: mark2, end: points.mark13, label: 13, drawLine: false },
+      { start: mark1, end: points.mark14, label: 14, drawLine: false },
+    ];
+
+    segments.forEach((seg) => {
+      if (!seg.start || !seg.end) return;
+      if (seg.drawLine !== false) {
+        drawDashedLine(capLayer, seg.start, seg.end, { name: seg.name || "" });
+      }
+      placeMarker(seg.end, seg.label);
+    });
+
+    if (points.mark11 && points.mark14) {
+      drawDashedLine(capLayer, points.mark11, points.mark14, { name: "11-14" });
+    }
+    if (points.mark12 && points.mark13) {
+      drawDashedLine(capLayer, points.mark12, points.mark13, { name: "12-13" });
+    }
+  }
+
+  function addPerpendicularCapPoints(capLayer, markerLayer, numberLayer, mark1, mark2, mark4Point, derivedValues) {
+    if (!capLayer || !markerLayer || !numberLayer) return;
+    const points = computeCapMarkerPoints(mark1, mark2, mark4Point, derivedValues);
+    if (!points) return;
+    addPerpendicularFromLine(capLayer, markerLayer, numberLayer, mark1, mark4Point, points.mark11, "a", "a-11");
+    addPerpendicularFromLine(capLayer, markerLayer, numberLayer, mark2, mark4Point, points.mark12, "b", "12-b");
+  }
+
+  function addBackCapNotches(pathNodes, layer, derivedValues) {
+    if (!pathNodes || pathNodes.length < 2 || !layer || !derivedValues) return;
+    const baseDistance = derivedValues.bAP || 0;
+    if (!Number.isFinite(baseDistance) || baseDistance <= 0) return;
+    const distances = [baseDistance, baseDistance + 1];
+    const names = ["Back Cap Notch", "Back Cap Notch Upper"];
+    distances.forEach((distance, index) => {
+      placeBackNotchOnChain(pathNodes, layer, distance, names[index]);
+    });
+  }
+
+  function placeBackNotchOnChain(nodes, layer, distanceCm, notchName) {
+    if (!Number.isFinite(distanceCm) || distanceCm <= 0) return;
+    let remaining = distanceCm;
+    for (let i = 1; i < nodes.length; i += 1) {
+      const prev = nodes[i - 1] || {};
+      const curr = nodes[i] || {};
+      const startPt = prev.anchor;
+      const endPt = curr.anchor;
+      if (!startPt || !endPt) continue;
+      const startHandle = prev.right || startPt;
+      const endHandle = curr.left || endPt;
+      const segLenCm = approximateBezierLength(startPt, startHandle, endHandle, endPt);
+      if (!Number.isFinite(segLenCm) || segLenCm <= 0) continue;
+      if (remaining <= segLenCm) {
+        addNotchOnPath(startPt, endPt, startHandle, endHandle, remaining, layer, notchName);
+        return;
+      }
+      remaining -= segLenCm;
+    }
+  }
+
+  function addCapArcs(layerHandles, mark1, mark2, mark4Point, derivedValues) {
+    if (!layerHandles || !mark1 || !mark2 || !mark4Point || !derivedValues) return;
+    const capLayer = layerHandles.capShaping;
+    const sleeveBlockLayer = layerHandles.sleeveBlock;
+    if (!capLayer) return;
+    const points = computeCapMarkerPoints(mark1, mark2, mark4Point, derivedValues);
+    if (!points || !points.mark11 || !points.mark12 || !points.mark14) return;
+
+    const mid1114 = midpoint(points.mark11, points.mark14);
+
+    const baselineDir = normalizeVector([mark2[0] - mark1[0], mark2[1] - mark1[1]]);
+    const arc1StartHandle = [mark1[0] + baselineDir[0] * 3, mark1[1] + baselineDir[1] * 3];
+
+    const towards14Dir = normalizeVector([points.mark14[0] - mid1114[0], points.mark14[1] - mid1114[1]]);
+    const arc1EndHandle = [mid1114[0] + towards14Dir[0] * 4, mid1114[1] + towards14Dir[1] * 4];
+
+    const frontDirMidTo11 = normalizeVector([points.mark11[0] - mid1114[0], points.mark11[1] - mid1114[1]]);
+    const frontSecondStartHandle = [mid1114[0] + frontDirMidTo11[0] * 3, mid1114[1] + frontDirMidTo11[1] * 3];
+    const dir4To12 = normalizeVector([mark4Point[0] - points.mark12[0], mark4Point[1] - points.mark12[1]]);
+    const frontSecondEndHandle = [mark4Point[0] + dir4To12[0] * 3.3, mark4Point[1] + dir4To12[1] * 3.3];
+    const frontNodes = [
+      { anchor: mark1, right: arc1StartHandle },
+      { anchor: mid1114, left: arc1EndHandle, right: frontSecondStartHandle },
+      { anchor: mark4Point, left: frontSecondEndHandle },
+    ];
+    drawBezierChain(capLayer, frontNodes, "Front Cap");
+    addNotchOnPath(mark1, mid1114, arc1StartHandle, arc1EndHandle, derivedValues.fAP || 0, capLayer, "Front Cap Notch");
+    if (sleeveBlockLayer) {
+      drawBezierChain(sleeveBlockLayer, frontNodes, "Front Cap");
+      addNotchOnPath(mark1, mid1114, arc1StartHandle, arc1EndHandle, derivedValues.fAP || 0, sleeveBlockLayer, "Front Cap Notch");
+    }
+
+    let mid1213 = midpoint(points.mark12, points.mark13);
+    if (!mid1213) mid1213 = mid1114;
+    const intersection1213_24 = lineIntersection(points.mark12, points.mark13, mark2, mark4Point);
+    if (intersection1213_24) {
+      const baselineForwardDir = normalizeVector([mark2[0] - mark1[0], mark2[1] - mark1[1]]);
+      let line1213Dir = normalizeVector([points.mark13[0] - points.mark12[0], points.mark13[1] - points.mark12[1]]);
+      if (Math.abs(line1213Dir[1]) < 1e-6) {
+        line1213Dir = [0, 1];
+      } else if (line1213Dir[1] < 0) {
+        line1213Dir = [-line1213Dir[0], -line1213Dir[1]];
+      }
+      const handleMark4 = [
+        mark4Point[0] + baselineForwardDir[0] * 6.6,
+        mark4Point[1] + baselineForwardDir[1] * 6.6,
+      ];
+      const handleIntersectionUpper = [
+        intersection1213_24[0] + line1213Dir[0] * 2.95,
+        intersection1213_24[1] + line1213Dir[1] * 2.95,
+      ];
+
+      const handleMark2 = [mark2[0] - baselineForwardDir[0] * 3.5, mark2[1] - baselineForwardDir[1] * 3.5];
+      const handleIntersectionLower = [
+        intersection1213_24[0] - line1213Dir[0] * 1.5,
+        intersection1213_24[1] - line1213Dir[1] * 1.5,
+      ];
+
+      const backNodesCustom = [
+        { anchor: mark2, right: handleMark2 },
+        { anchor: intersection1213_24, left: handleIntersectionLower, right: handleIntersectionUpper },
+        { anchor: mark4Point, left: handleMark4 },
+      ];
+      drawBezierChain(capLayer, backNodesCustom, "Back Cap");
+      addBackCapNotches(backNodesCustom, capLayer, derivedValues);
+      if (sleeveBlockLayer) {
+        drawBezierChain(sleeveBlockLayer, backNodesCustom, "Back Cap");
+        addBackCapNotches(backNodesCustom, sleeveBlockLayer, derivedValues);
+      }
+      const frontLength =
+        approximateBezierLength(mark1, arc1StartHandle, arc1EndHandle, mid1114) +
+        approximateBezierLength(mid1114, frontSecondStartHandle, frontSecondEndHandle, mark4Point);
+      const backLengthCustom =
+        approximateBezierLength(mark2, handleMark2, handleIntersectionLower, intersection1213_24) +
+        approximateBezierLength(intersection1213_24, handleIntersectionUpper, handleMark4, mark4Point);
+      derivedValues.CapCurveLengthCm = frontLength + backLengthCustom;
+    } else {
+      const baselineBackDir = normalizeVector([mark1[0] - mark2[0], mark1[1] - mark2[1]]);
+      const arc2StartHandle = [mark2[0] + baselineBackDir[0] * 4.3, mark2[1] + baselineBackDir[1] * 4.3];
+      const dirTo13 = normalizeVector([points.mark13[0] - mid1213[0], points.mark13[1] - mid1213[1]]);
+      const arc2EndHandleFallback = [mid1213[0] + dirTo13[0] * 4, mid1213[1] + dirTo13[1] * 4];
+
+      const projectionB = computePerpendicularProjection(mark4Point, mark2, points.mark12);
+      const mid12b = projectionB && projectionB.projectPoint ? midpoint(points.mark12, projectionB.projectPoint) : midpoint(points.mark12, mark4Point);
+      const dirTo12 = normalizeVector([points.mark12[0] - mid1213[0], points.mark12[1] - mid1213[1]]);
+      const dir4To12 = normalizeVector([points.mark12[0] - mark4Point[0], points.mark12[1] - mark4Point[1]]);
+      const arc3EndHandle = [mark4Point[0] + dir4To12[0] * 3.3, mark4Point[1] + dir4To12[1] * 3.3];
+      const targetPoint = mid12b || midpoint(mid1213, mark4Point);
+      const f0 = 0.125;
+      const f1 = 0.375;
+      const f2 = 0.375;
+      const f3 = 0.125;
+      const restX = f0 * mid1213[0] + f2 * arc3EndHandle[0] + f3 * mark4Point[0];
+      const restY = f0 * mid1213[1] + f2 * arc3EndHandle[1] + f3 * mark4Point[1];
+      const vecX = targetPoint[0] - restX - f1 * mid1213[0];
+      const vecY = targetPoint[1] - restY - f1 * mid1213[1];
+      let startLenPt = (vecX * dirTo12[0] + vecY * dirTo12[1]) / f1;
+      if (!Number.isFinite(startLenPt) || startLenPt <= 0) startLenPt = 3;
+      const arc3StartHandleFallback = [mid1213[0] + dirTo12[0] * startLenPt, mid1213[1] + dirTo12[1] * startLenPt];
+
+      const backNodesFallback = [
+        { anchor: mark2, right: arc2StartHandle },
+        { anchor: mid1213, left: arc2EndHandleFallback, right: arc3StartHandleFallback },
+        { anchor: mark4Point, left: arc3EndHandle },
+      ];
+      drawBezierChain(capLayer, backNodesFallback, "Back Cap");
+      addBackCapNotches(backNodesFallback, capLayer, derivedValues);
+      if (sleeveBlockLayer) {
+        drawBezierChain(sleeveBlockLayer, backNodesFallback, "Back Cap");
+        addBackCapNotches(backNodesFallback, sleeveBlockLayer, derivedValues);
+      }
+      const frontLength =
+        approximateBezierLength(mark1, arc1StartHandle, arc1EndHandle, mid1114) +
+        approximateBezierLength(mid1114, frontSecondStartHandle, frontSecondEndHandle, mark4Point);
+      const backLengthFallback =
+        approximateBezierLength(mark2, arc2StartHandle, arc2EndHandleFallback, mid1213) +
+        approximateBezierLength(mid1213, arc3StartHandleFallback, arc3EndHandle, mark4Point);
+      derivedValues.CapCurveLengthCm = frontLength + backLengthFallback;
+    }
+  }
+
+  function calculateMark3RadiusCm(derivedValues) {
+    if (!derivedValues) return 0;
+    const fAh =
+      derivedValues.fAhConstruction != null && Number.isFinite(derivedValues.fAhConstruction)
+        ? derivedValues.fAhConstruction
+        : derivedValues.fAh;
+    const capEase =
+      derivedValues.CapEaseCm != null && Number.isFinite(derivedValues.CapEaseCm)
+        ? derivedValues.CapEaseCm
+        : 0;
+    const radius = 0.97 * (fAh || 0) + 0.25 * (capEase || 0);
+    return Number.isFinite(radius) && radius > 0 ? radius : 0;
+  }
+
+  function calculateMark4RadiusCm(derivedValues) {
+    if (!derivedValues) return 0;
+    const bAh =
+      derivedValues.bAhConstruction != null && Number.isFinite(derivedValues.bAhConstruction)
+        ? derivedValues.bAhConstruction
+        : derivedValues.bAh;
+    const capEase =
+      derivedValues.CapEaseCm != null && Number.isFinite(derivedValues.CapEaseCm)
+        ? derivedValues.CapEaseCm
+        : 0;
+    const radius = 0.97 * (bAh || 0) + 0.75 * (capEase || 0);
+    return Number.isFinite(radius) && radius > 0 ? radius : 0;
+  }
+
+  function polarPoint(centerPt, radius, angle) {
+    if (!centerPt || !Number.isFinite(radius)) return null;
+    return [centerPt[0] + radius * Math.cos(angle), centerPt[1] + radius * Math.sin(angle)];
+  }
+
+  function buildMark3Arc(centerPt, derivedValues, layoutBounds, targetLengthCm) {
+    if (!centerPt || !derivedValues) return null;
+    const radiusCm =
+      layoutBounds && typeof layoutBounds.arcRadiusCm === "number"
+        ? layoutBounds.arcRadiusCm
+        : calculateMark3RadiusCm(derivedValues);
+    if (!Number.isFinite(radiusCm) || radiusCm <= 0) return null;
+
+    const desiredLengthCm = Number.isFinite(targetLengthCm) && targetLengthCm > 0 ? targetLengthCm : HOF_SLEEVE_ARC_TARGET_CM;
+    let sweepAngle = desiredLengthCm / radiusCm;
+    const maxSweep = HOF_SLEEVE_ARC_END - HOF_SLEEVE_ARC_MIN_START;
+    sweepAngle = Math.min(Math.max(sweepAngle, HOF_SLEEVE_ARC_MIN_SWEEP), maxSweep);
+    let startAngle = HOF_SLEEVE_ARC_END - sweepAngle;
+    if (startAngle < HOF_SLEEVE_ARC_MIN_START) {
+      startAngle = HOF_SLEEVE_ARC_MIN_START;
+      sweepAngle = HOF_SLEEVE_ARC_END - startAngle;
+    }
+    const endAngle = HOF_SLEEVE_ARC_END;
+    const startPoint = polarPoint(centerPt, radiusCm, startAngle);
+    const endPoint = polarPoint(centerPt, radiusCm, endAngle);
+    if (!startPoint || !endPoint) return null;
+
+    const handleLength = (4 / 3) * radiusCm * Math.tan(sweepAngle / 4);
+    const startTangent = [-Math.sin(startAngle), Math.cos(startAngle)];
+    const endTangent = [-Math.sin(endAngle), Math.cos(endAngle)];
+    const startHandle = [startPoint[0] + startTangent[0] * handleLength, startPoint[1] + startTangent[1] * handleLength];
+    const endHandle = [endPoint[0] - endTangent[0] * handleLength, endPoint[1] - endTangent[1] * handleLength];
+    const totalLengthCm = sweepAngle * radiusCm;
+
+    return {
+      startPoint,
+      endPoint,
+      center: centerPt,
+      radiusCm,
+      startAngle,
+      endAngle,
+      startHandle,
+      endHandle,
+      totalLengthCm,
+      targetLengthCm: desiredLengthCm,
+    };
+  }
+
+  function rebalanceArcAroundMark4(arcInfo, mark4Angle) {
+    if (!arcInfo || !Number.isFinite(mark4Angle)) return;
+    const radiusCm = arcInfo.radiusCm;
+    if (!Number.isFinite(radiusCm) || radiusCm <= 0) return;
+    const ratioUp = HOF_SLEEVE_ARC_UP_RATIO;
+    const ratioDown = HOF_SLEEVE_ARC_DOWN_RATIO;
+    const ratioSum = ratioUp + ratioDown;
+    if (!Number.isFinite(ratioSum) || ratioSum <= 0) return;
+    let desiredLengthCm = arcInfo.totalLengthCm || arcInfo.targetLengthCm || HOF_SLEEVE_ARC_TARGET_CM;
+    if (!Number.isFinite(desiredLengthCm) || desiredLengthCm <= 0) desiredLengthCm = HOF_SLEEVE_ARC_TARGET_CM;
+    let sweepAngle = desiredLengthCm / radiusCm;
+    const maxSweep = HOF_SLEEVE_ARC_END - HOF_SLEEVE_ARC_MIN_START;
+    sweepAngle = Math.min(Math.max(sweepAngle, HOF_SLEEVE_ARC_MIN_SWEEP), maxSweep);
+    const upSweep = sweepAngle * (ratioUp / ratioSum);
+    const downSweep = sweepAngle - upSweep;
+    let startAngle = mark4Angle - downSweep;
+    let endAngle = mark4Angle + upSweep;
+    const minAngle = HOF_SLEEVE_ARC_MIN_START;
+    const maxAngleLimit = HOF_SLEEVE_ARC_END;
+    if (startAngle < minAngle) {
+      const shiftUp = minAngle - startAngle;
+      startAngle += shiftUp;
+      endAngle += shiftUp;
+    }
+    if (endAngle > maxAngleLimit) {
+      const shiftDown = endAngle - maxAngleLimit;
+      startAngle -= shiftDown;
+      endAngle -= shiftDown;
+    }
+    if (startAngle < minAngle) startAngle = minAngle;
+    if (endAngle > maxAngleLimit) endAngle = maxAngleLimit;
+    let sweep = endAngle - startAngle;
+    if (sweep < HOF_SLEEVE_ARC_MIN_SWEEP) {
+      const mid = (startAngle + endAngle) / 2;
+      startAngle = mid - HOF_SLEEVE_ARC_MIN_SWEEP / 2;
+      endAngle = mid + HOF_SLEEVE_ARC_MIN_SWEEP / 2;
+    }
+    updateArcGeometry(arcInfo, startAngle, endAngle);
+  }
+
+  function updateArcGeometry(arcInfo, startAngle, endAngle) {
+    if (!arcInfo || !arcInfo.center || !Number.isFinite(arcInfo.radiusCm)) return;
+    arcInfo.startAngle = startAngle;
+    arcInfo.endAngle = endAngle;
+    const startPoint = polarPoint(arcInfo.center, arcInfo.radiusCm, startAngle);
+    const endPoint = polarPoint(arcInfo.center, arcInfo.radiusCm, endAngle);
+    arcInfo.startPoint = startPoint;
+    arcInfo.endPoint = endPoint;
+    let sweepAngle = endAngle - startAngle;
+    if (sweepAngle < HOF_SLEEVE_ARC_MIN_SWEEP) sweepAngle = HOF_SLEEVE_ARC_MIN_SWEEP;
+    const handleLength = (4 / 3) * arcInfo.radiusCm * Math.tan(sweepAngle / 4);
+    const startTangent = [-Math.sin(startAngle), Math.cos(startAngle)];
+    const endTangent = [-Math.sin(endAngle), Math.cos(endAngle)];
+    arcInfo.startHandle = [startPoint[0] + startTangent[0] * handleLength, startPoint[1] + startTangent[1] * handleLength];
+    arcInfo.endHandle = [endPoint[0] - endTangent[0] * handleLength, endPoint[1] - endTangent[1] * handleLength];
+    arcInfo.totalLengthCm = sweepAngle * (arcInfo.radiusCm || 0);
+  }
+
+  function intersectCircles(centerA, radiusA, centerB, radiusB) {
+    const dx = centerB[0] - centerA[0];
+    const dy = centerB[1] - centerA[1];
+    const d = Math.sqrt(dx * dx + dy * dy);
+    if (!Number.isFinite(d) || d > radiusA + radiusB || d < Math.abs(radiusA - radiusB)) return null;
+    const a = (radiusA * radiusA - radiusB * radiusB + d * d) / (2 * d);
+    const hSq = radiusA * radiusA - a * a;
+    if (hSq < 0) return null;
+    const h = Math.sqrt(hSq);
+    const midX = centerA[0] + (a * dx) / d;
+    const midY = centerA[1] + (a * dy) / d;
+    const rx = (-dy * h) / d;
+    const ry = (dx * h) / d;
+    return [
+      [midX + rx, midY + ry],
+      [midX - rx, midY - ry],
+    ];
+  }
+
+  function selectPointOnArc(points, arcInfo) {
+    if (!points || !points.length || !arcInfo) return null;
+    const { center, startAngle, endAngle } = arcInfo;
+    const start = Math.min(startAngle, endAngle);
+    const end = Math.max(startAngle, endAngle);
+    for (let i = 0; i < points.length; i += 1) {
+      const pt = points[i];
+      const angle = Math.atan2(pt[1] - center[1], pt[0] - center[0]);
+      if (angle >= start - 1e-4 && angle <= end + 1e-4) {
+        return { point: pt, angle };
+      }
+    }
+    return null;
+  }
+
+  function selectPreferredArcPoint(points, arcInfo) {
+    if (!points || !points.length || !arcInfo || !arcInfo.center) return null;
+    const targetAngle = (arcInfo.startAngle + arcInfo.endAngle) / 2;
+    let bestPoint = null;
+    let bestDiff = Infinity;
+    points.forEach((pt) => {
+      if (!pt) return;
+      const angle = Math.atan2(pt[1] - arcInfo.center[1], pt[0] - arcInfo.center[0]);
+      const diff = Math.abs(angle - targetAngle);
+      if (diff < bestDiff) {
+        bestDiff = diff;
+        bestPoint = { point: pt, angle };
+      }
+    });
+    return bestPoint;
+  }
+
+  function buildMark4Intersection(mark2, arcInfo, derivedValues) {
+    if (!mark2 || !arcInfo || !derivedValues) return null;
+    const radiusCm = calculateMark4RadiusCm(derivedValues);
+    if (!Number.isFinite(radiusCm) || radiusCm <= 0) return null;
+    const intersections = intersectCircles(arcInfo.center, arcInfo.radiusCm, mark2, radiusCm);
+    if (!intersections || intersections.length === 0) return null;
+    let targetPoint = selectPointOnArc(intersections, arcInfo);
+    if (!targetPoint) targetPoint = selectPreferredArcPoint(intersections, arcInfo);
+    if (!targetPoint) return null;
+    return {
+      point: targetPoint.point,
+      radiusCm,
+      angle: targetPoint.angle,
+    };
+  }
+
+  function buildVerticalAndSquares(layerHandles, mark1, mark2, mark4Point, derivedValues) {
+    if (!layerHandles || !mark1 || !mark2 || !mark4Point || !derivedValues) return;
+    const sleeveBlockLayer = layerHandles.sleeveBlock || null;
+    const sleeveLengthCm = derivedValues.SlL || 0;
+    if (!Number.isFinite(sleeveLengthCm) || sleeveLengthCm <= 0) return;
+    const verticalEnd = [mark4Point[0], mark4Point[1] - sleeveLengthCm];
+    const sleeveLengthLabel = { name: "Sleeve Length" };
+    drawDashedLine(layerHandles.sleeveBlock || layerHandles.foundation, mark4Point, verticalEnd, sleeveLengthLabel);
+    placeMarker(verticalEnd, 5);
+
+    const mark6 = [mark4Point[0], mark4Point[1] - sleeveLengthCm * 0.6];
+    placeMarker(mark6, 6);
+    const mid64 = midpoint(mark6, mark4Point);
+    const sleeveWidthY = mid64 ? mid64[1] : null;
+
+    const mark5 = verticalEnd;
+    const mark1Down5 = [mark1[0], mark5[1]];
+    const mark2Down5 = [mark2[0], mark5[1]];
+    const mark1Down6 = [mark1[0], mark6[1]];
+    const mark2Down6 = [mark2[0], mark6[1]];
+    const elbowLineY = mark6 ? mark6[1] : mark1Down6 ? mark1Down6[1] : null;
+
+    drawDashedLine(layerHandles.foundation, mark1, mark1Down5, { name: "1-7" });
+    drawDashedLine(layerHandles.foundation, mark2, mark2Down5, { name: "2-8" });
+    drawDashedLine(layerHandles.foundation, mark1Down5, mark2Down5, { name: "7-8" });
+    drawDashedLine(layerHandles.foundation, mark1Down6, mark2Down6, { name: "9-10" });
+
+    const hemOptions = {
+      name: "Hem Line",
+      labelLayer: layerHandles.labels,
+      labelText: "Hem Line",
+      labelOffsetCm: HOF_SLEEVE_LABEL_OFFSET_CM * 2,
+    };
+    let hemLineStart = mark1Down5;
+    let hemLineEnd = mark2Down5;
+    let hemLineStartSleeve = mark1Down5;
+    let hemLineEndSleeve = mark2Down5;
+
+    const elbowLabel = buildLineLabelOptions("Elbow Line", derivedValues.SlW, layerHandles.labels);
+    let elbowLineStart = null;
+    let elbowLineEnd = null;
+    let sleeveWidthStart = null;
+    let sleeveWidthEnd = null;
+    let leftSleeveCurve = null;
+    let rightSleeveCurve = null;
+    let leftElbowIntersection = null;
+    let rightElbowIntersection = null;
+
+    const mark15 = midpoint(mark1Down5, mark2Down5);
+    if (mark15) {
+      placeMarker(mark15, 15);
+      const halfHeW = (derivedValues.HeW || 0) / 2;
+      if (Number.isFinite(halfHeW) && halfHeW > 0) {
+        const left16 = [mark15[0] - halfHeW, mark15[1]];
+        const right17 = [mark15[0] + halfHeW, mark15[1]];
+        hemLineStart = left16;
+        hemLineEnd = right17;
+        hemLineStartSleeve = left16;
+        hemLineEndSleeve = right17;
+        placeMarker(left16, 16);
+        placeMarker(right17, 17);
+        drawDashedLine(layerHandles.foundation, left16, mark1, { name: "Left Sleeve Length" });
+        drawDashedLine(layerHandles.foundation, right17, mark2, { name: "Right Sleeve Length" });
+        if (elbowLineY !== null) {
+          if (!leftSleeveCurve) {
+            const leftStartHandle = [left16[0], left16[1] + 5];
+            const dir1To16 = normalizeVector([left16[0] - mark1[0], left16[1] - mark1[1]]);
+            const mark1Handle = [mark1[0] + dir1To16[0] * 12.47, mark1[1] + dir1To16[1] * 12.47];
+            leftSleeveCurve = {
+              start: left16,
+              startHandle: leftStartHandle,
+              endHandle: mark1Handle,
+              end: mark1,
+            };
+          }
+          let leftIntersection = findBezierHorizontalIntersection(
+            leftSleeveCurve.start,
+            leftSleeveCurve.startHandle,
+            leftSleeveCurve.endHandle,
+            leftSleeveCurve.end,
+            elbowLineY
+          );
+          if (!leftIntersection) {
+            leftIntersection = findHorizontalIntersection(leftSleeveCurve.start, leftSleeveCurve.end, elbowLineY);
+          }
+          if (!leftIntersection) {
+            leftIntersection = projectHorizontalOntoLine(leftSleeveCurve.start, leftSleeveCurve.end, elbowLineY);
+          }
+          if (leftIntersection) {
+            leftElbowIntersection = leftIntersection;
+          }
+        }
+
+        if (elbowLineY !== null) {
+          if (!rightSleeveCurve) {
+            const rightStartHandle = [right17[0], right17[1] + 5];
+            const dir2To17 = normalizeVector([right17[0] - mark2[0], right17[1] - mark2[1]]);
+            const mark2Handle = [mark2[0] + dir2To17[0] * 12.47, mark2[1] + dir2To17[1] * 12.47];
+            rightSleeveCurve = {
+              start: right17,
+              startHandle: rightStartHandle,
+              endHandle: mark2Handle,
+              end: mark2,
+            };
+          }
+          let rightIntersection = findBezierHorizontalIntersection(
+            rightSleeveCurve.start,
+            rightSleeveCurve.startHandle,
+            rightSleeveCurve.endHandle,
+            rightSleeveCurve.end,
+            elbowLineY
+          );
+          if (!rightIntersection) {
+            rightIntersection = findHorizontalIntersection(rightSleeveCurve.start, rightSleeveCurve.end, elbowLineY);
+          }
+          if (!rightIntersection) {
+            rightIntersection = projectHorizontalOntoLine(rightSleeveCurve.start, rightSleeveCurve.end, elbowLineY);
+          }
+          if (rightIntersection) {
+            rightElbowIntersection = rightIntersection;
+          }
+        }
+
+        if (sleeveWidthY !== null) {
+          let leftWidthIntersection = findBezierHorizontalIntersection(
+            leftSleeveCurve.start,
+            leftSleeveCurve.startHandle,
+            leftSleeveCurve.endHandle,
+            leftSleeveCurve.end,
+            sleeveWidthY
+          );
+          let rightWidthIntersection = findBezierHorizontalIntersection(
+            rightSleeveCurve.start,
+            rightSleeveCurve.startHandle,
+            rightSleeveCurve.endHandle,
+            rightSleeveCurve.end,
+            sleeveWidthY
+          );
+          if (!leftWidthIntersection) {
+            leftWidthIntersection = projectHorizontalOntoLine(leftSleeveCurve.start, leftSleeveCurve.end, sleeveWidthY);
+          }
+          if (!rightWidthIntersection) {
+            rightWidthIntersection = projectHorizontalOntoLine(rightSleeveCurve.start, rightSleeveCurve.end, sleeveWidthY);
+          }
+          if (leftWidthIntersection && rightWidthIntersection) {
+            sleeveWidthStart = leftWidthIntersection;
+            sleeveWidthEnd = rightWidthIntersection;
+          }
+        }
+      }
+    }
+    if (!leftElbowIntersection && elbowLineY != null) {
+      leftElbowIntersection = findHorizontalIntersection(mark1Down6, mark1, elbowLineY);
+    }
+    if (!rightElbowIntersection && elbowLineY != null) {
+      rightElbowIntersection = findHorizontalIntersection(mark2Down6, mark2, elbowLineY);
+    }
+    if (leftElbowIntersection) elbowLineStart = leftElbowIntersection;
+    if (rightElbowIntersection) elbowLineEnd = rightElbowIntersection;
+
+    placeMarker(mark1Down5, 7);
+    placeMarker(mark2Down5, 8);
+    placeMarker(mark1Down6, 9);
+    placeMarker(mark2Down6, 10);
+
+    drawSolidLine(layerHandles.sleeveBlock, hemLineStartSleeve, hemLineEndSleeve, hemOptions);
+
+    if (sleeveBlockLayer && leftSleeveCurve) {
+      const leftArc = drawBezierSegment(
+        sleeveBlockLayer,
+        leftSleeveCurve.start,
+        leftSleeveCurve.end,
+        leftSleeveCurve.startHandle,
+        leftSleeveCurve.endHandle,
+        "Left Sleeve Line"
+      );
+      if (leftArc) {
+        leftArc.removeAttribute("stroke-dasharray");
+      }
+    }
+    if (sleeveBlockLayer && rightSleeveCurve) {
+      const rightArc = drawBezierSegment(
+        sleeveBlockLayer,
+        rightSleeveCurve.start,
+        rightSleeveCurve.end,
+        rightSleeveCurve.startHandle,
+        rightSleeveCurve.endHandle,
+        "Right Sleeve Line"
+      );
+      if (rightArc) {
+        rightArc.removeAttribute("stroke-dasharray");
+      }
+    }
+
+    if (!elbowLineStart) elbowLineStart = mark1Down6;
+    if (!elbowLineEnd) elbowLineEnd = mark2Down6;
+    if (sleeveBlockLayer && elbowLineStart && elbowLineEnd) {
+      drawDashedLine(sleeveBlockLayer, elbowLineStart, elbowLineEnd, elbowLabel);
+    }
+
+    let measuredSleeveWidth = null;
+    if (sleeveWidthStart && sleeveWidthEnd) {
+      measuredSleeveWidth = pointDistanceCm(sleeveWidthStart, sleeveWidthEnd);
+      const sleeveWidthLabel = buildLineLabelOptions("Sleeve Width", measuredSleeveWidth, layerHandles.labels);
+      drawDashedLine(sleeveBlockLayer, sleeveWidthStart, sleeveWidthEnd, sleeveWidthLabel);
+    } else if (mark1Down5 && mark2Down5) {
+      measuredSleeveWidth = pointDistanceCm(mark1Down5, mark2Down5);
+    }
+
+    let measuredElbowWidth = null;
+    if (elbowLineStart && elbowLineEnd) {
+      measuredElbowWidth = pointDistanceCm(elbowLineStart, elbowLineEnd);
+    } else if (mark1Down6 && mark2Down6) {
+      measuredElbowWidth = pointDistanceCm(mark1Down6, mark2Down6);
+    }
+
+    hofSleeveUi.lastMeasured = {
+      SleeveWidthMeasured: measuredSleeveWidth,
+      ElbowWidthMeasured: measuredElbowWidth,
+      CapCurveLengthCm: derivedValues.CapCurveLengthCm,
+    };
+    updateHofSleeveDerivedFields();
+  }
+
+  const mark1 = [0, 0];
+  const mark2 = [baselineLengthCm, 0];
+  const arcRadiusCm = calculateMark3RadiusCm(derived);
+  const layoutStub = { arcRadiusCm };
+  let upwardArc = buildMark3Arc(mark1, derived, layoutStub, HOF_SLEEVE_ARC_TARGET_CM);
+  let mark4 = upwardArc ? buildMark4Intersection(mark2, upwardArc, derived) : null;
+
+  if ((!mark4 || !mark4.point || !upwardArc) && HOF_SLEEVE_ARC_MAX_CM > HOF_SLEEVE_ARC_TARGET_CM) {
+    upwardArc = buildMark3Arc(mark1, derived, layoutStub, HOF_SLEEVE_ARC_MAX_CM);
+    mark4 = upwardArc ? buildMark4Intersection(mark2, upwardArc, derived) : null;
+  }
+
+  const capLineLabel = `Cap Line (${formatHofenbitzerValue(baselineLengthCm)} cm)`;
+  if (layers.sleeveBlock) {
+    drawDashedLine(layers.sleeveBlock, mark1, mark2, {
+      name: "Cap Line",
+      labelLayer: layers.labels,
+      labelText: capLineLabel,
+      labelOffsetCm: HOF_SLEEVE_LABEL_OFFSET_CM,
+    });
+  }
+  placeMarker(mark1, 1);
+  placeMarker(mark2, 2);
+
+  if (mark4 && upwardArc) {
+    if (mark4.point) {
+      rebalanceArcAroundMark4(upwardArc, mark4.angle);
+      const backLineCm = pointDistanceCm(mark2, mark4.point);
+      const frontLineCm = pointDistanceCm(mark1, mark4.point);
+      drawDashedLine(layers.foundation, mark2, mark4.point, { name: "Back Line" });
+      drawDashedLine(layers.foundation, mark1, mark4.point, { name: "Front Line" });
+      placeMarker(mark4.point, 4);
+      buildVerticalAndSquares(layers, mark1, mark2, mark4.point, derived);
+      addCapMarkers(layers.capShaping, layers.markers, layers.numbers, mark1, mark2, mark4.point, derived);
+      addPerpendicularCapPoints(layers.capShaping, layers.markers, layers.numbers, mark1, mark2, mark4.point, derived);
+      addCapArcs(layers, mark1, mark2, mark4.point, derived);
+      if (!hofSleeveUi.lastMeasured) hofSleeveUi.lastMeasured = {};
+      hofSleeveUi.lastMeasured.CapCurveLengthCm = derived.CapCurveLengthCm;
+      if (frontLineCm) {
+        addLineLabel(
+          layers.labels,
+          mark1,
+          mark4.point,
+          `Front Line (${formatHofenbitzerValue(frontLineCm)} cm)`,
+          HOF_SLEEVE_LABEL_OFFSET_CM
+        );
+      }
+      if (backLineCm) {
+        addLineLabel(
+          layers.labels,
+          mark2,
+          mark4.point,
+          `Back Line (${formatHofenbitzerValue(backLineCm)} cm)`,
+          HOF_SLEEVE_LABEL_OFFSET_CM,
+          -1
+        );
+      }
+    }
+  }
+
+  if (upwardArc) {
+    drawArcPath(layers.foundation, upwardArc);
+    placeMarker(upwardArc.endPoint, 3);
+  }
+
+  applyLayerVisibility(layers, params);
+  fitSvgToBounds(svg, bounds);
+  return svg;
+}
+
 function generateHofenbitzerBasicSkirt(params = {}) {
   const svg = createSvgRoot();
   svg.appendChild(
@@ -3345,6 +4717,7 @@ function generateHofenbitzerBasicSkirt(params = {}) {
     }
     textEl.setAttribute("transform", `rotate(${angleDeg}, ${svgPoint.x}, ${svgPoint.y})`);
     labelsLayer.appendChild(textEl);
+    bounds.include(svgPoint.x, svgPoint.y);
   }
 
   function placeMarker(point, number) {
@@ -3354,8 +4727,8 @@ function generateHofenbitzerBasicSkirt(params = {}) {
     circle.setAttribute("cx", svgPoint.x);
     circle.setAttribute("cy", svgPoint.y);
     circle.setAttribute("r", cmToMmValue(HOFENBITZER_MARKER_RADIUS_CM));
-    circle.setAttribute("fill", "#0f172a");
-    circle.setAttribute("stroke", "#0f172a");
+    circle.setAttribute("fill", "#000");
+    circle.setAttribute("stroke", "#000");
     markersLayer.appendChild(circle);
     if (numbersLayer && Number.isFinite(number)) {
       const numberNode = textNode(svgPoint.x, svgPoint.y + 1, String(number), {
@@ -3766,6 +5139,11 @@ function readHofSkirtParams() {
   };
 }
 
+function readHofSleeveParams() {
+  const params = collectHofSleeveParams();
+  return { ...params };
+}
+
 function readAldrichParams() {
   return {
     bust: getNumber("aldrichBust", ALDRICH_DEFAULTS.bust),
@@ -4025,6 +5403,7 @@ const draftStores = {
   aldrich: createDraftStore(),
   hofenbitzerCasual: createDraftStore(),
   hofenbitzerBasicSkirt: createDraftStore(),
+  hofenbitzerWideSleeve: createDraftStore(),
 };
 let activePatternKey = "armstrong";
 const svgSerializer = new XMLSerializer();
@@ -4122,6 +5501,20 @@ const PATTERN_CONFIGS = {
     duplicateId: "duplicateDraftHofenbitzerSkirt",
     layerButtonId: "manageLayersHofenbitzerSkirt",
     draftListId: "draftListHofenbitzerSkirt",
+  },
+  hofenbitzerWideSleeve: {
+    title: "Hofenbitzer's Wide Basic Sleeve",
+    elementId: "hofenbitzerSleeveControls",
+    readParams: readHofSleeveParams,
+    generate: generateHofenbitzerWideBasicSleeve,
+    downloadId: "downloadHofenbitzerSleeve",
+    downloadAllId: "downloadAllHofenbitzerSleeve",
+    shareId: "shareHofenbitzerSleeve",
+    filename: "hofenbitzer_wide_basic_sleeve.svg",
+    stackFilename: "hofenbitzer_wide_basic_sleeve_drafts.svg",
+    duplicateId: "duplicateDraftHofenbitzerSleeve",
+    layerButtonId: "manageLayersHofenbitzerSleeve",
+    draftListId: "draftListHofenbitzerSleeve",
   },
 };
 
@@ -4542,6 +5935,7 @@ function initApp() {
   enhanceFitProfileSelect();
   initAldrichAutoFields();
   initHofenbitzerControls();
+  initHofSleeveControls();
   initHofSkirtControls();
   initLayerTools();
   initDraftManager();
@@ -5305,7 +6699,7 @@ function applyLayerVisibility(layers, params) {
   const showGuides = params.showGuides !== false;
   const showMarkers = params.showMarkers !== false;
   const guideDisplay = showGuides ? null : "none";
-  [layers.foundation, layers.foundationFront, layers.foundationBack, layers.dartsParent, layers.dartsLayer, layers.shapingLayer].forEach((layer) => {
+  [layers.foundation, layers.foundationFront, layers.foundationBack, layers.dartsParent, layers.dartsLayer, layers.shapingLayer, layers.capShaping].forEach((layer) => {
     if (!layer) return;
     if (guideDisplay) {
       layer.setAttribute("display", guideDisplay);
