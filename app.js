@@ -733,6 +733,9 @@ function computeHofenbitzerSleeveDerived(data = {}) {
   const wrist = toNumber(data.WrC);
   derived.HeW = wrist + toNumber(data.WrCEase);
   derived.CapLineEase = toNumber(data.CapLineEase);
+  if (Number.isFinite(data.CapCurveLengthCm)) {
+    derived.CapCurveLengthCm = data.CapCurveLengthCm;
+  }
 
   derived.CapEasePct = toNumber(data.CapEasePct);
   derived.CapEasePctConstruction = derived.CapEasePct;
@@ -869,6 +872,9 @@ function collectHofSleeveParams(skipInit = false) {
   });
   params.showGuides = getCheckbox("hofSleeveShowGuides", true);
   params.showMarkers = getCheckbox("hofSleeveShowMarkers", true);
+  if (hofSleeveUi.lastMeasured && Number.isFinite(hofSleeveUi.lastMeasured.CapCurveLengthCm)) {
+    params.CapCurveLengthCm = hofSleeveUi.lastMeasured.CapCurveLengthCm;
+  }
   return params;
 }
 
@@ -897,7 +903,13 @@ function updateHofSleeveDerivedFields() {
     measured.ElbowWidthMeasured != null && Number.isFinite(measured.ElbowWidthMeasured)
       ? measured.ElbowWidthMeasured
       : derived.HeW;
-  const capVal = measured.CapCurveLengthCm;
+  const capVal = Number.isFinite(measured.CapCurveLengthCm)
+    ? measured.CapCurveLengthCm
+    : Number.isFinite(derived.CapCurveLengthCm)
+      ? derived.CapCurveLengthCm
+      : Number.isFinite(hofSleeveUi.lastMeasured?.CapCurveLengthCm)
+        ? hofSleeveUi.lastMeasured.CapCurveLengthCm
+        : null;
   if (capLineEl)
     capLineEl.textContent = Number.isFinite(capLineVal) ? `${formatHofenbitzerValue(capLineVal)} cm` : "-- cm";
   if (widthEl) widthEl.textContent = Number.isFinite(widthVal) ? `${formatHofenbitzerValue(widthVal)} cm` : "-- cm";
@@ -4532,10 +4544,14 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
       measuredElbowWidth = pointDistanceCm(mark1Down6, mark2Down6);
     }
 
+    const prevMeasured = hofSleeveUi.lastMeasured || {};
     hofSleeveUi.lastMeasured = {
+      ...prevMeasured,
       SleeveWidthMeasured: measuredSleeveWidth,
       ElbowWidthMeasured: measuredElbowWidth,
-      CapCurveLengthCm: derivedValues.CapCurveLengthCm,
+      CapCurveLengthCm: Number.isFinite(derivedValues.CapCurveLengthCm)
+        ? derivedValues.CapCurveLengthCm
+        : prevMeasured.CapCurveLengthCm,
     };
     updateHofSleeveDerivedFields();
   }
@@ -4576,8 +4592,14 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
       addCapMarkers(layers.capShaping, layers.markers, layers.numbers, mark1, mark2, mark4.point, derived);
       addPerpendicularCapPoints(layers.capShaping, layers.markers, layers.numbers, mark1, mark2, mark4.point, derived);
       addCapArcs(layers, mark1, mark2, mark4.point, derived);
-      if (!hofSleeveUi.lastMeasured) hofSleeveUi.lastMeasured = {};
-      hofSleeveUi.lastMeasured.CapCurveLengthCm = derived.CapCurveLengthCm;
+      const prevMeasured = hofSleeveUi.lastMeasured || {};
+      hofSleeveUi.lastMeasured = {
+        ...prevMeasured,
+        CapCurveLengthCm: Number.isFinite(derived.CapCurveLengthCm)
+          ? derived.CapCurveLengthCm
+          : prevMeasured.CapCurveLengthCm,
+      };
+      updateHofSleeveDerivedFields();
       if (frontLineCm) {
         addLineLabel(
           layers.labels,
