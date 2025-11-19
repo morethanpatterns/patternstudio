@@ -1569,20 +1569,20 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
   const backFGVecX = backPointG.x - backPointF.x;
   const backFGVecY = backPointG.y - backPointF.y;
   const backFGLen = Math.hypot(backFGVecX, backFGVecY) || 1;
-  const backPointH = markPoint(
-    "BH",
-    {
-      x: backPointF.x + (backFGVecX * shoulderLengthPlusHalf) / backFGLen + 0.3,
-      y: backPointF.y + (backFGVecY * shoulderLengthPlusHalf) / backFGLen,
-    },
-    "H"
-  );
+  const backPointH = markPoint("BH", {
+    x: backPointF.x + (backFGVecX / backFGLen) * shoulderLengthPlusHalf,
+    y: backPointF.y + (backFGVecY / backFGLen) * shoulderLengthPlusHalf,
+  }, "H");
   drawLine(layers.foundationBack, backPointF, backPointH, "solid", { name: "Back Shoulder Length" });
 
-  const backPointP = markPoint("BP", {
-    x: (backPointF.x + backPointH.x) / 2,
-    y: (backPointF.y + backPointH.y) / 2,
-  });
+  const backPointP = markPoint(
+    "BP",
+    {
+      x: (backPointF.x + backPointH.x) / 2,
+      y: (backPointF.y + backPointH.y) / 2,
+    },
+    "P"
+  );
   const fhVecX = backPointH.x - backPointF.x;
   const fhVecY = backPointH.y - backPointF.y;
   const fhLength = Math.hypot(fhVecX, fhVecY) || 1;
