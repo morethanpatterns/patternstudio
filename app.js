@@ -7545,19 +7545,21 @@ function renderDraftList(patternKey) {
     selectBtn.addEventListener("click", () =>
       selectDraft(patternKey, draft.id)
     );
-    const meta = document.createElement("span");
-    meta.className = "draft-entry__meta";
-    meta.textContent = draft.visible ? "Visible" : "Hidden";
-    const toggleBtn = document.createElement("button");
-    toggleBtn.type = "button";
-    toggleBtn.className = "draft-entry__toggle";
-    toggleBtn.textContent = draft.visible ? "Hide" : "Show";
-    toggleBtn.addEventListener("click", () =>
-      toggleDraftVisibility(patternKey, draft.id)
-    );
+    const visibilityLabel = document.createElement("label");
+    visibilityLabel.className = "draft-entry__visibility";
+    visibilityLabel.title = "Show or hide this draft in the preview";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = draft.visible !== false;
+    checkbox.addEventListener("change", () => {
+      toggleDraftVisibility(patternKey, draft.id, checkbox.checked);
+    });
+    const visText = document.createElement("span");
+    visText.textContent = "Show";
+    visibilityLabel.appendChild(checkbox);
+    visibilityLabel.appendChild(visText);
     row.appendChild(selectBtn);
-    row.appendChild(meta);
-    row.appendChild(toggleBtn);
+    row.appendChild(visibilityLabel);
     container.appendChild(row);
   });
 }
@@ -7602,6 +7604,7 @@ function renderDraftPreviews(patternKey, liveSvg = null) {
     const wrapper = document.createElement("div");
     wrapper.className = "preview-draft";
     wrapper.dataset.draftId = draft.id;
+    wrapper.classList.toggle("is-active", isActive);
     applyDraftOffset(wrapper, draft);
     applyDraftColor(svgNode, draft.color, isActive);
     wrapper.appendChild(svgNode);
@@ -7764,16 +7767,20 @@ function selectDraft(patternKey, draftId) {
   regen();
 }
 
-function toggleDraftVisibility(patternKey, draftId) {
+function toggleDraftVisibility(patternKey, draftId, targetVisible) {
   const store = getDraftStore(patternKey);
   if (!store) return;
   const draft = store.drafts.find((entry) => entry.id === draftId);
   if (!draft) return;
-  if (draft.id === store.activeId && draft.visible) {
+  const nextVisible =
+    typeof targetVisible === "boolean" ? targetVisible : !draft.visible;
+  if (nextVisible === draft.visible) return;
+  if (!nextVisible && draft.id === store.activeId) {
     alert("Select another draft before hiding this one.");
+    renderDraftList(patternKey);
     return;
   }
-  draft.visible = !draft.visible;
+  draft.visible = nextVisible;
   renderDraftList(patternKey);
   renderDraftPreviews(patternKey);
   hydrateLayerTools(currentSvg);
@@ -8714,14 +8721,19 @@ function resetPreviewZoom() {
   previewPointers.clear();
   const containerWidth = preview.clientWidth || 0;
   const containerHeight = preview.clientHeight || 0;
-  const contentWidth =
-    target.scrollWidth || target.offsetWidth || containerWidth || 1;
-  const contentHeight =
-    target.scrollHeight || target.offsetHeight || containerHeight || 1;
-  const fitScale =
-    containerWidth > 0 && containerHeight > 0
-      ? Math.min(containerWidth / contentWidth, containerHeight / contentHeight)
-      : 1;
+  const prevTransform = target.style.transform;
+  target.style.transform = "";
+  const { width: contentWidth, height: contentHeight } =
+    measurePreviewContentSize(target) || {};
+  target.style.transform = prevTransform;
+  let fitScale = 0.5;
+  if (containerWidth > 0 && containerHeight > 0) {
+    const fitX = containerWidth / contentWidth;
+    const fitY = containerHeight / contentHeight;
+    fitScale = Math.min(fitX, fitY);
+  }
+  if (!Number.isFinite(fitScale) || fitScale <= 0) fitScale = 1;
+  fitScale = Math.min(1, fitScale);
   const clampedScale = clamp(
     fitScale,
     previewZoomState.minScale,
@@ -8735,6 +8747,40 @@ function resetPreviewZoom() {
   previewZoomState.pinchStartDistance = 0;
   previewZoomState.pinchStartScale = clampedScale;
   applyPreviewTransform(true);
+}
+
+function measurePreviewContentSize(target) {
+  if (!target) return { width: 1, height: 1 };
+  const referenceRect = target.getBoundingClientRect();
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  const drafts = target.querySelectorAll(".preview-draft");
+  drafts.forEach((node) => {
+    const rect = node.getBoundingClientRect();
+    const left = rect.left - referenceRect.left;
+    const top = rect.top - referenceRect.top;
+    const right = rect.right - referenceRect.left;
+    const bottom = rect.bottom - referenceRect.top;
+    if (rect.width > 0 && rect.height > 0) {
+      if (left < minX) minX = left;
+      if (top < minY) minY = top;
+      if (right > maxX) maxX = right;
+      if (bottom > maxY) maxY = bottom;
+    }
+  });
+  if (!Number.isFinite(minX) || !Number.isFinite(minY)) {
+    const fallbackWidth =
+      target.scrollWidth || target.offsetWidth || target.clientWidth || 1;
+    const fallbackHeight =
+      target.scrollHeight || target.offsetHeight || target.clientHeight || 1;
+    return { width: fallbackWidth, height: fallbackHeight };
+  }
+  return {
+    width: Math.max(1, maxX - minX),
+    height: Math.max(1, maxY - minY),
+  };
 }
 
 function clampPreviewTranslation() {
