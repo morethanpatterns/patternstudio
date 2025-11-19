@@ -7208,6 +7208,7 @@ let activePatternKey = "armstrong";
 const svgSerializer = new XMLSerializer();
 const svgDomParser = typeof DOMParser !== "undefined" ? new DOMParser() : null;
 const previewPointers = new Map();
+const patternDefaultInputs = {};
 const previewZoomState = {
   scale: 1,
   translateX: 0,
@@ -7378,6 +7379,7 @@ function initDraftManager() {
 function ensureInitialDraft(patternKey) {
   const store = getDraftStore(patternKey);
   if (!store || store.drafts.length) return;
+  applyPatternDefaults(patternKey);
   const inputState = captureInputState(patternKey);
   const draft = createDraft(patternKey, inputState);
   store.drafts.push(draft);
@@ -7409,6 +7411,46 @@ function cloneInputState(state = {}) {
     clone[key] = value ? { ...value } : value;
   });
   return clone;
+}
+
+function captureDefaultInputState(patternKey) {
+  const config = PATTERN_CONFIGS[patternKey];
+  const section = config?.elementId
+    ? document.getElementById(config.elementId)
+    : null;
+  const state = {};
+  if (!section) return state;
+  section.querySelectorAll("input, select, textarea").forEach((el) => {
+    if (!el.id) return;
+    if (el.type === "checkbox") {
+      state[el.id] = { type: "checkbox", value: el.defaultChecked };
+    } else if (el.tagName === "SELECT") {
+      const defaultOption =
+        Array.from(el.options).find((opt) => opt.defaultSelected) ||
+        el.options[0];
+      const value = defaultOption ? defaultOption.value : el.value || "";
+      state[el.id] = { type: "value", value };
+    } else {
+      state[el.id] = {
+        type: "value",
+        value: el.defaultValue ?? el.value ?? "",
+      };
+    }
+  });
+  return state;
+}
+
+function recordPatternDefaults() {
+  Object.keys(PATTERN_CONFIGS).forEach((patternKey) => {
+    patternDefaultInputs[patternKey] =
+      captureDefaultInputState(patternKey) || {};
+  });
+}
+
+function applyPatternDefaults(patternKey) {
+  const defaults = patternDefaultInputs[patternKey];
+  if (!defaults) return;
+  applyInputState(patternKey, defaults);
 }
 
 function captureInputState(patternKey) {
@@ -7450,6 +7492,12 @@ function applyActiveDraftInputs(patternKey) {
   const activeDraft = getActiveDraft(patternKey);
   if (!activeDraft) return;
   applyInputState(patternKey, activeDraft.inputState);
+}
+
+function resetPatternInputs(patternKey) {
+  applyPatternDefaults(patternKey);
+  persistActiveDraftInputs(patternKey);
+  regen();
 }
 
 function getDraftStore(patternKey) {
@@ -7790,6 +7838,8 @@ function initApp() {
   initHofSleeveControls();
   initHofSkirtControls();
   initLayerTools();
+  recordPatternDefaults();
+  applyPatternDefaults(activePatternKey);
   initDraftManager();
   Object.entries(PATTERN_CONFIGS).forEach(([key, config]) => {
     if (!config) return;
@@ -7862,8 +7912,7 @@ function initApp() {
     if (manageButton) {
       manageButton.addEventListener("click", () => {
         ensurePatternSelection(key);
-        if (!currentSvg) regen();
-        openLayerModal();
+        resetPatternInputs(key);
       });
     }
   });
@@ -8661,22 +8710,43 @@ function clearPreviewContent() {
 
 function resetPreviewZoom() {
   const target = getPreviewTarget();
-  if (!target) return;
+  if (!target || !preview) return;
   previewPointers.clear();
-  previewZoomState.scale = 1;
-  previewZoomState.translateX = 0;
-  previewZoomState.translateY = 0;
+  const containerWidth = preview.clientWidth || 0;
+  const containerHeight = preview.clientHeight || 0;
+  const contentWidth =
+    target.scrollWidth || target.offsetWidth || containerWidth || 1;
+  const contentHeight =
+    target.scrollHeight || target.offsetHeight || containerHeight || 1;
+  const fitScale =
+    containerWidth > 0 && containerHeight > 0
+      ? Math.min(containerWidth / contentWidth, containerHeight / contentHeight)
+      : 1;
+  const clampedScale = clamp(
+    fitScale,
+    previewZoomState.minScale,
+    previewZoomState.maxScale
+  );
+  previewZoomState.scale = clampedScale;
+  const scaledWidth = contentWidth * clampedScale;
+  const scaledHeight = contentHeight * clampedScale;
+  previewZoomState.translateX = (containerWidth - scaledWidth) / 2;
+  previewZoomState.translateY = (containerHeight - scaledHeight) / 2;
   previewZoomState.pinchStartDistance = 0;
-  previewZoomState.pinchStartScale = 1;
-  applyPreviewTransform();
+  previewZoomState.pinchStartScale = clampedScale;
+  applyPreviewTransform(true);
 }
 
 function clampPreviewTranslation() {
   if (!preview || !previewViewport) return;
   const containerWidth = preview.clientWidth || 0;
   const containerHeight = preview.clientHeight || 0;
-  const contentWidth = previewViewport.offsetWidth || containerWidth;
-  const contentHeight = previewViewport.offsetHeight || containerHeight;
+  const contentWidth =
+    previewViewport.scrollWidth || previewViewport.offsetWidth || containerWidth;
+  const contentHeight =
+    previewViewport.scrollHeight ||
+    previewViewport.offsetHeight ||
+    containerHeight;
   const scaledWidth = contentWidth * previewZoomState.scale;
   const scaledHeight = contentHeight * previewZoomState.scale;
   const extraWidth = Math.max(0, scaledWidth - containerWidth);
@@ -8690,10 +8760,12 @@ function clampPreviewTranslation() {
   previewZoomState.translateY = clamp(previewZoomState.translateY, minY, maxY);
 }
 
-function applyPreviewTransform() {
+function applyPreviewTransform(skipClamp = false) {
   const target = getPreviewTarget();
   if (!target) return;
-  clampPreviewTranslation();
+  if (!skipClamp) {
+    clampPreviewTranslation();
+  }
   const { scale, translateX, translateY } = previewZoomState;
   target.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
 }
