@@ -44,7 +44,8 @@ if (typeof window !== "undefined") {
         banner.style.padding = "12px";
         banner.style.background = "#fee2e2";
         banner.style.color = "#991b1b";
-        banner.style.fontFamily = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+        banner.style.fontFamily =
+          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
         banner.style.fontSize = "14px";
         banner.style.borderBottom = "1px solid #fecaca";
         document.body?.prepend(banner);
@@ -73,7 +74,9 @@ const baseAldrichDefaults = {
   frontSideWaistDart: 0,
   backSideWaistDart: 0,
 };
-const ALDRICH_DEFAULT_FRONT_NECK_DART = computeAldrichFrontNeckDart(baseAldrichDefaults.bust);
+const ALDRICH_DEFAULT_FRONT_NECK_DART = computeAldrichFrontNeckDart(
+  baseAldrichDefaults.bust
+);
 const ALDRICH_DEFAULT_DARTS = computeAldrichWaistDarts(
   baseAldrichDefaults.bust,
   baseAldrichDefaults.waist,
@@ -130,58 +133,187 @@ const HOFENBITZER_FIT_PROFILES = Object.freeze([
   },
   {
     name: "Fit 1",
-    ease: { AhD: 0.45, BrC: 2, WaC: 1, HiC: 1, BG: 0.1, AG: 0.3, BrG: 0.6, ShG: 0.1 },
+    ease: {
+      AhD: 0.45,
+      BrC: 2,
+      WaC: 1,
+      HiC: 1,
+      BG: 0.1,
+      AG: 0.3,
+      BrG: 0.6,
+      ShG: 0.1,
+    },
   },
   {
     name: "Fit 2",
-    ease: { AhD: 0.75, BrC: 4, WaC: 3, HiC: 3, BG: 0.3, AG: 0.9, BrG: 0.8, ShG: 0.2 },
+    ease: {
+      AhD: 0.75,
+      BrC: 4,
+      WaC: 3,
+      HiC: 3,
+      BG: 0.3,
+      AG: 0.9,
+      BrG: 0.8,
+      ShG: 0.2,
+    },
   },
   {
     name: "Fit 3",
-    ease: { AhD: 1.3, BrC: 6, WaC: 5, HiC: 5, BG: 0.5, AG: 1.5, BrG: 1.0, ShG: 0.3 },
+    ease: {
+      AhD: 1.3,
+      BrC: 6,
+      WaC: 5,
+      HiC: 5,
+      BG: 0.5,
+      AG: 1.5,
+      BrG: 1.0,
+      ShG: 0.3,
+    },
   },
   {
     name: "Fit 4",
-    ease: { AhD: 1.7, BrC: 8, WaC: 6, HiC: 6, BG: 0.8, AG: 2.0, BrG: 1.2, ShG: 0.4 },
+    ease: {
+      AhD: 1.7,
+      BrC: 8,
+      WaC: 6,
+      HiC: 6,
+      BG: 0.8,
+      AG: 2.0,
+      BrG: 1.2,
+      ShG: 0.4,
+    },
   },
   {
     name: "Fit 5",
-    ease: { AhD: 2.1, BrC: 10, WaC: 10, HiC: 7, BG: 1.1, AG: 2.5, BrG: 1.4, ShG: 0.5 },
+    ease: {
+      AhD: 2.1,
+      BrC: 10,
+      WaC: 10,
+      HiC: 7,
+      BG: 1.1,
+      AG: 2.5,
+      BrG: 1.4,
+      ShG: 0.5,
+    },
   },
   {
     name: "Fit 6",
-    ease: { AhD: 2.5, BrC: 12, WaC: 12, HiC: 8, BG: 1.4, AG: 3.0, BrG: 1.6, ShG: 0.6 },
+    ease: {
+      AhD: 2.5,
+      BrC: 12,
+      WaC: 12,
+      HiC: 8,
+      BG: 1.4,
+      AG: 3.0,
+      BrG: 1.6,
+      ShG: 0.6,
+    },
   },
 ]);
 
 const HOFENBITZER_PRIMARY_MEASUREMENTS = (() => {
-  const profile = HOFENBITZER_FIT_PROFILES[HOFENBITZER_DEFAULT_FIT_INDEX] || { ease: {} };
+  const profile = HOFENBITZER_FIT_PROFILES[HOFENBITZER_DEFAULT_FIT_INDEX] || {
+    ease: {},
+  };
   return [
-    { id: "BrC", label: "BrC", measurementDefault: HOFENBITZER_DEFAULTS.BrC, easeDefault: profile.ease.BrC || 0, fitKey: "BrC" },
-    { id: "WaC", label: "WaC", measurementDefault: HOFENBITZER_DEFAULTS.WaC, easeDefault: profile.ease.WaC || 0, fitKey: "WaC" },
-    { id: "HiC", label: "HiC", measurementDefault: HOFENBITZER_DEFAULTS.HiC, easeDefault: profile.ease.HiC || 0, fitKey: "HiC" },
-    { id: "AhD", label: "AhD", measurementDefault: HOFENBITZER_DEFAULTS.AhD, easeDefault: profile.ease.AhD || 0, fitKey: "AhD" },
-    { id: "BG", label: "BG", measurementDefault: HOFENBITZER_DEFAULTS.BG, easeDefault: profile.ease.BG || 0, fitKey: "BG" },
-    { id: "AG", label: "AG", measurementDefault: HOFENBITZER_DEFAULTS.AG, easeDefault: profile.ease.AG || 0, fitKey: "AG" },
-    { id: "BrG", label: "BrG", measurementDefault: HOFENBITZER_DEFAULTS.BrG, easeDefault: profile.ease.BrG || 0, fitKey: "BrG" },
-    { id: "ShG", label: "ShG", measurementDefault: HOFENBITZER_DEFAULTS.ShG, easeDefault: profile.ease.ShG || 0, fitKey: "ShG" },
-    { id: "BL", label: "BL", measurementDefault: HOFENBITZER_DEFAULTS.BL, easeDefault: HOFENBITZER_DEFAULTS.BLBal, easeLabel: "BL Balance" },
-    { id: "FL", label: "FL", measurementDefault: HOFENBITZER_DEFAULTS.FL, easeDefault: HOFENBITZER_DEFAULTS.FLBalance, easeLabel: "FL Balance" },
+    {
+      id: "BrC",
+      label: "BrC",
+      measurementDefault: HOFENBITZER_DEFAULTS.BrC,
+      easeDefault: profile.ease.BrC || 0,
+      fitKey: "BrC",
+    },
+    {
+      id: "WaC",
+      label: "WaC",
+      measurementDefault: HOFENBITZER_DEFAULTS.WaC,
+      easeDefault: profile.ease.WaC || 0,
+      fitKey: "WaC",
+    },
+    {
+      id: "HiC",
+      label: "HiC",
+      measurementDefault: HOFENBITZER_DEFAULTS.HiC,
+      easeDefault: profile.ease.HiC || 0,
+      fitKey: "HiC",
+    },
+    {
+      id: "AhD",
+      label: "AhD",
+      measurementDefault: HOFENBITZER_DEFAULTS.AhD,
+      easeDefault: profile.ease.AhD || 0,
+      fitKey: "AhD",
+    },
+    {
+      id: "BG",
+      label: "BG",
+      measurementDefault: HOFENBITZER_DEFAULTS.BG,
+      easeDefault: profile.ease.BG || 0,
+      fitKey: "BG",
+    },
+    {
+      id: "AG",
+      label: "AG",
+      measurementDefault: HOFENBITZER_DEFAULTS.AG,
+      easeDefault: profile.ease.AG || 0,
+      fitKey: "AG",
+    },
+    {
+      id: "BrG",
+      label: "BrG",
+      measurementDefault: HOFENBITZER_DEFAULTS.BrG,
+      easeDefault: profile.ease.BrG || 0,
+      fitKey: "BrG",
+    },
+    {
+      id: "ShG",
+      label: "ShG",
+      measurementDefault: HOFENBITZER_DEFAULTS.ShG,
+      easeDefault: profile.ease.ShG || 0,
+      fitKey: "ShG",
+    },
+    {
+      id: "BL",
+      label: "BL",
+      measurementDefault: HOFENBITZER_DEFAULTS.BL,
+      easeDefault: HOFENBITZER_DEFAULTS.BLBal,
+      easeLabel: "BL Balance",
+    },
+    {
+      id: "FL",
+      label: "FL",
+      measurementDefault: HOFENBITZER_DEFAULTS.FL,
+      easeDefault: HOFENBITZER_DEFAULTS.FLBalance,
+      easeLabel: "FL Balance",
+    },
   ];
 })();
 
-const HOFENBITZER_MEASUREMENT_LOOKUP = HOFENBITZER_PRIMARY_MEASUREMENTS.reduce((acc, def) => {
-  acc[def.id] = def;
-  return acc;
-}, {});
+const HOFENBITZER_MEASUREMENT_LOOKUP = HOFENBITZER_PRIMARY_MEASUREMENTS.reduce(
+  (acc, def) => {
+    acc[def.id] = def;
+    return acc;
+  },
+  {}
+);
 
 const HOFENBITZER_SECONDARY_MEASUREMENTS = [
   { id: "NeG", label: "NeG", defaultValue: HOFENBITZER_DEFAULTS.NeG },
   { id: "MoL", label: "MoL", defaultValue: HOFENBITZER_DEFAULTS.MoL },
   { id: "HiD", label: "HiD", defaultValue: HOFENBITZER_DEFAULTS.HiD },
-  { id: "ShA", label: "ShA (deg)", defaultValue: HOFENBITZER_DEFAULTS.ShA, step: 0.1 },
+  {
+    id: "ShA",
+    label: "ShA (deg)",
+    defaultValue: HOFENBITZER_DEFAULTS.ShA,
+    step: 0.1,
+  },
   { id: "BrD", label: "BrD", defaultValue: HOFENBITZER_DEFAULTS.BrD },
-  { id: "ShoulderDifference", label: "Shoulder Diff. (deg)", defaultValue: HOFENBITZER_DEFAULTS.ShoulderDifference, step: 0.1 },
+  {
+    id: "ShoulderDifference",
+    label: "Shoulder Diff. (deg)",
+    defaultValue: HOFENBITZER_DEFAULTS.ShoulderDifference,
+    step: 0.1,
+  },
 ];
 
 const HOFENBITZER_SLEEVE_DEFAULTS = Object.freeze({
@@ -206,18 +338,84 @@ const HOFENBITZER_SLEEVE_DEFAULTS = Object.freeze({
 });
 
 const HOFENBITZER_SLEEVE_MEASUREMENTS = [
-  { id: "AhH", label: "AhH", easeKey: "AhHEase", derivedKey: "AhHConstruction", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.AhH },
-  { id: "fAh", label: "fAh", easeKey: "fAhEase", derivedKey: "fAhConstruction", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.fAh },
-  { id: "bAh", label: "bAh", easeKey: "bAhEase", derivedKey: "bAhConstruction", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.bAh },
+  {
+    id: "AhH",
+    label: "AhH",
+    easeKey: "AhHEase",
+    derivedKey: "AhHConstruction",
+    defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.AhH,
+  },
+  {
+    id: "fAh",
+    label: "fAh",
+    easeKey: "fAhEase",
+    derivedKey: "fAhConstruction",
+    defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.fAh,
+  },
+  {
+    id: "bAh",
+    label: "bAh",
+    easeKey: "bAhEase",
+    derivedKey: "bAhConstruction",
+    defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.bAh,
+  },
   { id: "AhC", label: "AhC", derivedKey: "AhCConstruction", readOnly: true },
-  { id: "AL", label: "AL", easeKey: "ALEase", derivedKey: "SlL", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.AL },
-  { id: "upAC", label: "upAC", easeKey: "upACEase", derivedKey: "SlW", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.upAC },
-  { id: "WrC", label: "WrC", easeKey: "WrCEase", derivedKey: "HeW", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.WrC },
-  { id: "CapEasePct", label: "Cap Ease (%)", derivedKey: "CapEaseCm", derivedLabel: "Cap Ease (cm)", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.CapEasePct, hasEase: false },
-  { id: "CapC", label: "CapC", derivedKey: "CapC", readOnly: true, hasEase: false },
-  { id: "CapLineEase", label: "Cap Line Ease", derivedKey: "CapLineEase", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.CapLineEase },
-  { id: "fAP", label: "fAP", derivedKey: "fAPFinal", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.fAP, hasEase: false },
-  { id: "bAP", label: "bAP", derivedKey: "bAPFinal", defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.bAP, hasEase: false },
+  {
+    id: "AL",
+    label: "AL",
+    easeKey: "ALEase",
+    derivedKey: "SlL",
+    defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.AL,
+  },
+  {
+    id: "upAC",
+    label: "upAC",
+    easeKey: "upACEase",
+    derivedKey: "SlW",
+    defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.upAC,
+  },
+  {
+    id: "WrC",
+    label: "WrC",
+    easeKey: "WrCEase",
+    derivedKey: "HeW",
+    defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.WrC,
+  },
+  {
+    id: "CapEasePct",
+    label: "Cap Ease (%)",
+    derivedKey: "CapEaseCm",
+    derivedLabel: "Cap Ease (cm)",
+    defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.CapEasePct,
+    hasEase: false,
+  },
+  {
+    id: "CapC",
+    label: "CapC",
+    derivedKey: "CapC",
+    readOnly: true,
+    hasEase: false,
+  },
+  {
+    id: "CapLineEase",
+    label: "Cap Line Ease",
+    derivedKey: "CapLineEase",
+    defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.CapLineEase,
+  },
+  {
+    id: "fAP",
+    label: "fAP",
+    derivedKey: "fAPFinal",
+    defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.fAP,
+    hasEase: false,
+  },
+  {
+    id: "bAP",
+    label: "bAP",
+    derivedKey: "bAPFinal",
+    defaultValue: HOFENBITZER_SLEEVE_DEFAULTS.bAP,
+    hasEase: false,
+  },
 ];
 
 const HOFENBITZER_SKIRT_DEFAULTS = Object.freeze({
@@ -233,7 +431,12 @@ const HOFENBITZER_SKIRT_DEFAULTS = Object.freeze({
   HipProfile: "Normal",
 });
 
-const HOFENBITZER_SKIRT_MANUAL_KEYS = ["SideDart", "FrontDart", "BackDart1", "BackDart2"];
+const HOFENBITZER_SKIRT_MANUAL_KEYS = [
+  "SideDart",
+  "FrontDart",
+  "BackDart1",
+  "BackDart2",
+];
 
 const HOFENBITZER_MARKER_RADIUS_CM = 0.25;
 const HOFENBITZER_MIN_HANDLE_LENGTH_CM = 0.5;
@@ -274,7 +477,9 @@ function hofSkirtOverrideId(key) {
 function hydrateHofSkirtManualOverridesFromDom() {
   HOFENBITZER_SKIRT_MANUAL_KEYS.forEach((key) => {
     const overrideInput = document.getElementById(hofSkirtOverrideId(key));
-    hofSkirtUi.manualOverrides[key] = overrideInput ? overrideInput.value === "true" : false;
+    hofSkirtUi.manualOverrides[key] = overrideInput
+      ? overrideInput.value === "true"
+      : false;
   });
 }
 
@@ -287,7 +492,9 @@ function setHofSkirtManualOverride(key, enabled) {
 }
 
 function formatHofenbitzerValue(value) {
-  return Number.isFinite(value) ? (Math.round(value * 100) / 100).toFixed(2) : "--";
+  return Number.isFinite(value)
+    ? (Math.round(value * 100) / 100).toFixed(2)
+    : "--";
 }
 
 function createHofenbitzerField(labelText, content, options = {}) {
@@ -321,14 +528,20 @@ function updateHofenbitzerMeasurementRow(rowId) {
   if (!ref) return;
   const { def, measurementInput, easeInput, finalOutput } = ref;
   const measurementValue = Number.parseFloat(measurementInput.value);
-  const resolvedMeasurement = Number.isFinite(measurementValue) ? measurementValue : def.measurementDefault;
+  const resolvedMeasurement = Number.isFinite(measurementValue)
+    ? measurementValue
+    : def.measurementDefault;
   let resolvedEase = 0;
   if (easeInput) {
     const easeValue = Number.parseFloat(easeInput.value);
-    resolvedEase = Number.isFinite(easeValue) ? easeValue : def.easeDefault || 0;
+    resolvedEase = Number.isFinite(easeValue)
+      ? easeValue
+      : def.easeDefault || 0;
   }
   if (finalOutput) {
-    finalOutput.value = formatHofenbitzerValue(resolvedMeasurement + resolvedEase);
+    finalOutput.value = formatHofenbitzerValue(
+      resolvedMeasurement + resolvedEase
+    );
   }
 }
 
@@ -342,15 +555,19 @@ function updateHofenbitzerDerivedOutputs(values = {}) {
   const outputs = hofenbitzerUi.derivedOutputs;
   if (!outputs) return;
   const { hiG, hipShortage, hipSpanBack, hipSpanFront } = outputs;
-  const formatDisplay = (val) => (Number.isFinite(val) ? formatHofenbitzerValue(val) : "--");
+  const formatDisplay = (val) =>
+    Number.isFinite(val) ? formatHofenbitzerValue(val) : "--";
   if (hiG) hiG.textContent = formatDisplay(values.hiG);
   if (hipShortage) hipShortage.textContent = formatDisplay(values.hipShortage);
   if (hipSpanBack) hipSpanBack.textContent = formatDisplay(values.hipSpanBack);
-  if (hipSpanFront) hipSpanFront.textContent = formatDisplay(values.hipSpanFront);
+  if (hipSpanFront)
+    hipSpanFront.textContent = formatDisplay(values.hipSpanFront);
 }
 
 function normalizeHofSkirtProfile(profile = "Normal") {
-  const value = String(profile || "Normal").trim().toLowerCase();
+  const value = String(profile || "Normal")
+    .trim()
+    .toLowerCase();
   if (value.includes("flat")) return "Flat";
   if (value.includes("curvy")) return "Curvy";
   return "Normal";
@@ -369,8 +586,10 @@ function determineHofSkirtSideDartBase(profile = "Normal", waistDiff = 0) {
 }
 
 function computeHofSkirtDerived(params = {}) {
-  const hipWidth = ((Number(params.HiC) || 0) + (Number(params.HipEase) || 0)) / 2;
-  const waistWidth = ((Number(params.WaC) || 0) + (Number(params.WaistEase) || 0)) / 2;
+  const hipWidth =
+    ((Number(params.HiC) || 0) + (Number(params.HipEase) || 0)) / 2;
+  const waistWidth =
+    ((Number(params.WaC) || 0) + (Number(params.WaistEase) || 0)) / 2;
   const waistDiffTarget = Math.max(0, hipWidth - waistWidth);
   const result = {
     HiW: hipWidth,
@@ -378,32 +597,50 @@ function computeHofSkirtDerived(params = {}) {
     WaistDiffTarget: waistDiffTarget,
   };
 
-  const sideBase = determineHofSkirtSideDartBase(params.HipProfile, waistDiffTarget);
+  const sideBase = determineHofSkirtSideDartBase(
+    params.HipProfile,
+    waistDiffTarget
+  );
   const manualSide = Number(params.SideDart);
   const sideOverride = params.SideDartOverride && Number.isFinite(manualSide);
-  const sideVal = sideOverride ? Math.max(0, manualSide) : Math.max(0, sideBase);
+  const sideVal = sideOverride
+    ? Math.max(0, manualSide)
+    : Math.max(0, sideBase);
   result.SideDart = sideVal;
 
   const frontAuto = Math.min(waistDiffTarget * 0.2, 2.5);
   const manualFront = Number(params.FrontDart);
-  const frontOverride = params.FrontDartOverride && Number.isFinite(manualFront);
-  const frontVal = frontOverride ? Math.max(0, manualFront) : Math.max(0, frontAuto);
+  const frontOverride =
+    params.FrontDartOverride && Number.isFinite(manualFront);
+  const frontVal = frontOverride
+    ? Math.max(0, manualFront)
+    : Math.max(0, frontAuto);
   result.FrontDart = frontVal;
 
   const FIRST_BACK_DART_MAX = 4.5;
   const MIN_SECOND_BACK_DART_CM_TARGET = 1;
   const manualBack1 = Number(params.BackDart1);
-  const back1Override = params.BackDart1Override && Number.isFinite(manualBack1);
+  const back1Override =
+    params.BackDart1Override && Number.isFinite(manualBack1);
   let back1Val = back1Override
     ? Math.max(0, manualBack1)
     : Math.min(waistDiffTarget * 0.3, FIRST_BACK_DART_MAX);
 
   let remainder = Math.max(0, waistDiffTarget - sideVal - frontVal - back1Val);
   const manualBack2 = Number(params.BackDart2);
-  const back2Override = params.BackDart2Override && Number.isFinite(manualBack2);
-  let back2Val = back2Override ? Math.max(0, manualBack2) : Math.max(0, remainder);
+  const back2Override =
+    params.BackDart2Override && Number.isFinite(manualBack2);
+  let back2Val = back2Override
+    ? Math.max(0, manualBack2)
+    : Math.max(0, remainder);
 
-  if (!back1Override && !back2Override && back2Val > 0 && back2Val < MIN_SECOND_BACK_DART_CM_TARGET && back1Val < FIRST_BACK_DART_MAX) {
+  if (
+    !back1Override &&
+    !back2Override &&
+    back2Val > 0 &&
+    back2Val < MIN_SECOND_BACK_DART_CM_TARGET &&
+    back1Val < FIRST_BACK_DART_MAX
+  ) {
     const transferable = Math.min(back2Val, FIRST_BACK_DART_MAX - back1Val);
     if (transferable > 0) {
       back1Val += transferable;
@@ -430,7 +667,9 @@ function computeHofSkirtDerived(params = {}) {
 }
 
 function applyHofenbitzerFitProfile(index, options = {}) {
-  const profile = HOFENBITZER_FIT_PROFILES[index] || HOFENBITZER_FIT_PROFILES[HOFENBITZER_DEFAULT_FIT_INDEX];
+  const profile =
+    HOFENBITZER_FIT_PROFILES[index] ||
+    HOFENBITZER_FIT_PROFILES[HOFENBITZER_DEFAULT_FIT_INDEX];
   if (!profile) return;
   if (hofenbitzerUi.fitSelect) {
     hofenbitzerUi.fitSelect.value = String(index);
@@ -450,7 +689,9 @@ function applyHofenbitzerFitProfile(index, options = {}) {
 function initHofenbitzerControls() {
   if (hofenbitzerUi.initialized) return;
   const primaryHost = document.getElementById("hofenbitzerPrimaryMeasurements");
-  const secondaryHost = document.getElementById("hofenbitzerSecondaryMeasurements");
+  const secondaryHost = document.getElementById(
+    "hofenbitzerSecondaryMeasurements"
+  );
   if (!primaryHost || !secondaryHost) return;
 
   hofenbitzerUi.measurementRows = {};
@@ -468,7 +709,9 @@ function initHofenbitzerControls() {
     measurementInput.step = def.step || 0.1;
     measurementInput.value = formatHofenbitzerValue(def.measurementDefault);
     measurementInput.inputMode = "decimal";
-    inputsWrapper.appendChild(createHofenbitzerField(def.label, measurementInput));
+    inputsWrapper.appendChild(
+      createHofenbitzerField(def.label, measurementInput)
+    );
 
     let easeInput = null;
     if (def.hasEase !== false) {
@@ -484,10 +727,14 @@ function initHofenbitzerControls() {
       emptyInput.readOnly = true;
       emptyInput.value = "--";
       emptyInput.tabIndex = -1;
-      inputsWrapper.appendChild(createHofenbitzerField("Ease", emptyInput, { empty: true }));
+      inputsWrapper.appendChild(
+        createHofenbitzerField("Ease", emptyInput, { empty: true })
+      );
     }
 
-    const initialFinal = def.measurementDefault + (def.hasEase !== false ? def.easeDefault || 0 : 0);
+    const initialFinal =
+      def.measurementDefault +
+      (def.hasEase !== false ? def.easeDefault || 0 : 0);
     const finalLabelMap = {
       AhD: "AhD+",
       BrC: "BrC+",
@@ -566,19 +813,27 @@ function initHofenbitzerControls() {
     const initialFit = Number.parseInt(fitSelect.value, 10);
     fitSelect.addEventListener("change", () => {
       const idx = Number.parseInt(fitSelect.value, 10);
-      applyHofenbitzerFitProfile(Number.isNaN(idx) ? HOFENBITZER_DEFAULT_FIT_INDEX : idx);
+      applyHofenbitzerFitProfile(
+        Number.isNaN(idx) ? HOFENBITZER_DEFAULT_FIT_INDEX : idx
+      );
     });
-    applyHofenbitzerFitProfile(Number.isNaN(initialFit) ? HOFENBITZER_DEFAULT_FIT_INDEX : initialFit, {
-      silent: true,
-    });
+    applyHofenbitzerFitProfile(
+      Number.isNaN(initialFit) ? HOFENBITZER_DEFAULT_FIT_INDEX : initialFit,
+      {
+        silent: true,
+      }
+    );
   }
 
   const derivedContainer = document.getElementById("hofenbitzerDerivedMetrics");
   hofenbitzerUi.derivedOutputs = {
     hiG: derivedContainer?.querySelector("#hofDerivedHiG") || null,
-    hipShortage: derivedContainer?.querySelector("#hofDerivedHipShortage") || null,
-    hipSpanBack: derivedContainer?.querySelector("#hofDerivedHipSpanBack") || null,
-    hipSpanFront: derivedContainer?.querySelector("#hofDerivedHipSpanFront") || null,
+    hipShortage:
+      derivedContainer?.querySelector("#hofDerivedHipShortage") || null,
+    hipSpanBack:
+      derivedContainer?.querySelector("#hofDerivedHipSpanBack") || null,
+    hipSpanFront:
+      derivedContainer?.querySelector("#hofDerivedHipSpanFront") || null,
   };
   updateHofenbitzerDerivedOutputs();
 
@@ -594,11 +849,26 @@ function captureHofSkirtInputs() {
     HiD: getNumber("hofSkirtHiD", HOFENBITZER_SKIRT_DEFAULTS.HiD),
     MoL: getNumber("hofSkirtMoL", HOFENBITZER_SKIRT_DEFAULTS.MoL),
     HipEase: getNumber("hofSkirtHipEase", HOFENBITZER_SKIRT_DEFAULTS.HipEase),
-    WaistEase: getNumber("hofSkirtWaistEase", HOFENBITZER_SKIRT_DEFAULTS.WaistEase),
-    FrontDartLength: getNumber("hofSkirtFrontDartLength", HOFENBITZER_SKIRT_DEFAULTS.FrontDartLength),
-    BackDartLength1: getNumber("hofSkirtBackDartLength1", HOFENBITZER_SKIRT_DEFAULTS.BackDartLength1),
-    BackDartLength2: getNumber("hofSkirtBackDartLength2", HOFENBITZER_SKIRT_DEFAULTS.BackDartLength2),
-    HipProfile: getText("hofSkirtHipProfile", HOFENBITZER_SKIRT_DEFAULTS.HipProfile),
+    WaistEase: getNumber(
+      "hofSkirtWaistEase",
+      HOFENBITZER_SKIRT_DEFAULTS.WaistEase
+    ),
+    FrontDartLength: getNumber(
+      "hofSkirtFrontDartLength",
+      HOFENBITZER_SKIRT_DEFAULTS.FrontDartLength
+    ),
+    BackDartLength1: getNumber(
+      "hofSkirtBackDartLength1",
+      HOFENBITZER_SKIRT_DEFAULTS.BackDartLength1
+    ),
+    BackDartLength2: getNumber(
+      "hofSkirtBackDartLength2",
+      HOFENBITZER_SKIRT_DEFAULTS.BackDartLength2
+    ),
+    HipProfile: getText(
+      "hofSkirtHipProfile",
+      HOFENBITZER_SKIRT_DEFAULTS.HipProfile
+    ),
     SideDart: getNumber("hofSkirtSideDart", 0),
     FrontDart: getNumber("hofSkirtFrontDart", 0),
     BackDart1: getNumber("hofSkirtBackDart1", 0),
@@ -638,11 +908,14 @@ function updateHofSkirtDerivedFields() {
   setInputIfAuto("BackDart2", derived.BackDart2);
 
   const outputs = hofSkirtUi.derivedOutputs || {};
-  const formatDisplay = (val) => (Number.isFinite(val) ? `${formatHofenbitzerValue(val)} cm` : "--");
+  const formatDisplay = (val) =>
+    Number.isFinite(val) ? `${formatHofenbitzerValue(val)} cm` : "--";
   if (outputs.hiW) outputs.hiW.textContent = formatDisplay(derived.HiW);
   if (outputs.waW) outputs.waW.textContent = formatDisplay(derived.WaW);
-  if (outputs.waistDiff) outputs.waistDiff.textContent = formatDisplay(derived.WaistDiffTarget);
-  if (outputs.dartSum) outputs.dartSum.textContent = formatDisplay(derived.DartSum);
+  if (outputs.waistDiff)
+    outputs.waistDiff.textContent = formatDisplay(derived.WaistDiffTarget);
+  if (outputs.dartSum)
+    outputs.dartSum.textContent = formatDisplay(derived.DartSum);
 }
 
 function initHofSkirtControls() {
@@ -739,7 +1012,8 @@ function computeHofenbitzerSleeveDerived(data = {}) {
 
   derived.CapEasePct = toNumber(data.CapEasePct);
   derived.CapEasePctConstruction = derived.CapEasePct;
-  derived.CapEaseCm = (derived.AhCConstruction * derived.CapEasePctConstruction) / 100;
+  derived.CapEaseCm =
+    (derived.AhCConstruction * derived.CapEasePctConstruction) / 100;
   derived.CapC = derived.AhCConstruction + derived.CapEaseCm;
   derived.fAP = toNumber(data.fAP);
   derived.bAP = toNumber(data.bAP);
@@ -773,7 +1047,9 @@ function initHofSleeveControls() {
       emptyMeasurement.readOnly = true;
       emptyMeasurement.value = "--";
       emptyMeasurement.tabIndex = -1;
-      rowContent.appendChild(createHofenbitzerField(def.label, emptyMeasurement, { empty: true }));
+      rowContent.appendChild(
+        createHofenbitzerField(def.label, emptyMeasurement, { empty: true })
+      );
     } else {
       measurementInput = document.createElement("input");
       measurementInput.type = "number";
@@ -782,7 +1058,9 @@ function initHofSleeveControls() {
         measurementInput.value = formatHofenbitzerValue(def.defaultValue);
       }
       measurementInput.inputMode = "decimal";
-      rowContent.appendChild(createHofenbitzerField(def.label, measurementInput));
+      rowContent.appendChild(
+        createHofenbitzerField(def.label, measurementInput)
+      );
     }
 
     let easeInput = null;
@@ -791,7 +1069,9 @@ function initHofSleeveControls() {
       easeInput.type = "number";
       easeInput.step = def.easeStep || 0.1;
       const easeDefault =
-        def.easeDefault != null ? def.easeDefault : HOFENBITZER_SLEEVE_DEFAULTS[def.easeKey];
+        def.easeDefault != null
+          ? def.easeDefault
+          : HOFENBITZER_SLEEVE_DEFAULTS[def.easeKey];
       if (Number.isFinite(easeDefault)) {
         easeInput.value = formatHofenbitzerValue(easeDefault);
       }
@@ -803,12 +1083,17 @@ function initHofSleeveControls() {
       emptyEase.readOnly = true;
       emptyEase.value = "--";
       emptyEase.tabIndex = -1;
-      rowContent.appendChild(createHofenbitzerField("Ease", emptyEase, { empty: true }));
+      rowContent.appendChild(
+        createHofenbitzerField("Ease", emptyEase, { empty: true })
+      );
     }
 
     let finalOutput = null;
     if (def.derivedKey) {
-      const finalField = createHofenbitzerFinalField(def.derivedLabel || def.label || "Final", "--");
+      const finalField = createHofenbitzerFinalField(
+        def.derivedLabel || def.label || "Final",
+        "--"
+      );
       rowContent.appendChild(finalField.field);
       finalOutput = finalField.output;
     } else {
@@ -817,7 +1102,9 @@ function initHofSleeveControls() {
       emptyFinal.readOnly = true;
       emptyFinal.value = "--";
       emptyFinal.tabIndex = -1;
-      rowContent.appendChild(createHofenbitzerField("Final", emptyFinal, { empty: true }));
+      rowContent.appendChild(
+        createHofenbitzerField("Final", emptyFinal, { empty: true })
+      );
     }
 
     const ref = {
@@ -851,7 +1138,8 @@ function initHofSleeveControls() {
 
 function collectHofSleeveParams(skipInit = false) {
   if (!skipInit) initHofSleeveControls();
-  else if (!hofSleeveUi.initialized && !hofSleeveUi.initializing) initHofSleeveControls();
+  else if (!hofSleeveUi.initialized && !hofSleeveUi.initializing)
+    initHofSleeveControls();
   const params = {};
   HOFENBITZER_SLEEVE_MEASUREMENTS.forEach((def) => {
     const ref = hofSleeveUi.rows[def.id];
@@ -860,7 +1148,9 @@ function collectHofSleeveParams(skipInit = false) {
       params[def.id] = Number.isFinite(measurementValue)
         ? measurementValue
         : HOFENBITZER_SLEEVE_DEFAULTS[def.id];
-    } else if (Object.prototype.hasOwnProperty.call(HOFENBITZER_SLEEVE_DEFAULTS, def.id)) {
+    } else if (
+      Object.prototype.hasOwnProperty.call(HOFENBITZER_SLEEVE_DEFAULTS, def.id)
+    ) {
       params[def.id] = HOFENBITZER_SLEEVE_DEFAULTS[def.id];
     }
     if (def.easeKey && ref?.easeInput) {
@@ -872,7 +1162,10 @@ function collectHofSleeveParams(skipInit = false) {
   });
   params.showGuides = getCheckbox("hofSleeveShowGuides", true);
   params.showMarkers = getCheckbox("hofSleeveShowMarkers", true);
-  if (hofSleeveUi.lastMeasured && Number.isFinite(hofSleeveUi.lastMeasured.CapCurveLengthCm)) {
+  if (
+    hofSleeveUi.lastMeasured &&
+    Number.isFinite(hofSleeveUi.lastMeasured.CapCurveLengthCm)
+  ) {
     params.CapCurveLengthCm = hofSleeveUi.lastMeasured.CapCurveLengthCm;
   }
   return params;
@@ -896,25 +1189,38 @@ function updateHofSleeveDerivedFields() {
       ? measured.CapLineCm
       : (derived.SlW || 0) + (derived.CapLineEase || 0);
   const widthVal =
-    measured.SleeveWidthMeasured != null && Number.isFinite(measured.SleeveWidthMeasured)
+    measured.SleeveWidthMeasured != null &&
+    Number.isFinite(measured.SleeveWidthMeasured)
       ? measured.SleeveWidthMeasured
       : derived.SlW;
   const elbowVal =
-    measured.ElbowWidthMeasured != null && Number.isFinite(measured.ElbowWidthMeasured)
+    measured.ElbowWidthMeasured != null &&
+    Number.isFinite(measured.ElbowWidthMeasured)
       ? measured.ElbowWidthMeasured
       : derived.HeW;
   const capVal = Number.isFinite(measured.CapCurveLengthCm)
     ? measured.CapCurveLengthCm
     : Number.isFinite(derived.CapCurveLengthCm)
-      ? derived.CapCurveLengthCm
-      : Number.isFinite(hofSleeveUi.lastMeasured?.CapCurveLengthCm)
-        ? hofSleeveUi.lastMeasured.CapCurveLengthCm
-        : null;
+    ? derived.CapCurveLengthCm
+    : Number.isFinite(hofSleeveUi.lastMeasured?.CapCurveLengthCm)
+    ? hofSleeveUi.lastMeasured.CapCurveLengthCm
+    : null;
   if (capLineEl)
-    capLineEl.textContent = Number.isFinite(capLineVal) ? `${formatHofenbitzerValue(capLineVal)} cm` : "-- cm";
-  if (widthEl) widthEl.textContent = Number.isFinite(widthVal) ? `${formatHofenbitzerValue(widthVal)} cm` : "-- cm";
-  if (elbowEl) elbowEl.textContent = Number.isFinite(elbowVal) ? `${formatHofenbitzerValue(elbowVal)} cm` : "-- cm";
-  if (capEl) capEl.textContent = Number.isFinite(capVal) ? `${formatHofenbitzerValue(capVal)} cm` : "-- cm";
+    capLineEl.textContent = Number.isFinite(capLineVal)
+      ? `${formatHofenbitzerValue(capLineVal)} cm`
+      : "-- cm";
+  if (widthEl)
+    widthEl.textContent = Number.isFinite(widthVal)
+      ? `${formatHofenbitzerValue(widthVal)} cm`
+      : "-- cm";
+  if (elbowEl)
+    elbowEl.textContent = Number.isFinite(elbowVal)
+      ? `${formatHofenbitzerValue(elbowVal)} cm`
+      : "-- cm";
+  if (capEl)
+    capEl.textContent = Number.isFinite(capVal)
+      ? `${formatHofenbitzerValue(capVal)} cm`
+      : "-- cm";
 }
 
 function createSvgRoot(w = PAGE_WIDTH_MM, h = PAGE_HEIGHT_MM) {
@@ -989,7 +1295,10 @@ function fitSvgToBounds(svg, bounds) {
   const viewMinY = bounds.minY - TOP_PADDING_MM;
   const viewWidth = width + PADDING_MM * 2;
   const viewHeight = height + TOP_PADDING_MM + PADDING_MM;
-  svg.setAttribute("viewBox", `${viewMinX} ${viewMinY} ${viewWidth} ${viewHeight}`);
+  svg.setAttribute(
+    "viewBox",
+    `${viewMinX} ${viewMinY} ${viewWidth} ${viewHeight}`
+  );
   svg.setAttribute("width", viewWidth + "mm");
   svg.setAttribute("height", viewHeight + "mm");
 }
@@ -1041,8 +1350,10 @@ function generateArmstrong(params) {
       stroke === "#111" ||
       stroke === "#111111";
     if (isBlack) {
-      if (targetLayer === layers.front && layers.foundationFront) return layers.foundationFront;
-      if (targetLayer === layers.back && layers.foundationBack) return layers.foundationBack;
+      if (targetLayer === layers.front && layers.foundationFront)
+        return layers.foundationFront;
+      if (targetLayer === layers.back && layers.foundationBack)
+        return layers.foundationBack;
     }
     return targetLayer;
   }
@@ -1065,8 +1376,8 @@ function generateArmstrong(params) {
     }
     const line = path(`M ${s.x} ${s.y} L ${e.x} ${e.y}`, attrs);
     actualLayer.appendChild(line);
-      return line;
-    }
+    return line;
+  }
 
   function drawCurve(targetLayer, start, control1, control2, end, opts = {}) {
     const s = toSvgCoords(start);
@@ -1085,14 +1396,25 @@ function generateArmstrong(params) {
     if (opts.name) {
       attrs["data-name"] = opts.name;
     }
-    const curve = path(`M ${s.x} ${s.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${e.x} ${e.y}`, attrs);
+    const curve = path(
+      `M ${s.x} ${s.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${e.x} ${e.y}`,
+      attrs
+    );
     actualLayer.appendChild(curve);
-      return curve;
-    }
+    return curve;
+  }
 
-function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, opts = {}) {
+  function drawBezierArcSegment(
+    targetLayer,
+    startPoint,
+    controlPoint,
+    endPoint,
+    opts = {}
+  ) {
     const start = { x: startPoint.x, y: startPoint.y };
-    const control = controlPoint ? { x: controlPoint.x, y: controlPoint.y } : null;
+    const control = controlPoint
+      ? { x: controlPoint.x, y: controlPoint.y }
+      : null;
     const end = { x: endPoint.x, y: endPoint.y };
     const dxChord = end.x - start.x;
     const dyChord = end.y - start.y;
@@ -1103,11 +1425,19 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
     const normalUnit = { x: -tangentUnit.y, y: tangentUnit.x };
 
     const applyRatio = (base, ratio) => {
-      const tangentComp = ratio && Number.isFinite(ratio.tangent) ? ratio.tangent : 0;
-      const normalComp = ratio && Number.isFinite(ratio.normal) ? ratio.normal : 0;
+      const tangentComp =
+        ratio && Number.isFinite(ratio.tangent) ? ratio.tangent : 0;
+      const normalComp =
+        ratio && Number.isFinite(ratio.normal) ? ratio.normal : 0;
       return {
-        x: base.x + (tangentUnit.x * tangentComp + normalUnit.x * normalComp) * chordLength,
-        y: base.y + (tangentUnit.y * tangentComp + normalUnit.y * normalComp) * chordLength,
+        x:
+          base.x +
+          (tangentUnit.x * tangentComp + normalUnit.x * normalComp) *
+            chordLength,
+        y:
+          base.y +
+          (tangentUnit.y * tangentComp + normalUnit.y * normalComp) *
+            chordLength,
       };
     };
 
@@ -1140,7 +1470,11 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
       opts.controlStartAbsolute
     );
     if (opts.controlStartOffset) {
-      ctrl1 = movePoint(ctrl1, opts.controlStartOffset.x || 0, opts.controlStartOffset.y || 0);
+      ctrl1 = movePoint(
+        ctrl1,
+        opts.controlStartOffset.x || 0,
+        opts.controlStartOffset.y || 0
+      );
     }
     let ctrl2 = buildControl(
       end,
@@ -1150,7 +1484,11 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
       opts.controlEndAbsolute
     );
     if (opts.controlEndOffset) {
-      ctrl2 = movePoint(ctrl2, opts.controlEndOffset.x || 0, opts.controlEndOffset.y || 0);
+      ctrl2 = movePoint(
+        ctrl2,
+        opts.controlEndOffset.x || 0,
+        opts.controlEndOffset.y || 0
+      );
     }
 
     const s = toSvgCoords(start);
@@ -1169,12 +1507,21 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
     if (opts.name) {
       attrs["data-name"] = opts.name;
     }
-    const curve = path(`M ${s.x} ${s.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${e.x} ${e.y}`, attrs);
+    const curve = path(
+      `M ${s.x} ${s.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${e.x} ${e.y}`,
+      attrs
+    );
     actualLayer.appendChild(curve);
     return curve;
   }
 
-  function drawInwardArc(targetLayer, startPoint, endPoint, depth = 0.5, options = {}) {
+  function drawInwardArc(
+    targetLayer,
+    startPoint,
+    endPoint,
+    depth = 0.5,
+    options = {}
+  ) {
     const start = { x: startPoint.x, y: startPoint.y };
     const end = { x: endPoint.x, y: endPoint.y };
     const dx = end.x - start.x;
@@ -1211,8 +1558,14 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
     circle.setAttribute("stroke", "#000");
     circle.setAttribute("stroke-width", 0.2);
     layers.markers.appendChild(circle);
-    bounds.include(svgCoords.x - MARKER_RADIUS_MM, svgCoords.y - MARKER_RADIUS_MM);
-    bounds.include(svgCoords.x + MARKER_RADIUS_MM, svgCoords.y + MARKER_RADIUS_MM);
+    bounds.include(
+      svgCoords.x - MARKER_RADIUS_MM,
+      svgCoords.y - MARKER_RADIUS_MM
+    );
+    bounds.include(
+      svgCoords.x + MARKER_RADIUS_MM,
+      svgCoords.y + MARKER_RADIUS_MM
+    );
 
     const labelNode = textNode(svgCoords.x, svgCoords.y + 0.4, label, {
       fill: "#fff",
@@ -1237,16 +1590,23 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
     x: pointA.x + (params.acrossShoulder - 0.125),
     y: pointA.y,
   });
-  drawLine(layers.front, pointA, pointC, "solid", { name: "Front Across Shoulder" });
+  drawLine(layers.front, pointA, pointC, "solid", {
+    name: "Front Across Shoulder",
+  });
 
   const pointD = markPoint("D", {
     x: pointB.x,
     y: pointB.y - params.centreFrontLength,
   });
-  drawLine(layers.front, pointB, pointD, "solid", { name: "B-D", color: "#2563eb" });
+  drawLine(layers.front, pointB, pointD, "solid", {
+    name: "B-D",
+    color: "#2563eb",
+  });
 
   const dLeftPoint = { x: pointD.x + 4, y: pointD.y };
-  drawLine(layers.foundationFront, pointD, dLeftPoint, "dashed", { name: "Front Neck Guide 1" });
+  drawLine(layers.foundationFront, pointD, dLeftPoint, "dashed", {
+    name: "Front Neck Guide 1",
+  });
 
   const pointE = markPoint("E", {
     x: pointB.x + params.bustArc + 0.25,
@@ -1255,7 +1615,9 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
   drawLine(layers.front, pointB, pointE, "solid", { name: "Bust Arc" });
 
   const eUpPoint = { x: pointE.x, y: pointE.y - 11 };
-  drawLine(layers.front, pointE, eUpPoint, "solid", { name: "Side Guide Line" });
+  drawLine(layers.front, pointE, eUpPoint, "solid", {
+    name: "Side Guide Line",
+  });
 
   const cGuidePoint = { x: pointC.x, y: pointC.y + 4 };
   drawLine(layers.front, pointC, cGuidePoint, "dashed", {
@@ -1266,8 +1628,10 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
   const horizontalSeparation = Math.abs(pointC.x - pointB.x);
   const shoulderSlopeLength = params.shoulderSlope;
   const verticalSpanSquared =
-    shoulderSlopeLength * shoulderSlopeLength - horizontalSeparation * horizontalSeparation;
-  const verticalSpan = verticalSpanSquared > 0 ? Math.sqrt(verticalSpanSquared) : 0;
+    shoulderSlopeLength * shoulderSlopeLength -
+    horizontalSeparation * horizontalSeparation;
+  const verticalSpan =
+    verticalSpanSquared > 0 ? Math.sqrt(verticalSpanSquared) : 0;
   let gY = pointB.y - verticalSpan;
   if (gY < pointC.y) gY = pointC.y;
   if (gY > cGuidePoint.y) gY = cGuidePoint.y;
@@ -1292,7 +1656,8 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
   const wY = pointA.y - pointG.y;
   const aQuad = acVectorX * acVectorX + acVectorY * acVectorY;
   const bQuad = 2 * (wX * acVectorX + wY * acVectorY);
-  const cQuad = wX * wX + wY * wY - params.shoulderLength * params.shoulderLength;
+  const cQuad =
+    wX * wX + wY * wY - params.shoulderLength * params.shoulderLength;
   let discriminant = bQuad * bQuad - 4 * aQuad * cQuad;
   if (discriminant < 0) discriminant = 0;
   let t = 0;
@@ -1315,7 +1680,10 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
     x: pointA.x + acVectorX * t,
     y: pointA.y + acVectorY * t,
   });
-  drawLine(layers.front, pointG, pointI, "solid", { name: "Shoulder Length", color: "#2563eb" });
+  drawLine(layers.front, pointG, pointI, "solid", {
+    name: "Shoulder Length",
+    color: "#2563eb",
+  });
 
   const diStartControl = movePoint(pointD, 1.8, 0);
   const diEndControl = movePoint(pointI, 0, 1.8);
@@ -1352,13 +1720,17 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
   drawLine(layers.foundationFront, pointK, kDropPoint, "dashed", {
     name: "Dart Reduction",
   });
-  drawLine(layers.foundationFront, pointJ, pointK, "solid", { name: "Bust Span" });
+  drawLine(layers.foundationFront, pointJ, pointK, "solid", {
+    name: "Bust Span",
+  });
 
   const pointM = markPoint("M", {
     x: pointL.x + (params.acrossChest + 0.25),
     y: pointL.y,
   });
-  drawLine(layers.foundationFront, pointL, pointM, "solid", { name: "Across Chest" });
+  drawLine(layers.foundationFront, pointL, pointM, "solid", {
+    name: "Across Chest",
+  });
   drawLine(
     layers.foundationFront,
     { x: pointM.x, y: pointM.y - 2 },
@@ -1369,9 +1741,17 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
 
   const pointFTop = { x: pointB.x + params.dartPlacement, y: pointB.y };
   const pointF = markPoint("F", { x: pointFTop.x, y: pointFTop.y + 0.1875 });
-  drawLine(layers.foundationFront, pointFTop, pointF, "solid", { name: "Dart Placement Guide" });
-  drawLine(layers.front, pointB, pointF, "solid", { name: "Front Waist Line 2", color: "#2563eb" });
-  drawLine(layers.front, kDropPoint, pointF, "solid", { name: "K-F", color: "#2563eb" });
+  drawLine(layers.foundationFront, pointFTop, pointF, "solid", {
+    name: "Dart Placement Guide",
+  });
+  drawLine(layers.front, pointB, pointF, "solid", {
+    name: "Front Waist Line 2",
+    color: "#2563eb",
+  });
+  drawLine(layers.front, kDropPoint, pointF, "solid", {
+    name: "K-F",
+    color: "#2563eb",
+  });
 
   const newStrapPlusEighth = params.newStrap + 0.125;
   const dxSide = pointE.x - pointI.x;
@@ -1382,18 +1762,30 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
   const candidateNY2 = pointI.y - dySide;
   const sideUpperY = pointE.y;
   const sideLowerY = pointE.y - 11;
-  const clampToSide = (y) => y >= Math.min(sideLowerY, sideUpperY) && y <= Math.max(sideLowerY, sideUpperY);
+  const clampToSide = (y) =>
+    y >= Math.min(sideLowerY, sideUpperY) &&
+    y <= Math.max(sideLowerY, sideUpperY);
   let selectedNY = clampToSide(candidateNY1) ? candidateNY1 : candidateNY2;
   if (clampToSide(candidateNY1) && clampToSide(candidateNY2)) {
-    selectedNY = Math.abs(candidateNY1 - sideUpperY) < Math.abs(candidateNY2 - sideUpperY) ? candidateNY1 : candidateNY2;
+    selectedNY =
+      Math.abs(candidateNY1 - sideUpperY) < Math.abs(candidateNY2 - sideUpperY)
+        ? candidateNY1
+        : candidateNY2;
   } else if (!clampToSide(selectedNY)) {
     selectedNY = Math.max(Math.min(selectedNY, sideUpperY), sideLowerY);
   }
   const pointN = markPoint("N", { x: pointE.x, y: selectedNY });
-  drawLine(layers.foundationFront, pointI, pointN, "solid", { name: "New Strap" });
+  drawLine(layers.foundationFront, pointI, pointN, "solid", {
+    name: "New Strap",
+  });
 
-  const pointO = markPoint("O", { x: pointE.x, y: pointN.y - params.sideLength });
-  drawLine(layers.foundationFront, pointN, pointO, "solid", { name: "Provisional Side Length" });
+  const pointO = markPoint("O", {
+    x: pointE.x,
+    y: pointN.y - params.sideLength,
+  });
+  drawLine(layers.foundationFront, pointN, pointO, "solid", {
+    name: "Provisional Side Length",
+  });
   drawInwardArc(layers.front, pointG, pointO, 0, {
     name: "G-O Arc",
     color: "#2563eb",
@@ -1412,7 +1804,8 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
     const r0 = params.sideLength;
     const r1 = bustCupOffset;
     if (onDistance <= r0 + r1 && onDistance >= Math.abs(r0 - r1)) {
-      const aInt = (r0 * r0 - r1 * r1 + onDistance * onDistance) / (2 * onDistance);
+      const aInt =
+        (r0 * r0 - r1 * r1 + onDistance * onDistance) / (2 * onDistance);
       const hSq = Math.max(0, r0 * r0 - aInt * aInt);
       const hInt = Math.sqrt(hSq);
       const baseX = pointO.x + (aInt * (pointN.x - pointO.x)) / onDistance;
@@ -1442,7 +1835,10 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
       pointPPosition = { x: pointPBase.x, y: pointPBase.y };
     }
   }
-  drawLine(layers.front, pointO, pointPPosition, "solid", { name: "Side Length OP", color: "#2563eb" });
+  drawLine(layers.front, pointO, pointPPosition, "solid", {
+    name: "Side Length OP",
+    color: "#2563eb",
+  });
   const pointP = markPoint("P", pointPPosition);
 
   const waistArcPlusQuarter = params.waistArc + 0.25;
@@ -1473,23 +1869,53 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
       y: kDropPoint.y + kqVecY * kqScale,
     };
   }
-  drawLine(layers.front, kDropPoint, pointQTarget, "solid", { name: "KQ Equivalent", color: "#2563eb" });
+  drawLine(layers.front, kDropPoint, pointQTarget, "solid", {
+    name: "KQ Equivalent",
+    color: "#2563eb",
+  });
   const pointQ = markPoint("Q", pointQTarget);
-  drawLine(layers.front, pointP, pointQ, "solid", { name: "Front Waist Line 1", color: "#2563eb" });
+  drawLine(layers.front, pointP, pointQ, "solid", {
+    name: "Front Waist Line 1",
+    color: "#2563eb",
+  });
 
   // --- Back Draft ---
   const backFullLength = firstNumber(params.fullLengthBack, params.fullLength);
-  const backDartPlacement = firstNumber(params.dartPlacementBack, params.dartPlacement, 0);
-  const backWaistArcValue = firstNumber(params.waistArcBack, params.waistArc, 0);
+  const backDartPlacement = firstNumber(
+    params.dartPlacementBack,
+    params.dartPlacement,
+    0
+  );
+  const backWaistArcValue = firstNumber(
+    params.waistArcBack,
+    params.waistArc,
+    0
+  );
   const dartIntake = 1.5;
   const backJOffset = backWaistArcValue + 1.5 + 0.25;
-  const centreBackLength = firstNumber(params.centreFrontLengthBack, params.centreFrontLength, backFullLength);
-  const backAcrossShoulder = firstNumber(params.acrossShoulderBack, params.acrossShoulder);
+  const centreBackLength = firstNumber(
+    params.centreFrontLengthBack,
+    params.centreFrontLength,
+    backFullLength
+  );
+  const backAcrossShoulder = firstNumber(
+    params.acrossShoulderBack,
+    params.acrossShoulder
+  );
   const backBustArc = firstNumber(params.bustArcBack, params.bustArc);
-  const backShoulderSlope = firstNumber(params.shoulderSlopeBack, params.shoulderSlope) + 0.125;
-  const shoulderLengthPlusHalf = firstNumber(params.shoulderLengthBack, params.shoulderLength, 0) + 0.5;
-  const backSideLength = firstNumber(params.sideLengthBack, params.sideLength, 0);
-  const backAcrossChest = firstNumber(params.acrossChestBack, params.acrossChest);
+  const backShoulderSlope =
+    firstNumber(params.shoulderSlopeBack, params.shoulderSlope) + 0.125;
+  const shoulderLengthPlusHalf =
+    firstNumber(params.shoulderLengthBack, params.shoulderLength, 0) + 0.5;
+  const backSideLength = firstNumber(
+    params.sideLengthBack,
+    params.sideLength,
+    0
+  );
+  const backAcrossChest = firstNumber(
+    params.acrossChestBack,
+    params.acrossChest
+  );
   const backNeckPlusEighth = firstNumber(params.backNeck, 0) + 0.125;
 
   const backOrigin = {
@@ -1503,16 +1929,39 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
 
   const backPointA = markPoint("BA", backCoord(0, 0), "A");
   const backPointB = markPoint("BB", backCoord(0, backFullLength), "B");
-  drawLine(layers.foundationBack, backPointA, backPointB, "solid", { name: "Back Full Length" });
+  drawLine(layers.foundationBack, backPointA, backPointB, "solid", {
+    name: "Back Full Length",
+  });
 
-  const backPointJ = markPoint("BJ", backCoord(-backJOffset, backFullLength), "J");
-  const backPointL = markPoint("BL", backCoord(-(backDartPlacement + dartIntake / 2), backFullLength), "L");
-  const backPointM = markPoint("BM", backCoord(-backJOffset, backFullLength + 0.1875), "M");
-  const backPointD = markPoint("BD", backCoord(0, backFullLength - centreBackLength), "D");
-  drawLine(layers.back, backPointD, backPointB, "solid", { name: "Centre Back", color: "#2563eb" });
+  const backPointJ = markPoint(
+    "BJ",
+    backCoord(-backJOffset, backFullLength),
+    "J"
+  );
+  const backPointL = markPoint(
+    "BL",
+    backCoord(-(backDartPlacement + dartIntake / 2), backFullLength),
+    "L"
+  );
+  const backPointM = markPoint(
+    "BM",
+    backCoord(-backJOffset, backFullLength + 0.1875),
+    "M"
+  );
+  const backPointD = markPoint(
+    "BD",
+    backCoord(0, backFullLength - centreBackLength),
+    "D"
+  );
+  drawLine(layers.back, backPointD, backPointB, "solid", {
+    name: "Centre Back",
+    color: "#2563eb",
+  });
 
   const backPointC = markPoint("BC", backCoord(-backAcrossShoulder, 0), "C");
-  drawLine(layers.foundationBack, backPointA, backPointC, "solid", { name: "Back Across Shoulder" });
+  drawLine(layers.foundationBack, backPointA, backPointC, "solid", {
+    name: "Back Across Shoulder",
+  });
   drawLine(
     layers.foundationBack,
     backPointD,
@@ -1528,10 +1977,18 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
     { name: "Back Shoulder Slope Guide" }
   );
 
-  const backPointE = markPoint("BE", backCoord(-(backBustArc + 0.75), backFullLength), "E");
-  drawLine(layers.foundationBack, backPointB, backPointE, "solid", { name: "Back Arc" });
+  const backPointE = markPoint(
+    "BE",
+    backCoord(-(backBustArc + 0.75), backFullLength),
+    "E"
+  );
+  drawLine(layers.foundationBack, backPointB, backPointE, "solid", {
+    name: "Back Arc",
+  });
   const backEUp = backCoord(-(backBustArc + 0.75), backFullLength - 10);
-  drawLine(layers.foundationBack, backPointE, backEUp, "solid", { name: "Back Side Guide Line" });
+  drawLine(layers.foundationBack, backPointE, backEUp, "solid", {
+    name: "Back Side Guide Line",
+  });
 
   const backPointF = markPoint("BF", backCoord(-backNeckPlusEighth, 0), "F");
   drawBezierArcSegment(layers.back, backPointD, backPointD, backPointF, {
@@ -1545,14 +2002,15 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
   const baseDy = backPointC.y - backPointB.y;
   const aSlope = 1;
   const bSlope = 2 * baseDy;
-  const cSlope = baseDy * baseDy + dxSlope * dxSlope - backShoulderSlope * backShoulderSlope;
+  const cSlope =
+    baseDy * baseDy + dxSlope * dxSlope - backShoulderSlope * backShoulderSlope;
   const discriminantSlope = bSlope * bSlope - 4 * aSlope * cSlope;
   let tSlope = 0;
   if (discriminantSlope >= 0) {
     const sqrtDisc = Math.sqrt(discriminantSlope);
     const t1 = (-bSlope + sqrtDisc) / (2 * aSlope);
     const t2 = (-bSlope - sqrtDisc) / (2 * aSlope);
-  const withinGuide = (val) => val >= 0 && val <= 6;
+    const withinGuide = (val) => val >= 0 && val <= 6;
     if (withinGuide(t1) && withinGuide(t2)) {
       tSlope = Math.max(t1, t2);
     } else if (withinGuide(t1)) {
@@ -1563,17 +2021,29 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
       tSlope = Math.max(0, Math.min(6, t1));
     }
   }
-  const backPointG = markPoint("BG", backCoord(-backAcrossShoulder, tSlope), "G");
-  drawLine(layers.foundationBack, backPointB, backPointG, "solid", { name: "Back Shoulder Slope" });
+  const backPointG = markPoint(
+    "BG",
+    backCoord(-backAcrossShoulder, tSlope),
+    "G"
+  );
+  drawLine(layers.foundationBack, backPointB, backPointG, "solid", {
+    name: "Back Shoulder Slope",
+  });
 
   const backFGVecX = backPointG.x - backPointF.x;
   const backFGVecY = backPointG.y - backPointF.y;
   const backFGLen = Math.hypot(backFGVecX, backFGVecY) || 1;
-  const backPointH = markPoint("BH", {
-    x: backPointF.x + (backFGVecX / backFGLen) * shoulderLengthPlusHalf,
-    y: backPointF.y + (backFGVecY / backFGLen) * shoulderLengthPlusHalf,
-  }, "H");
-  drawLine(layers.foundationBack, backPointF, backPointH, "solid", { name: "Back Shoulder Length" });
+  const backPointH = markPoint(
+    "BH",
+    {
+      x: backPointF.x + (backFGVecX / backFGLen) * shoulderLengthPlusHalf,
+      y: backPointF.y + (backFGVecY / backFGLen) * shoulderLengthPlusHalf,
+    },
+    "H"
+  );
+  drawLine(layers.foundationBack, backPointF, backPointH, "solid", {
+    name: "Back Shoulder Length",
+  });
 
   const backPointP = markPoint(
     "BP",
@@ -1600,19 +2070,25 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
   const backPointMtoE = backPointE.x - backPointM.x;
   let backPointN = {
     x: backPointE.x,
-    y: backPointM.y - Math.sqrt(Math.max(0, backSideLength * backSideLength - backPointMtoE * backPointMtoE)),
+    y:
+      backPointM.y -
+      Math.sqrt(
+        Math.max(
+          0,
+          backSideLength * backSideLength - backPointMtoE * backPointMtoE
+        )
+      ),
   };
   if (backPointN.y < backEUp.y) backPointN.y = backEUp.y;
   backPointN = markPoint("BN", backPointN, "N");
-  drawLine(layers.back, backPointM, backPointN, "solid", { name: "Back Side Length", color: "#2563eb" });
-  drawBezierArcSegment(layers.back, backPointH, backPointH, backPointN, {
-    name: "Back Armhole Curve",
+  drawLine(layers.back, backPointM, backPointN, "solid", {
+    name: "Back Side Length",
     color: "#2563eb",
-    controlStartRatio: { tangent: 0.5836719092, normal: -0.3423131657 },
-    controlEndRatio: { tangent: -0.1240008345, normal: -0.3063856393 },
   });
-
-  const backMNLength = Math.hypot(backPointN.x - backPointM.x, backPointN.y - backPointM.y);
+  const backMNLength = Math.hypot(
+    backPointN.x - backPointM.x,
+    backPointN.y - backPointM.y
+  );
   const backPointO = markPoint(
     "BO",
     {
@@ -1621,12 +2097,27 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
     },
     "O"
   );
-  drawLine(layers.foundationBack, backPointL, backPointO, "dashed", { name: "Back Dart Leg Guide" });
+  drawLine(layers.foundationBack, backPointL, backPointO, "dashed", {
+    name: "Back Dart Leg Guide",
+  });
 
-  const backDLength = Math.hypot(backPointB.x - backPointD.x, backPointB.y - backPointD.y);
-  const backPointS = markPoint("BS", backCoord(0, backFullLength - centreBackLength + backDLength / 4), "S");
-  const backPointT = markPoint("BT", backCoord(-(backAcrossChest + 0.25), backPointS.y), "T");
-  drawLine(layers.foundationBack, backPointS, backPointT, "solid", { name: "Across Back" });
+  const backDLength = Math.hypot(
+    backPointB.x - backPointD.x,
+    backPointB.y - backPointD.y
+  );
+  const backPointS = markPoint(
+    "BS",
+    backCoord(0, backFullLength - centreBackLength + backDLength / 4),
+    "S"
+  );
+  const backPointT = markPoint(
+    "BT",
+    backCoord(-(backAcrossChest + 0.25), backPointS.y),
+    "T"
+  );
+  drawLine(layers.foundationBack, backPointS, backPointT, "solid", {
+    name: "Across Back",
+  });
   drawLine(
     layers.foundationBack,
     backCoord(-(backAcrossChest + 0.25), backPointT.y - 1),
@@ -1635,18 +2126,52 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
     { name: "Back Armhole Guideline" }
   );
 
+  const backArmholeStartHandle = movePoint(backPointH, 6.25 / 2.54, 9.2 / 2.54);
+  const backArmholeEndHandle = movePoint(backPointN, 3.7 / 2.54, -0.5 / 2.54);
+  drawBezierArcSegment(layers.back, backPointH, backPointH, backPointN, {
+    name: "Back Armhole Curve",
+    color: "#2563eb",
+    controlStartAbsolute: backArmholeStartHandle,
+    controlEndAbsolute: backArmholeEndHandle,
+  });
+
   const backPointIBase = backCoord(-backDartPlacement, backFullLength);
-  const backPointKBase = backCoord(-(backDartPlacement + dartIntake), backFullLength);
+  const backPointKBase = backCoord(
+    -(backDartPlacement + dartIntake),
+    backFullLength
+  );
   const extensionLength = 0.125;
-  const backPointI = markPoint("BI", extendPoint(backPointO, backPointIBase, extensionLength), "I");
-  const backPointK = markPoint("BK", extendPoint(backPointO, backPointKBase, extensionLength), "K");
+  const backPointI = markPoint(
+    "BI",
+    extendPoint(backPointO, backPointIBase, extensionLength),
+    "I"
+  );
+  const backPointK = markPoint(
+    "BK",
+    extendPoint(backPointO, backPointKBase, extensionLength),
+    "K"
+  );
 
-  drawLine(layers.back, backPointB, backPointI, "solid", { name: "Back Waist Line 1", color: "#2563eb" });
-  drawLine(layers.back, backPointK, backPointM, "solid", { name: "Back Waist Line 2", color: "#2563eb" });
-  drawLine(layers.foundationBack, backPointP, backPointO, "dashed", { name: "Back Dart Center Guide" });
+  drawLine(layers.back, backPointB, backPointI, "solid", {
+    name: "Back Waist Line 1",
+    color: "#2563eb",
+  });
+  drawLine(layers.back, backPointK, backPointM, "solid", {
+    name: "Back Waist Line 2",
+    color: "#2563eb",
+  });
+  drawLine(layers.foundationBack, backPointP, backPointO, "dashed", {
+    name: "Back Dart Center Guide",
+  });
 
-  drawLine(layers.back, backPointO, backPointI, "solid", { name: "Back Waist Dart Left Leg", color: "#2563eb" });
-  drawLine(layers.back, backPointO, backPointK, "solid", { name: "Back Waist Dart Right Leg", color: "#2563eb" });
+  drawLine(layers.back, backPointO, backPointI, "solid", {
+    name: "Back Waist Dart Left Leg",
+    color: "#2563eb",
+  });
+  drawLine(layers.back, backPointO, backPointK, "solid", {
+    name: "Back Waist Dart Right Leg",
+    color: "#2563eb",
+  });
 
   const backPOVecX = backPointO.x - backPointP.x;
   const backPOVecY = backPointO.y - backPointP.y;
@@ -1661,8 +2186,16 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
   );
 
   const dartExtension = 0.125;
-  const backPointR = markPoint("BR", extendPoint(backPointQ, backPointRBase, dartExtension), "R");
-  const backPointa = markPoint("Ba", extendPoint(backPointQ, backPointABase, dartExtension), "a");
+  const backPointR = markPoint(
+    "BR",
+    extendPoint(backPointQ, backPointRBase, dartExtension),
+    "R"
+  );
+  const backPointa = markPoint(
+    "Ba",
+    extendPoint(backPointQ, backPointABase, dartExtension),
+    "a"
+  );
   drawLine(layers.back, backPointQ, backPointR, "solid", {
     name: "Back Shoulder Dart Left Leg",
     color: "#2563eb",
@@ -1672,8 +2205,14 @@ function drawBezierArcSegment(targetLayer, startPoint, controlPoint, endPoint, o
     color: "#2563eb",
   });
 
-  drawLine(layers.back, backPointa, backPointH, "solid", { name: "Back Shoulder Line 2", color: "#2563eb" });
-  drawLine(layers.back, backPointF, backPointR, "solid", { name: "Back Shoulder Line 1", color: "#2563eb" });
+  drawLine(layers.back, backPointa, backPointH, "solid", {
+    name: "Back Shoulder Line 2",
+    color: "#2563eb",
+  });
+  drawLine(layers.back, backPointF, backPointR, "solid", {
+    name: "Back Shoulder Line 1",
+    color: "#2563eb",
+  });
   // ------------------------------------------------
 
   applyLayerVisibility(layers, params);
@@ -1689,7 +2228,8 @@ function generateAldrich(params) {
       textContent: JSON.stringify({
         tool: "AldrichCloseFittingBodiceWeb",
         units: "mm",
-        source: "Aldrich/Bodice/aldrich_close_fitting_bodice_with_waist_shaping_v1.jsx",
+        source:
+          "Aldrich/Bodice/aldrich_close_fitting_bodice_with_waist_shaping_v1.jsx",
       }),
     })
   );
@@ -1746,7 +2286,14 @@ function generateAldrich(params) {
     offsetY: 0,
   };
 
-  function drawCurveSegment(layerNode, start, control1, control2, end, opts = {}) {
+  function drawCurveSegment(
+    layerNode,
+    start,
+    control1,
+    control2,
+    end,
+    opts = {}
+  ) {
     if (!layerNode || !start || !end || !control1 || !control2) return null;
     const s = toSvgCoords(start);
     const c1 = toSvgCoords(control1);
@@ -1760,7 +2307,10 @@ function generateAldrich(params) {
     if (opts.dashed) {
       attrs["stroke-dasharray"] = opts.dash || "6 4";
     }
-    const pathEl = path(`M ${s.x} ${s.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${e.x} ${e.y}`, attrs);
+    const pathEl = path(
+      `M ${s.x} ${s.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${e.x} ${e.y}`,
+      attrs
+    );
     if (opts.name) pathEl.setAttribute("data-name", opts.name);
     layerNode.appendChild(pathEl);
     return pathEl;
@@ -1792,9 +2342,13 @@ function generateAldrich(params) {
     if (!layers.markers || !layers.numbers || !coords) return;
     const anchor = toSvgCoords(coords);
     const radius =
-      typeof style.radius === "number" && Number.isFinite(style.radius) ? style.radius : MARKER_RADIUS_MM;
+      typeof style.radius === "number" && Number.isFinite(style.radius)
+        ? style.radius
+        : MARKER_RADIUS_MM;
     const fontSize =
-      typeof style.fontSize === "number" && Number.isFinite(style.fontSize) ? style.fontSize : LABEL_FONT_SIZE_MM;
+      typeof style.fontSize === "number" && Number.isFinite(style.fontSize)
+        ? style.fontSize
+        : LABEL_FONT_SIZE_MM;
     const offsetY =
       typeof style.offsetY === "number" && Number.isFinite(style.offsetY)
         ? style.offsetY
@@ -1853,7 +2407,11 @@ function generateAldrich(params) {
   registerPoint("4", { x: width23, y: 0 });
   registerPoint("5", { x: 0, y: depth01 + napeToWaist });
   registerPoint("6", { x: width23, y: depth01 + napeToWaist });
-  const pointC = registerLetterPoint("c", { x: points["6"].x, y: points["6"].y + 1 }, "c");
+  const pointC = registerLetterPoint(
+    "c",
+    { x: points["6"].x, y: points["6"].y + 1 },
+    "c"
+  );
 
   registerPoint("9", { x: params.neckSize / 5 - 0.2, y: points["0"].y });
   registerPoint("10", {
@@ -1892,7 +2450,11 @@ function generateAldrich(params) {
   }
 
   registerPoint("23", midpoint(points["3"], points["22"]));
-  registerPoint("24", { x: points["23"].x, y: points["5"].y }, { skipMarker: true });
+  registerPoint(
+    "24",
+    { x: points["23"].x, y: points["5"].y },
+    { skipMarker: true }
+  );
   registerPoint("26", { x: points["23"].x, y: points["23"].y + 2.5 });
   registerPoint("27", {
     x: points["20"].x - params.frontNeckDart,
@@ -1901,7 +2463,7 @@ function generateAldrich(params) {
 
   registerPoint("31", {
     x: points["22"].x,
-    y: points["22"].y + ((points["21"].y - points["3"].y) / 3),
+    y: points["22"].y + (points["21"].y - points["3"].y) / 3,
   });
   drawSegment(layers.foundation, points["5"], pointC, {
     color: ALDRICH_COLORS.primary,
@@ -1964,8 +2526,10 @@ function generateAldrich(params) {
   const shoulderSegmentLength = distanceBetween(points["9"], points["11"]);
   const shoulderDartHalfWidth = 0.5;
   if (shoulderSegmentLength > 0.0001) {
-    const shoulderUnitX = (points["11"].x - points["9"].x) / shoulderSegmentLength;
-    const shoulderUnitY = (points["11"].y - points["9"].y) / shoulderSegmentLength;
+    const shoulderUnitX =
+      (points["11"].x - points["9"].x) / shoulderSegmentLength;
+    const shoulderUnitY =
+      (points["11"].y - points["9"].y) / shoulderSegmentLength;
     const shoulderDartLeft = {
       x: points["12"].x - shoulderUnitX * shoulderDartHalfWidth,
       y: points["12"].y - shoulderUnitY * shoulderDartHalfWidth,
@@ -1988,10 +2552,14 @@ function generateAldrich(params) {
         y: points["13"].y + rightVector.y * scale,
       };
     }
-    drawPolylineSegment(layers.back, [shoulderDartLeft, points["13"], shoulderDartRightAdjusted], {
-      color: ALDRICH_COLORS.primary,
-      name: "Back Shoulder Dart",
-    });
+    drawPolylineSegment(
+      layers.back,
+      [shoulderDartLeft, points["13"], shoulderDartRightAdjusted],
+      {
+        color: ALDRICH_COLORS.primary,
+        name: "Back Shoulder Dart",
+      }
+    );
     drawSegment(layers.back, points["9"], shoulderDartLeft, {
       color: ALDRICH_COLORS.primary,
       name: "Back Shoulder Line",
@@ -2057,7 +2625,8 @@ function generateAldrich(params) {
     name: "Shoulder Balance Line",
   });
   const frontShoulderDeltaY = Math.abs(points["28"].y - points["27"].y);
-  const frontShoulderHorizontalSq = Math.pow(params.shoulder, 2) - Math.pow(frontShoulderDeltaY, 2);
+  const frontShoulderHorizontalSq =
+    Math.pow(params.shoulder, 2) - Math.pow(frontShoulderDeltaY, 2);
   let frontShoulderHorizontal = 0;
   if (frontShoulderHorizontalSq > 0) {
     frontShoulderHorizontal = Math.sqrt(frontShoulderHorizontalSq);
@@ -2165,19 +2734,30 @@ function generateAldrich(params) {
     ];
     intersectionSpecs.forEach((spec) => {
       if (!spec.top || !spec.bottom || !isFiniteNumber(spec.x)) return;
-      const intersectionPoint = intersectLineWithVertical(line5, pointC, spec.x);
+      const intersectionPoint = intersectLineWithVertical(
+        line5,
+        pointC,
+        spec.x
+      );
       if (!intersectionPoint) return;
-      if (!valueBetween(intersectionPoint.y, spec.top.y, spec.bottom.y, 0.001)) return;
+      if (!valueBetween(intersectionPoint.y, spec.top.y, spec.bottom.y, 0.001))
+        return;
       registerLetterPoint(spec.id, intersectionPoint, spec.id);
     });
   }
 
   const frontWaistDartWidth = params.frontWaistDart;
-  if (points["e"] && Number.isFinite(frontWaistDartWidth) && frontWaistDartWidth > 0) {
+  if (
+    points["e"] &&
+    Number.isFinite(frontWaistDartWidth) &&
+    frontWaistDartWidth > 0
+  ) {
     const half = frontWaistDartWidth / 2;
     const dartBaseLeft = { x: points["e"].x - half, y: points["e"].y };
     const dartBaseRight = { x: points["e"].x + half, y: points["e"].y };
-    const dartBackOff = Number.isFinite(params.frontWaistDartBackOff) ? params.frontWaistDartBackOff : 2.5;
+    const dartBackOff = Number.isFinite(params.frontWaistDartBackOff)
+      ? params.frontWaistDartBackOff
+      : 2.5;
     const dartApex = { x: points["e"].x, y: points["26"].y + dartBackOff };
     drawSegment(layers.front, dartBaseLeft, dartApex, {
       color: ALDRICH_COLORS.primary,
@@ -2195,7 +2775,12 @@ function generateAldrich(params) {
   }
 
   const backWaistDartWidth = params.backWaistDart;
-  if (points["d"] && points["17"] && Number.isFinite(backWaistDartWidth) && backWaistDartWidth > 0) {
+  if (
+    points["d"] &&
+    points["17"] &&
+    Number.isFinite(backWaistDartWidth) &&
+    backWaistDartWidth > 0
+  ) {
     const half = backWaistDartWidth / 2;
     const backLeftBase = { x: points["d"].x - half, y: points["d"].y };
     const backRightBase = { x: points["d"].x + half, y: points["d"].y };
@@ -2218,12 +2803,17 @@ function generateAldrich(params) {
   const waistLineStart = points["5"];
   const waistLineEnd = pointC;
   const waistLineMinX =
-    waistLineStart && waistLineEnd ? Math.min(waistLineStart.x, waistLineEnd.x) : null;
+    waistLineStart && waistLineEnd
+      ? Math.min(waistLineStart.x, waistLineEnd.x)
+      : null;
   const waistLineMaxX =
-    waistLineStart && waistLineEnd ? Math.max(waistLineStart.x, waistLineEnd.x) : null;
+    waistLineStart && waistLineEnd
+      ? Math.max(waistLineStart.x, waistLineEnd.x)
+      : null;
 
   const clampWaistX = (x) => {
-    if (waistLineMinX == null || waistLineMaxX == null || !Number.isFinite(x)) return x;
+    if (waistLineMinX == null || waistLineMaxX == null || !Number.isFinite(x))
+      return x;
     const minX = Math.min(waistLineMinX, waistLineMaxX);
     const maxX = Math.max(waistLineMinX, waistLineMaxX);
     if (x < minX) return minX;
@@ -2263,7 +2853,10 @@ function generateAldrich(params) {
     const backSideWidth = params.backSideWaistDart;
     if (Number.isFinite(backSideWidth) && backSideWidth > 0) {
       const baseX = clampWaistX(waistAxisPoint.x - backSideWidth);
-      const sideLeftBase = waistLinePointAtX(baseX) || { x: baseX, y: waistAxisPoint.y };
+      const sideLeftBase = waistLinePointAtX(baseX) || {
+        x: baseX,
+        y: waistAxisPoint.y,
+      };
       drawSegment(layers.back, sideLeftBase, sideApex, {
         color: ALDRICH_COLORS.primary,
         name: "Back Side Waist Dart",
@@ -2279,7 +2872,10 @@ function generateAldrich(params) {
     const frontSideWidth = params.frontSideWaistDart;
     if (Number.isFinite(frontSideWidth) && frontSideWidth > 0) {
       const baseX = clampWaistX(waistAxisPoint.x + frontSideWidth);
-      const sideRightBase = waistLinePointAtX(baseX) || { x: baseX, y: waistAxisPoint.y };
+      const sideRightBase = waistLinePointAtX(baseX) || {
+        x: baseX,
+        y: waistAxisPoint.y,
+      };
       drawSegment(layers.front, sideRightBase, sideApex, {
         color: ALDRICH_COLORS.primary,
         name: "Front Side Waist Dart",
@@ -2327,15 +2923,30 @@ function extendPoint(origin, target, extra = 0) {
 
 function createArmstrongLayerStack(svg) {
   const foundation = layer(svg, "Foundation", { asLayer: true });
-  const foundationFront = layer(foundation, "Front Guides", { asLayer: true, prefix: "foundation" });
-  const foundationBack = layer(foundation, "Back Guides", { asLayer: true, prefix: "foundation" });
+  const foundationFront = layer(foundation, "Front Guides", {
+    asLayer: true,
+    prefix: "foundation",
+  });
+  const foundationBack = layer(foundation, "Back Guides", {
+    asLayer: true,
+    prefix: "foundation",
+  });
 
   const front = layer(svg, "Front Bodice", { asLayer: true });
   const back = layer(svg, "Back Bodice", { asLayer: true });
   const labelsParent = layer(svg, "Labels & Markers", { asLayer: true });
-  const labels = layer(labelsParent, "Labels", { asLayer: true, prefix: "labels" });
-  const markers = layer(labelsParent, "Markers", { asLayer: true, prefix: "labels" });
-  const numbers = layer(labelsParent, "Numbers", { asLayer: true, prefix: "labels" });
+  const labels = layer(labelsParent, "Labels", {
+    asLayer: true,
+    prefix: "labels",
+  });
+  const markers = layer(labelsParent, "Markers", {
+    asLayer: true,
+    prefix: "labels",
+  });
+  const numbers = layer(labelsParent, "Numbers", {
+    asLayer: true,
+    prefix: "labels",
+  });
 
   return {
     foundation,
@@ -2351,14 +2962,38 @@ function createArmstrongLayerStack(svg) {
 }
 
 function createAldrichLayerStack(svg) {
-  const foundation = layer(svg, "Aldrich Guides", { asLayer: true, prefix: "aldrich" });
-  const front = layer(svg, "Aldrich Front Bodice", { asLayer: true, prefix: "aldrich" });
-  const back = layer(svg, "Aldrich Back Bodice", { asLayer: true, prefix: "aldrich" });
-  const darts = layer(svg, "Aldrich Darts", { asLayer: true, prefix: "aldrich" });
-  const labelsParent = layer(svg, "Aldrich Labels & Markers", { asLayer: true, prefix: "aldrich" });
-  const markers = layer(labelsParent, "Markers", { asLayer: true, prefix: "aldrich" });
-  const numbers = layer(labelsParent, "Numbers", { asLayer: true, prefix: "aldrich" });
-  const letters = layer(labelsParent, "Letters", { asLayer: true, prefix: "aldrich" });
+  const foundation = layer(svg, "Aldrich Guides", {
+    asLayer: true,
+    prefix: "aldrich",
+  });
+  const front = layer(svg, "Aldrich Front Bodice", {
+    asLayer: true,
+    prefix: "aldrich",
+  });
+  const back = layer(svg, "Aldrich Back Bodice", {
+    asLayer: true,
+    prefix: "aldrich",
+  });
+  const darts = layer(svg, "Aldrich Darts", {
+    asLayer: true,
+    prefix: "aldrich",
+  });
+  const labelsParent = layer(svg, "Aldrich Labels & Markers", {
+    asLayer: true,
+    prefix: "aldrich",
+  });
+  const markers = layer(labelsParent, "Markers", {
+    asLayer: true,
+    prefix: "aldrich",
+  });
+  const numbers = layer(labelsParent, "Numbers", {
+    asLayer: true,
+    prefix: "aldrich",
+  });
+  const letters = layer(labelsParent, "Letters", {
+    asLayer: true,
+    prefix: "aldrich",
+  });
   return {
     foundation,
     front,
@@ -2372,16 +3007,46 @@ function createAldrichLayerStack(svg) {
 }
 
 function createHofenbitzerLayerStack(svg) {
-  const foundation = layer(svg, "Basic Frame", { asLayer: true, prefix: "hofenbitzer" });
-  const foundationFront = layer(foundation, "Front Guides", { asLayer: true, prefix: "hofenbitzer" });
-  const foundationBack = layer(foundation, "Back Guides", { asLayer: true, prefix: "hofenbitzer" });
-  const pattern = layer(svg, "Casual Bodice Lines", { asLayer: true, prefix: "hofenbitzer" });
-  const front = layer(svg, "Front Bodice", { asLayer: true, prefix: "hofenbitzer" });
-  const back = layer(svg, "Back Bodice", { asLayer: true, prefix: "hofenbitzer" });
-  const labelsParent = layer(svg, "Hofenbitzer Labels & Markers", { asLayer: true, prefix: "hofenbitzer" });
-  const labels = layer(labelsParent, "Labels", { asLayer: true, prefix: "hofenbitzer" });
-  const markers = layer(labelsParent, "Markers", { asLayer: true, prefix: "hofenbitzer" });
-  const numbers = layer(labelsParent, "Numbers", { asLayer: true, prefix: "hofenbitzer" });
+  const foundation = layer(svg, "Basic Frame", {
+    asLayer: true,
+    prefix: "hofenbitzer",
+  });
+  const foundationFront = layer(foundation, "Front Guides", {
+    asLayer: true,
+    prefix: "hofenbitzer",
+  });
+  const foundationBack = layer(foundation, "Back Guides", {
+    asLayer: true,
+    prefix: "hofenbitzer",
+  });
+  const pattern = layer(svg, "Casual Bodice Lines", {
+    asLayer: true,
+    prefix: "hofenbitzer",
+  });
+  const front = layer(svg, "Front Bodice", {
+    asLayer: true,
+    prefix: "hofenbitzer",
+  });
+  const back = layer(svg, "Back Bodice", {
+    asLayer: true,
+    prefix: "hofenbitzer",
+  });
+  const labelsParent = layer(svg, "Hofenbitzer Labels & Markers", {
+    asLayer: true,
+    prefix: "hofenbitzer",
+  });
+  const labels = layer(labelsParent, "Labels", {
+    asLayer: true,
+    prefix: "hofenbitzer",
+  });
+  const markers = layer(labelsParent, "Markers", {
+    asLayer: true,
+    prefix: "hofenbitzer",
+  });
+  const numbers = layer(labelsParent, "Numbers", {
+    asLayer: true,
+    prefix: "hofenbitzer",
+  });
   return {
     foundation,
     foundationFront,
@@ -2397,15 +3062,36 @@ function createHofenbitzerLayerStack(svg) {
 }
 
 function createHofSkirtLayerStack(svg) {
-  const foundation = layer(svg, "Basic Frame", { asLayer: true, prefix: "hofskirt" });
-  const pattern = layer(svg, "Skirt Pattern", { asLayer: true, prefix: "hofskirt" });
-  const dartsParent = layer(svg, "Darts & Shaping", { asLayer: true, prefix: "hofskirt" });
+  const foundation = layer(svg, "Basic Frame", {
+    asLayer: true,
+    prefix: "hofskirt",
+  });
+  const pattern = layer(svg, "Skirt Pattern", {
+    asLayer: true,
+    prefix: "hofskirt",
+  });
+  const dartsParent = layer(svg, "Darts & Shaping", {
+    asLayer: true,
+    prefix: "hofskirt",
+  });
   const dartsLayer = layer(dartsParent, "Darts", { prefix: "hofskirt" });
   const shapingLayer = layer(dartsParent, "Shaping", { prefix: "hofskirt" });
-  const labelsParent = layer(svg, "Labels, Markers & Numbers", { asLayer: true, prefix: "hofskirt" });
-  const labels = layer(labelsParent, "Labels", { asLayer: true, prefix: "hofskirt" });
-  const markers = layer(labelsParent, "Markers", { asLayer: true, prefix: "hofskirt" });
-  const numbers = layer(labelsParent, "Numbers", { asLayer: true, prefix: "hofskirt" });
+  const labelsParent = layer(svg, "Labels, Markers & Numbers", {
+    asLayer: true,
+    prefix: "hofskirt",
+  });
+  const labels = layer(labelsParent, "Labels", {
+    asLayer: true,
+    prefix: "hofskirt",
+  });
+  const markers = layer(labelsParent, "Markers", {
+    asLayer: true,
+    prefix: "hofskirt",
+  });
+  const numbers = layer(labelsParent, "Numbers", {
+    asLayer: true,
+    prefix: "hofskirt",
+  });
   return {
     foundation,
     pattern,
@@ -2421,13 +3107,34 @@ function createHofSkirtLayerStack(svg) {
 }
 
 function createHofSleeveLayerStack(svg) {
-  const foundation = layer(svg, "Basic Frame", { asLayer: true, prefix: "hofsleeve" });
-  const capShaping = layer(svg, "Cap Shaping", { asLayer: true, prefix: "hofsleeve" });
-  const sleeveBlock = layer(svg, "Sleeve Block", { asLayer: true, prefix: "hofsleeve" });
-  const labelsParent = layer(svg, "Numbers, Markers & Labels", { asLayer: true, prefix: "hofsleeve" });
-  const labels = layer(labelsParent, "Labels", { asLayer: true, prefix: "hofsleeve" });
-  const markers = layer(labelsParent, "Markers", { asLayer: true, prefix: "hofsleeve" });
-  const numbers = layer(labelsParent, "Numbers", { asLayer: true, prefix: "hofsleeve" });
+  const foundation = layer(svg, "Basic Frame", {
+    asLayer: true,
+    prefix: "hofsleeve",
+  });
+  const capShaping = layer(svg, "Cap Shaping", {
+    asLayer: true,
+    prefix: "hofsleeve",
+  });
+  const sleeveBlock = layer(svg, "Sleeve Block", {
+    asLayer: true,
+    prefix: "hofsleeve",
+  });
+  const labelsParent = layer(svg, "Numbers, Markers & Labels", {
+    asLayer: true,
+    prefix: "hofsleeve",
+  });
+  const labels = layer(labelsParent, "Labels", {
+    asLayer: true,
+    prefix: "hofsleeve",
+  });
+  const markers = layer(labelsParent, "Markers", {
+    asLayer: true,
+    prefix: "hofsleeve",
+  });
+  const numbers = layer(labelsParent, "Numbers", {
+    asLayer: true,
+    prefix: "hofsleeve",
+  });
   return {
     foundation,
     capShaping,
@@ -2506,7 +3213,10 @@ function generateHofenbitzerCasualBodice(params) {
       "stroke-width": options.width || 0.6,
     });
     if (options.dashed) {
-      segment.setAttribute("stroke-dasharray", options.dash || HOFENBITZER_DASH_PATTERN);
+      segment.setAttribute(
+        "stroke-dasharray",
+        options.dash || HOFENBITZER_DASH_PATTERN
+      );
     }
     if (options.name) {
       segment.setAttribute("data-name", options.name);
@@ -2533,7 +3243,8 @@ function generateHofenbitzerCasualBodice(params) {
     const startY = parseFloat(pathEl.getAttribute("data-start-y"));
     const endX = parseFloat(pathEl.getAttribute("data-end-x"));
     const endY = parseFloat(pathEl.getAttribute("data-end-y"));
-    if ([startX, startY, endX, endY].some((val) => Number.isNaN(val))) return null;
+    if ([startX, startY, endX, endY].some((val) => Number.isNaN(val)))
+      return null;
     return {
       start: { x: startX, y: startY },
       end: { x: endX, y: endY },
@@ -2588,7 +3299,10 @@ function generateHofenbitzerCasualBodice(params) {
     if (options.name) {
       attrs["data-name"] = options.name;
     }
-    const curve = path(`M ${s.x} ${s.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${e.x} ${e.y}`, attrs);
+    const curve = path(
+      `M ${s.x} ${s.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${e.x} ${e.y}`,
+      attrs
+    );
     layer.appendChild(curve);
     return curve;
   }
@@ -2693,11 +3407,16 @@ function generateHofenbitzerCasualBodice(params) {
   }
 
   function drawGuide(start, end, opts = {}) {
-    return drawSegment(opts.back ? guideBackLayer : guideFrontLayer, start, end, {
-      color: opts.color || HOFENBITZER_GUIDE_COLOR,
-      dashed: opts.dashed,
-      name: opts.name,
-    });
+    return drawSegment(
+      opts.back ? guideBackLayer : guideFrontLayer,
+      start,
+      end,
+      {
+        color: opts.color || HOFENBITZER_GUIDE_COLOR,
+        dashed: opts.dashed,
+        name: opts.name,
+      }
+    );
   }
 
   function drawBackLine(start, end, opts = {}) {
@@ -2713,7 +3432,9 @@ function generateHofenbitzerCasualBodice(params) {
   }
 
   function registerPoint(id, coords, label = id) {
-    const point = Array.isArray(coords) ? { x: coords[0], y: coords[1] } : coords;
+    const point = Array.isArray(coords)
+      ? { x: coords[0], y: coords[1] }
+      : coords;
     hofPoints[id] = point;
     const svgCoords = toSvgCoords(point);
     if (markersLayer) {
@@ -2828,7 +3549,8 @@ function generateHofenbitzerCasualBodice(params) {
   const bShS = ShGFinal + backShoulderEase;
 
   function buildHofenbitzerDraft() {
-    const safeValue = (value, fallback = 0) => (Number.isFinite(value) ? value : fallback);
+    const safeValue = (value, fallback = 0) =>
+      Number.isFinite(value) ? value : fallback;
     const neckMeasure = safeValue(NeG, HOFENBITZER_DEFAULTS.NeG);
 
     const point1 = registerPoint("1", { x: 0, y: 0 }, "1");
@@ -2840,26 +3562,48 @@ function generateHofenbitzerCasualBodice(params) {
     );
     const point1aExtension = { x: point1a.x - 10, y: point1a.y };
     drawGuide(point1, point1a, { back: true, dashed: true, name: "1-1a" });
-    drawGuide(point1a, point1aExtension, { back: true, dashed: true, name: "1a Extension" });
+    drawGuide(point1a, point1aExtension, {
+      back: true,
+      dashed: true,
+      name: "1a Extension",
+    });
 
     const dist12 = safeValue(NeG / 3 + 1, 0);
-    const point2 = registerPoint("2", { x: point1.x, y: point1.y + dist12 }, "2");
+    const point2 = registerPoint(
+      "2",
+      { x: point1.x, y: point1.y + dist12 },
+      "2"
+    );
     if (point1a && point2) {
       if (backNeckPath && backNeckPath.remove) backNeckPath.remove();
       const backBulge = -Math.max(0.5, (neckMeasure + 0.5) / 3);
-      const handleLength = Math.max(HOFENBITZER_MIN_HANDLE_LENGTH_CM, neckMeasure / 2);
+      const handleLength = Math.max(
+        HOFENBITZER_MIN_HANDLE_LENGTH_CM,
+        neckMeasure / 2
+      );
       backNeckPath = drawNeckCurve(point1a, point2, {
         layer: backLayer,
         name: "Back Neck Curve",
         bulgeCm: backBulge,
-        startHandleOverride: { x: point1a.x + 0.6, y: point1a.y + handleLength },
+        startHandleOverride: {
+          x: point1a.x + 0.6,
+          y: point1a.y + handleLength,
+        },
         endHandleOverride: { x: point2.x - handleLength, y: point2.y },
       });
     }
 
     const point3 = registerPoint("3", { x: point2.x, y: point2.y + MoL }, "3");
-    const point4 = registerPoint("4", { x: point2.x, y: point2.y + AhDPlus }, "4");
-    const point5 = registerPoint("5", { x: point2.x, y: point2.y + BLFinal }, "5");
+    const point4 = registerPoint(
+      "4",
+      { x: point2.x, y: point2.y + AhDPlus },
+      "4"
+    );
+    const point5 = registerPoint(
+      "5",
+      { x: point2.x, y: point2.y + BLFinal },
+      "5"
+    );
     const point6 = registerPoint("6", { x: point5.x, y: point5.y + HiD }, "6");
     const point6a = registerPoint(
       "6a",
@@ -2882,7 +3626,11 @@ function generateHofenbitzerCasualBodice(params) {
     const backArmBase = point9 ? registerPoint("9", point9, "9") : null;
 
     const point10 = backArmBase
-      ? registerPoint("10", { x: backArmBase.x - safeValue(BGPlus, 0), y: bustLineStart.y }, "10")
+      ? registerPoint(
+          "10",
+          { x: backArmBase.x - safeValue(BGPlus, 0), y: bustLineStart.y },
+          "10"
+        )
       : null;
     const point11 = point10
       ? registerPoint(
@@ -2895,13 +3643,25 @@ function generateHofenbitzerCasualBodice(params) {
       ? registerPoint("12", { x: point11.x - 15, y: point11.y }, "12")
       : null;
     const point13 = point12
-      ? registerPoint("13", { x: point12.x - safeValue(AGPlus / 3, 0), y: point12.y }, "13")
+      ? registerPoint(
+          "13",
+          { x: point12.x - safeValue(AGPlus / 3, 0), y: point12.y },
+          "13"
+        )
       : null;
     const point13a = point13
-      ? registerPoint("13a", { x: point13.x, y: point13.y - safeValue(AGPlus / 4, 0) }, "13a")
+      ? registerPoint(
+          "13a",
+          { x: point13.x, y: point13.y - safeValue(AGPlus / 4, 0) },
+          "13a"
+        )
       : null;
     const point14 = point13
-      ? registerPoint("14", { x: point13.x - safeValue(BrGPlus, 0), y: point13.y }, "14")
+      ? registerPoint(
+          "14",
+          { x: point13.x - safeValue(BrGPlus, 0), y: point13.y },
+          "14"
+        )
       : null;
 
     const drawBasicLine = (start, end, name) => {
@@ -2919,10 +3679,18 @@ function generateHofenbitzerCasualBodice(params) {
     drawBasicLine(point1, point1a, "1-1a");
 
     if (point4 && point14 && point2) {
-      drawGuide({ x: point2.x, y: point4.y }, { x: point14.x, y: point4.y }, { name: "Bust Line", dashed: true });
+      drawGuide(
+        { x: point2.x, y: point4.y },
+        { x: point14.x, y: point4.y },
+        { name: "Bust Line", dashed: true }
+      );
     }
     if (point5 && point14 && point2) {
-      drawGuide({ x: point2.x, y: point5.y }, { x: point14.x, y: point5.y }, { name: "Waist Line", dashed: true });
+      drawGuide(
+        { x: point2.x, y: point5.y },
+        { x: point14.x, y: point5.y },
+        { name: "Waist Line", dashed: true }
+      );
     }
 
     let frontShoulderEnd = null;
@@ -2945,13 +3713,18 @@ function generateHofenbitzerCasualBodice(params) {
         tIntersect = 0;
       }
       let effectiveLength = bShS;
-      if (tIntersect !== null && tIntersect > effectiveLength) effectiveLength = tIntersect;
+      if (tIntersect !== null && tIntersect > effectiveLength)
+        effectiveLength = tIntersect;
       backShoulderEnd = {
         x: point1a.x + dirX * effectiveLength,
         y: point1a.y + dirY * effectiveLength,
       };
       if (tIntersect !== null && point10) {
-        point16 = registerPoint("16", { x: point10.x, y: point1a.y + dirY * tIntersect }, "16");
+        point16 = registerPoint(
+          "16",
+          { x: point10.x, y: point1a.y + dirY * tIntersect },
+          "16"
+        );
       }
       drawBackLine(point1a, backShoulderEnd, { name: "Back Shoulder Line" });
     }
@@ -2964,17 +3737,37 @@ function generateHofenbitzerCasualBodice(params) {
         x: (point16.x + point10.x) / 2,
         y: (point16.y + point10.y) / 2,
       };
-      point17 = registerPoint("17", { x: midpoint1610.x - 1, y: midpoint1610.y }, "17");
+      point17 = registerPoint(
+        "17",
+        { x: midpoint1610.x - 1, y: midpoint1610.y },
+        "17"
+      );
       const shoulderBladeEnd = { x: point2.x, y: point17.y };
-      drawGuide(point17, shoulderBladeEnd, { back: true, dashed: true, name: "Shoulder Blade Line" });
+      drawGuide(point17, shoulderBladeEnd, {
+        back: true,
+        dashed: true,
+        name: "Shoulder Blade Line",
+      });
 
       const midpoint1710 = {
         x: (point17.x + point10.x) / 2,
         y: (point17.y + point10.y) / 2,
       };
-      point17a = registerPoint("17a", { x: midpoint1710.x - 1.5, y: midpoint1710.y }, "17a");
-      point18 = registerPoint("18", { x: point13 ? point13.x : midpoint1710.x, y: point17a.y }, "18");
-      drawGuide(point17a, point18, { back: true, dashed: true, name: "17a-18" });
+      point17a = registerPoint(
+        "17a",
+        { x: midpoint1710.x - 1.5, y: midpoint1710.y },
+        "17a"
+      );
+      point18 = registerPoint(
+        "18",
+        { x: point13 ? point13.x : midpoint1710.x, y: point17a.y },
+        "18"
+      );
+      drawGuide(point17a, point18, {
+        back: true,
+        dashed: true,
+        name: "17a-18",
+      });
     }
 
     let point25 = null;
@@ -2984,7 +3777,10 @@ function generateHofenbitzerCasualBodice(params) {
         x: point6a.x - point2.x,
         y: point6a.y - point2.y,
       };
-      if (Math.abs(backDiagVec.x) > 0.0001 || Math.abs(backDiagVec.y) > 0.0001) {
+      if (
+        Math.abs(backDiagVec.x) > 0.0001 ||
+        Math.abs(backDiagVec.y) > 0.0001
+      ) {
         const refPoint25 = {
           x: point11.x + backDiagVec.x,
           y: point11.y + backDiagVec.y,
@@ -2994,7 +3790,11 @@ function generateHofenbitzerCasualBodice(params) {
     }
     if (point25) {
       registerPoint("25", point25, "25");
-      drawGuide(point11, point25, { dashed: true, name: "Back Side Straightening", back: true });
+      drawGuide(point11, point25, {
+        dashed: true,
+        name: "Back Side Straightening",
+        back: true,
+      });
     }
 
     const point26 = point11
@@ -3015,7 +3815,6 @@ function generateHofenbitzerCasualBodice(params) {
     }
     if (point28) registerPoint("28", point28, "28");
 
-
     const point19a = point14
       ? registerPoint("19a", { x: point14.x, y: hipLineStart.y }, "19a")
       : null;
@@ -3023,8 +3822,10 @@ function generateHofenbitzerCasualBodice(params) {
       ? registerPoint("19", { x: point14.x, y: waistLineStart.y }, "19")
       : null;
 
-    const hipSpanBack = point6a && point26 ? distanceBetween(point6a, point26) : null;
-    const hipSpanFront = point19a && point27 ? distanceBetween(point19a, point27) : null;
+    const hipSpanBack =
+      point6a && point26 ? distanceBetween(point6a, point26) : null;
+    const hipSpanFront =
+      point19a && point27 ? distanceBetween(point19a, point27) : null;
     hipSpanBackValue = hipSpanBack;
     hipSpanFrontValue = hipSpanFront;
     const halfHiW = resolveMeasurementFinal("HiC") / 2;
@@ -3040,11 +3841,21 @@ function generateHofenbitzerCasualBodice(params) {
       halfHipShortageMagnitude = Math.abs(halfHipShortage);
       hiGValue = hiG;
       hipShortageValue = hipShortage;
-      updateHofenbitzerDerivedOutputs({ hiG, hipShortage, hipSpanBack, hipSpanFront });
+      updateHofenbitzerDerivedOutputs({
+        hiG,
+        hipShortage,
+        hipSpanBack,
+        hipSpanFront,
+      });
     } else {
       hiGValue = null;
       hipShortageValue = null;
-      updateHofenbitzerDerivedOutputs({ hiG: null, hipShortage: null, hipSpanBack, hipSpanFront });
+      updateHofenbitzerDerivedOutputs({
+        hiG: null,
+        hipShortage: null,
+        hipSpanBack,
+        hipSpanFront,
+      });
     }
     if (!Number.isFinite(halfHipShortageMagnitude)) {
       halfHipShortageMagnitude = 0;
@@ -3064,10 +3875,18 @@ function generateHofenbitzerCasualBodice(params) {
     const backShift = backDirection * shortageMagnitude;
 
     const point29 = point27
-      ? registerPoint("29", { x: point27.x + frontShift, y: hipLineStart.y }, "29")
+      ? registerPoint(
+          "29",
+          { x: point27.x + frontShift, y: hipLineStart.y },
+          "29"
+        )
       : null;
     const point30 = point28
-      ? registerPoint("30", { x: point28.x + backShift, y: hipLineStart.y }, "30")
+      ? registerPoint(
+          "30",
+          { x: point28.x + backShift, y: hipLineStart.y },
+          "30"
+        )
       : null;
 
     const topLineY = point1.y;
@@ -3075,7 +3894,9 @@ function generateHofenbitzerCasualBodice(params) {
     const waistLineY = waistLineStart.y;
     const hipLineY = hipLineStart.y;
     const hemLineY = hemLineStart.y;
-    const hemEnd = point14 ? { x: point14.x, y: hemLineY } : { x: point6.x, y: hemLineY };
+    const hemEnd = point14
+      ? { x: point14.x, y: hemLineY }
+      : { x: point6.x, y: hemLineY };
     const bustEnd = point14 ? { x: point14.x, y: bustLineY } : null;
     const waistEnd = point14 ? { x: point14.x, y: waistLineY } : null;
     const hipEnd = point14 ? { x: point14.x, y: hipLineY } : null;
@@ -3086,7 +3907,10 @@ function generateHofenbitzerCasualBodice(params) {
       const diagY = point6a.y - point2.y;
       const diagLenSq = diagX * diagX + diagY * diagY;
       if (diagLenSq < 1e-6) return null;
-      const tDiag = ((sourcePoint.x - point2.x) * diagX + (sourcePoint.y - point2.y) * diagY) / diagLenSq;
+      const tDiag =
+        ((sourcePoint.x - point2.x) * diagX +
+          (sourcePoint.y - point2.y) * diagY) /
+        diagLenSq;
       return {
         x: point2.x + diagX * tDiag,
         y: point2.y + diagY * tDiag,
@@ -3101,7 +3925,9 @@ function generateHofenbitzerCasualBodice(params) {
       if (point30Hem) {
         drawBackLine(point11, point30Hem, { name: "Back Side Line 1" });
       }
-      const point30Waist = Number.isFinite(waistLineY) ? extendLineToY(point11, point30, waistLineY) : null;
+      const point30Waist = Number.isFinite(waistLineY)
+        ? extendLineToY(point11, point30, waistLineY)
+        : null;
       hipLinePoint6a = perpendicularFootOnBackDiagonal(point30);
       if (!hipLinePoint6a && point6a) {
         hipLinePoint6a = { x: point6a.x, y: hipLineY };
@@ -3109,7 +3935,10 @@ function generateHofenbitzerCasualBodice(params) {
         hipLinePoint6a = { x: point30.x, y: hipLineY };
       }
       if (hipLinePoint6a) {
-        drawFrontLine(point30, hipLinePoint6a, { name: "Back Hip Line", dashed: true });
+        drawFrontLine(point30, hipLinePoint6a, {
+          name: "Back Hip Line",
+          dashed: true,
+        });
       }
       if (point30Hem) {
         hemConnectorEnd = perpendicularFootOnBackDiagonal(point30Hem);
@@ -3120,7 +3949,10 @@ function generateHofenbitzerCasualBodice(params) {
       if (point30Waist) {
         waistConnectorEnd = perpendicularFootOnBackDiagonal(point30Waist);
         if (waistConnectorEnd) {
-          drawFrontLine(point30Waist, waistConnectorEnd, { name: "Back Waist Line", dashed: true });
+          drawFrontLine(point30Waist, waistConnectorEnd, {
+            name: "Back Waist Line",
+            dashed: true,
+          });
         }
       }
     }
@@ -3133,10 +3965,18 @@ function generateHofenbitzerCasualBodice(params) {
 
     const point20Offset = safeValue(FLFinal - 1, 0);
     const point20 = point19
-      ? registerPoint("20", { x: point19.x, y: point19.y - point20Offset }, "20")
+      ? registerPoint(
+          "20",
+          { x: point19.x, y: point19.y - point20Offset },
+          "20"
+        )
       : null;
     const point20a = point20
-      ? registerPoint("20a", { x: point20.x + safeValue(NeG, 0), y: point20.y }, "20a")
+      ? registerPoint(
+          "20a",
+          { x: point20.x + safeValue(NeG, 0), y: point20.y },
+          "20a"
+        )
       : null;
     const point23 = point20
       ? registerPoint(
@@ -3147,8 +3987,14 @@ function generateHofenbitzerCasualBodice(params) {
       : null;
     if (point20a && point23) {
       if (frontNeckPath && frontNeckPath.remove) frontNeckPath.remove();
-      const frontBulge = -Math.max(HOFENBITZER_MIN_HANDLE_LENGTH_CM, neckMeasure / 2);
-      const handleLength = Math.max(HOFENBITZER_MIN_HANDLE_LENGTH_CM, neckMeasure / 2);
+      const frontBulge = -Math.max(
+        HOFENBITZER_MIN_HANDLE_LENGTH_CM,
+        neckMeasure / 2
+      );
+      const handleLength = Math.max(
+        HOFENBITZER_MIN_HANDLE_LENGTH_CM,
+        neckMeasure / 2
+      );
       frontNeckPath = drawNeckCurve(point20a, point23, {
         layer: frontLayer,
         name: "Front Neck Curve",
@@ -3171,8 +4017,14 @@ function generateHofenbitzerCasualBodice(params) {
       ? registerPoint(
           "24",
           {
-            x: point20a.x + Math.cos((frontShoulderAngle * Math.PI) / 180) * safeValue(ShGFinal, 0),
-            y: point20a.y + Math.sin((frontShoulderAngle * Math.PI) / 180) * safeValue(ShGFinal, 0),
+            x:
+              point20a.x +
+              Math.cos((frontShoulderAngle * Math.PI) / 180) *
+                safeValue(ShGFinal, 0),
+            y:
+              point20a.y +
+              Math.sin((frontShoulderAngle * Math.PI) / 180) *
+                safeValue(ShGFinal, 0),
           },
           "24"
         )
@@ -3181,9 +4033,12 @@ function generateHofenbitzerCasualBodice(params) {
       drawFrontLine(point20a, point24, { name: "Front Shoulder Line" });
     }
 
-
     const point21 = point20
-      ? registerPoint("21", { x: point20.x, y: point20.y + safeValue(BrDValue - 1, 0) }, "21")
+      ? registerPoint(
+          "21",
+          { x: point20.x, y: point20.y + safeValue(BrDValue - 1, 0) },
+          "21"
+        )
       : null;
     const dartOffset = safeValue(BrGPlus / 2 - 0.3, 0);
     const point22 = point21
@@ -3193,15 +4048,24 @@ function generateHofenbitzerCasualBodice(params) {
       drawGuide(point2, point6, { back: true, name: "Centre Back" });
     }
     if (point14 && hipLineStart) {
-      drawFrontLine(point14, { x: point14.x, y: hipLineStart.y }, { name: "Centre Front" });
+      drawFrontLine(
+        point14,
+        { x: point14.x, y: hipLineStart.y },
+        { name: "Centre Front" }
+      );
     }
 
     if (hemLineStart && point14) {
-      drawSegment(guideLayer, { x: point6a ? point6a.x : point6.x, y: hipLineStart.y }, point19a || point14, {
-        dashed: true,
-        name: "Hem Line",
-        color: HOFENBITZER_GUIDE_COLOR,
-      });
+      drawSegment(
+        guideLayer,
+        { x: point6a ? point6a.x : point6.x, y: hipLineStart.y },
+        point19a || point14,
+        {
+          dashed: true,
+          name: "Hem Line",
+          color: HOFENBITZER_GUIDE_COLOR,
+        }
+      );
     }
 
     const drawFrontArmholeCurve = () => {
@@ -3225,7 +4089,10 @@ function generateHofenbitzerCasualBodice(params) {
         perp = scaleVector(perp, -1);
       }
       perp = normalizeVector(perp);
-      const shoulderHandleLen = Math.max(vectorMagnitude(bustVector) * 0.45, 1.2);
+      const shoulderHandleLen = Math.max(
+        vectorMagnitude(bustVector) * 0.45,
+        1.2
+      );
       const shoulderHandle = scaleVector(perp, shoulderHandleLen);
       let handleLen = Math.max(dir1214Len * 0.5, 0.5);
       let tSolve = 0.5;
@@ -3234,11 +4101,26 @@ function generateHofenbitzerCasualBodice(params) {
       const ctrlStart = addVector(p0, shoulderHandle);
       const guide = guidePoint || bustPoint;
       for (let iter = 0; iter < 25; iter += 1) {
-        const ctrlEndCandidate = addVector(p3, scaleVector(dir1214Norm, handleLen));
-        const current = bezierPointCoords(p0, ctrlStart, ctrlEndCandidate, p3, tSolve);
+        const ctrlEndCandidate = addVector(
+          p3,
+          scaleVector(dir1214Norm, handleLen)
+        );
+        const current = bezierPointCoords(
+          p0,
+          ctrlStart,
+          ctrlEndCandidate,
+          p3,
+          tSolve
+        );
         const diff = { x: current.x - guide.x, y: current.y - guide.y };
         if (Math.abs(diff.x) < 0.0005 && Math.abs(diff.y) < 0.0005) break;
-        const dBdt = bezierDerivativeVector(p0, ctrlStart, ctrlEndCandidate, p3, tSolve);
+        const dBdt = bezierDerivativeVector(
+          p0,
+          ctrlStart,
+          ctrlEndCandidate,
+          p3,
+          tSolve
+        );
         const coeff = 3 * (1 - tSolve) * tSolve * tSolve;
         const dBdL = scaleVector(dir1214Norm, coeff);
         const det = dBdt.x * dBdL.y - dBdt.y * dBdL.x;
@@ -3249,11 +4131,14 @@ function generateHofenbitzerCasualBodice(params) {
         handleLen = Math.max(handleLen + deltaL, 0.05);
       }
       const ctrlEnd = addVector(p3, scaleVector(dir1214Norm, handleLen));
-      drawCubic(frontLayer, p0, ctrlStart, ctrlEnd, p3, { name: "Front Armhole Curve" });
+      drawCubic(frontLayer, p0, ctrlStart, ctrlEnd, p3, {
+        name: "Front Armhole Curve",
+      });
     };
 
     const drawBackArmholeCurve = () => {
-      if (!backShoulderEnd || !point17 || !point17a || !point11 || !point4) return;
+      if (!backShoulderEnd || !point17 || !point17a || !point11 || !point4)
+        return;
       const startAnchor = backShoulderEnd;
       const midAnchor = point17;
       const guidePoint = point17a;
@@ -3265,11 +4150,16 @@ function generateHofenbitzerCasualBodice(params) {
       const startDir = normalizeVector(startToMid);
       let startHandleLen = Math.min(startLen * 0.35, 5);
       if (startHandleLen < 0.5) startHandleLen = 0.5;
-      const startHandle = addVector(startAnchor, scaleVector(startDir, startHandleLen));
+      const startHandle = addVector(
+        startAnchor,
+        scaleVector(startDir, startHandleLen)
+      );
       let verticalDrop = guidePoint ? Math.abs(guidePoint.y - midAnchor.y) : 5;
       if (verticalDrop < 0.5) verticalDrop = 0.5;
       const midDown = { x: midAnchor.x, y: midAnchor.y + verticalDrop };
-      const midOutgoingHandle = guidePoint ? { x: guidePoint.x + 1, y: guidePoint.y } : midDown;
+      const midOutgoingHandle = guidePoint
+        ? { x: guidePoint.x + 1, y: guidePoint.y }
+        : midDown;
       const midIncomingHandle = {
         x: midAnchor.x - (midOutgoingHandle.x - midAnchor.x),
         y: midAnchor.y - (midOutgoingHandle.y - midAnchor.y),
@@ -3279,7 +4169,9 @@ function generateHofenbitzerCasualBodice(params) {
         lineDir = vectorBetween(endAnchor, midAnchor);
       }
       lineDir = normalizeVector(lineDir);
-      let handleLenEnd = vectorMagnitude(vectorBetween(endAnchor, guidePoint || endAnchor));
+      let handleLenEnd = vectorMagnitude(
+        vectorBetween(endAnchor, guidePoint || endAnchor)
+      );
       if (handleLenEnd < 0.5) handleLenEnd = 0.5;
       let tSolve = 0.5;
       const p0 = midAnchor;
@@ -3301,7 +4193,10 @@ function generateHofenbitzerCasualBodice(params) {
         tSolve = Math.min(Math.max(tSolve + deltaT, 0.05), 0.95);
         handleLenEnd = Math.max(handleLenEnd + deltaL, 0.05);
       }
-      const endLeftHandle = addVector(endAnchor, scaleVector(lineDir, handleLenEnd));
+      const endLeftHandle = addVector(
+        endAnchor,
+        scaleVector(lineDir, handleLenEnd)
+      );
       const startSvg = toSvgCoords(startAnchor);
       const midSvg = toSvgCoords(midAnchor);
       const endSvg = toSvgCoords(endAnchor);
@@ -3331,7 +4226,8 @@ function generateHofenbitzerCasualBodice(params) {
       drawGuide(point11, point26, { name: "Back Side Seam", back: true });
     }
 
-    const point29Hem = point29 && point12 ? extendLineToY(point12, point29, hemLineY) : null;
+    const point29Hem =
+      point29 && point12 ? extendLineToY(point12, point29, hemLineY) : null;
     if (point29Hem && point12) {
       drawFrontLine(point12, point29Hem, { name: "New Front Side Line" });
     }
@@ -3356,7 +4252,8 @@ function generateHofenbitzerCasualBodice(params) {
         if (Math.abs(shoulderDX) > 0.0001) {
           const tIntersectDart = (point22.x - point20a.x) / shoulderDX;
           if (tIntersectDart >= 0 && tIntersectDart <= 1) {
-            frontDartTopY = point20a.y + (point24.y - point20a.y) * tIntersectDart;
+            frontDartTopY =
+              point20a.y + (point24.y - point20a.y) * tIntersectDart;
           }
         } else if (Math.abs(point22.x - point20a.x) < 0.0001) {
           const minShoulderY = Math.min(point20a.y, point24.y);
@@ -3367,17 +4264,26 @@ function generateHofenbitzerCasualBodice(params) {
       }
       frontDartTop = { x: point22.x, y: frontDartTopY };
       frontDartBottom = { x: point22.x, y: hemLineY };
-      frontDartPath = drawGuide(frontDartTop, frontDartBottom, { name: "Front Dart Line", dashed: true });
+      frontDartPath = drawGuide(frontDartTop, frontDartBottom, {
+        name: "Front Dart Line",
+        dashed: true,
+      });
     }
 
     const centreBackStart = { x: point2.x, y: point2.y };
     const centreBackMid = point7 ? { x: point7.x, y: point7.y } : null;
-    const centreBackEnd = point8 ? { x: point8.x, y: point8.y } : { x: point2.x, y: hemLineY };
+    const centreBackEnd = point8
+      ? { x: point8.x, y: point8.y }
+      : { x: point2.x, y: hemLineY };
     if (centreBackMid) {
-      drawBackLine(centreBackStart, centreBackMid, { name: "Centre Back (CB)" });
+      drawBackLine(centreBackStart, centreBackMid, {
+        name: "Centre Back (CB)",
+      });
       drawBackLine(centreBackMid, centreBackEnd, { name: "Centre Back (CB)" });
     } else {
-      drawBackLine(centreBackStart, centreBackEnd, { name: "Centre Back (CB)" });
+      drawBackLine(centreBackStart, centreBackEnd, {
+        name: "Centre Back (CB)",
+      });
     }
     if (point17 && point2) {
       const cbStart = { x: point2.x, y: point2.y };
@@ -3387,15 +4293,25 @@ function generateHofenbitzerCasualBodice(params) {
         ? { x: point7.x, y: point7.y }
         : { x: point2.x, y: hemLineY };
       const shoulderRayEnd = { x: point2.x, y: point17.y };
-      const cbIntersection = segmentIntersection(point17, shoulderRayEnd, cbStart, cbEnd) || shoulderRayEnd;
-      drawGuide(point17, cbIntersection, { name: "17-Centre Back", dashed: true, back: true });
+      const cbIntersection =
+        segmentIntersection(point17, shoulderRayEnd, cbStart, cbEnd) ||
+        shoulderRayEnd;
+      drawGuide(point17, cbIntersection, {
+        name: "17-Centre Back",
+        dashed: true,
+        back: true,
+      });
     }
 
     if (point10) {
       const backArmLineTopY = point16 ? point16.y : topLineY;
       const backArmLineStart = { x: point10.x, y: backArmLineTopY };
       const backArmLineEnd = { x: point10.x, y: hipLineY };
-      drawGuide(backArmLineStart, backArmLineEnd, { name: "Back Arm Line", dashed: true, back: true });
+      drawGuide(backArmLineStart, backArmLineEnd, {
+        name: "Back Arm Line",
+        dashed: true,
+        back: true,
+      });
     }
     if (point11) {
       drawGuide(
@@ -3406,25 +4322,37 @@ function generateHofenbitzerCasualBodice(params) {
     }
     let frontSideLinePath = null;
     if (point12) {
-      frontSideLinePath = drawGuide({ x: point12.x, y: point12.y }, { x: point12.x, y: hemLineY }, {
-        name: "Front Side Line",
-        dashed: true,
-      });
+      frontSideLinePath = drawGuide(
+        { x: point12.x, y: point12.y },
+        { x: point12.x, y: hemLineY },
+        {
+          name: "Front Side Line",
+          dashed: true,
+        }
+      );
     }
 
     if (point13) {
       const frontArmLineTopY = Math.min(topLineY + 8, waistLineY);
-      drawGuide({ x: point13.x, y: frontArmLineTopY }, { x: point13.x, y: waistLineY }, {
-        name: "Front Arm Line",
-        dashed: true,
-      });
+      drawGuide(
+        { x: point13.x, y: frontArmLineTopY },
+        { x: point13.x, y: waistLineY },
+        {
+          name: "Front Arm Line",
+          dashed: true,
+        }
+      );
     }
 
     let centreFrontPath = null;
     if (point14) {
-      centreFrontPath = drawFrontLine({ x: point14.x, y: point20 ? point20.y : topLineY }, { x: point14.x, y: hemLineY }, {
-        name: "Centre Front (CF)",
-      });
+      centreFrontPath = drawFrontLine(
+        { x: point14.x, y: point20 ? point20.y : topLineY },
+        { x: point14.x, y: hemLineY },
+        {
+          name: "Centre Front (CF)",
+        }
+      );
     }
 
     const frontSideBottom = point29Hem
@@ -3441,65 +4369,112 @@ function generateHofenbitzerCasualBodice(params) {
     if (point14 && point12) {
       drawFrontLine(point14, point12, { name: "14-12", dashed: true });
     }
-    drawSegment(guideLayer, hemLineStart, hemEnd, { name: "Hem Line", dashed: true, color: HOFENBITZER_GUIDE_COLOR });
+    drawSegment(guideLayer, hemLineStart, hemEnd, {
+      name: "Hem Line",
+      dashed: true,
+      color: HOFENBITZER_GUIDE_COLOR,
+    });
 
     const frontBustEnd = point12 ? { x: point12.x, y: bustLineY } : bustEnd;
     const frontBustLinePath = frontBustEnd
-      ? drawGuide(bustLineStart, frontBustEnd, { name: "Front Bust Line", dashed: true })
+      ? drawGuide(bustLineStart, frontBustEnd, {
+          name: "Front Bust Line",
+          dashed: true,
+        })
       : null;
 
-    const frontWaistLineStart = point19 ? { x: point19.x, y: waistLineY } : waistLineStart;
+    const frontWaistLineStart = point19
+      ? { x: point19.x, y: waistLineY }
+      : waistLineStart;
     const frontWaistEndPoint = point12
       ? extendLineToY(point12, point29 ? point29 : point12, waistLineY)
       : frontWaistLineStart;
-    const frontWaistLinePath = frontWaistLineStart && frontWaistEndPoint
-      ? drawGuide(frontWaistLineStart, frontWaistEndPoint, { name: "Front Waist Line", dashed: true })
-      : null;
+    const frontWaistLinePath =
+      frontWaistLineStart && frontWaistEndPoint
+        ? drawGuide(frontWaistLineStart, frontWaistEndPoint, {
+            name: "Front Waist Line",
+            dashed: true,
+          })
+        : null;
     if (point19 && frontWaistEndPoint) {
-      drawFrontLine(point19, frontWaistEndPoint, { name: "19-Front Side Waist", dashed: true });
+      drawFrontLine(point19, frontWaistEndPoint, {
+        name: "19-Front Side Waist",
+        dashed: true,
+      });
     }
 
     const frontHipEnd = point29 ? { x: point29.x, y: hipLineY } : hipEnd;
     const frontHipLinePath = frontHipEnd
-      ? drawGuide(hipLineStart, frontHipEnd, { name: "Front Hip Line", dashed: true })
+      ? drawGuide(hipLineStart, frontHipEnd, {
+          name: "Front Hip Line",
+          dashed: true,
+        })
       : null;
     if (point19a && point29) {
-      drawFrontLine(point19a, point29, { name: "19a-29 Hip Span", dashed: true });
+      drawFrontLine(point19a, point29, {
+        name: "19a-29 Hip Span",
+        dashed: true,
+      });
     }
 
-    const backBustStart = point11 && point30 ? extendLineToY(point11, point30, bustLineY) : null;
-    const backBustLinePath = backBustStart && point9
-      ? drawGuide(backBustStart, { x: point9.x, y: point9.y }, { name: "Back Bust Line", dashed: true, back: true })
-      : null;
+    const backBustStart =
+      point11 && point30 ? extendLineToY(point11, point30, bustLineY) : null;
+    const backBustLinePath =
+      backBustStart && point9
+        ? drawGuide(
+            backBustStart,
+            { x: point9.x, y: point9.y },
+            { name: "Back Bust Line", dashed: true, back: true }
+          )
+        : null;
     if (point11 && point9) {
-      drawBackLine(point11, { x: point9.x, y: point9.y }, { name: "11-9", dashed: true });
+      drawBackLine(
+        point11,
+        { x: point9.x, y: point9.y },
+        { name: "11-9", dashed: true }
+      );
     }
 
     if (frontBustLinePath && point12) {
-      trimHorizontalSegmentRightOf(frontBustLinePath, { x: point12.x, y: bustLineY });
+      trimHorizontalSegmentRightOf(frontBustLinePath, {
+        x: point12.x,
+        y: bustLineY,
+      });
     }
     if (frontHipLinePath && point29) {
-      trimHorizontalSegmentRightOf(frontHipLinePath, { x: point29.x, y: hipLineY });
+      trimHorizontalSegmentRightOf(frontHipLinePath, {
+        x: point29.x,
+        y: hipLineY,
+      });
     }
     if (centreFrontPath && point23) {
-      setSegmentBetween(centreFrontPath, point23, { x: point14.x, y: hemLineY });
+      setSegmentBetween(centreFrontPath, point23, {
+        x: point14.x,
+        y: hemLineY,
+      });
     }
     if (backBustLinePath && point9) {
-      setSegmentBetween(backBustLinePath, backBustStart, { x: point9.x, y: point9.y });
+      setSegmentBetween(backBustLinePath, backBustStart, {
+        x: point9.x,
+        y: point9.y,
+      });
     }
   }
 
   buildHofenbitzerDraft();
 
-  const measurementSummary = Object.keys(measurementEntries).reduce((acc, key) => {
-    const entry = measurementEntries[key];
-    acc[key] = {
-      measurement: entry?.measurement ?? null,
-      ease: entry?.ease ?? null,
-      final: entry?.final ?? null,
-    };
-    return acc;
-  }, {});
+  const measurementSummary = Object.keys(measurementEntries).reduce(
+    (acc, key) => {
+      const entry = measurementEntries[key];
+      acc[key] = {
+        measurement: entry?.measurement ?? null,
+        ease: entry?.ease ?? null,
+        final: entry?.final ?? null,
+      };
+      return acc;
+    },
+    {}
+  );
 
   const secondarySummary = { ...secondaryEntries };
 
@@ -3544,7 +4519,10 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
   const cmToMm = (value) => value * CM_TO_MM;
   const dashValue = HOF_SLEEVE_DASH;
   const derived = computeHofenbitzerSleeveDerived(params);
-  const baselineLengthCm = Math.max((derived.SlW || 0) + (derived.CapLineEase || 0), 0);
+  const baselineLengthCm = Math.max(
+    (derived.SlW || 0) + (derived.CapLineEase || 0),
+    0
+  );
   derived.CapLineCm = baselineLengthCm;
   if (!hofSleeveUi.lastMeasured) hofSleeveUi.lastMeasured = {};
   hofSleeveUi.lastMeasured.CapLineCm = baselineLengthCm;
@@ -3577,7 +4555,14 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     const lineEl = path(`M ${s.x} ${s.y} L ${e.x} ${e.y}`, attrs);
     target.appendChild(lineEl);
     if (opts.labelLayer && opts.labelText) {
-      addLineLabel(opts.labelLayer, start, end, opts.labelText, opts.labelOffsetCm, opts.labelSide);
+      addLineLabel(
+        opts.labelLayer,
+        start,
+        end,
+        opts.labelText,
+        opts.labelOffsetCm,
+        opts.labelSide
+      );
     }
     return lineEl;
   }
@@ -3600,22 +4585,42 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     if (opts.name) {
       attrs["data-name"] = opts.name;
     }
-    const curveEl = path(`M ${s.x} ${s.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${e.x} ${e.y}`, attrs);
+    const curveEl = path(
+      `M ${s.x} ${s.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${e.x} ${e.y}`,
+      attrs
+    );
     target.appendChild(curveEl);
     if (opts.labelLayer && opts.labelText) {
-      addLineLabel(opts.labelLayer, start, end, opts.labelText, opts.labelOffsetCm, opts.labelSide);
+      addLineLabel(
+        opts.labelLayer,
+        start,
+        end,
+        opts.labelText,
+        opts.labelOffsetCm,
+        opts.labelSide
+      );
     }
     return curveEl;
   }
 
-  function addLineLabel(targetLayer, start, end, text, offsetCm = HOF_SLEEVE_LABEL_OFFSET_CM, side = 1) {
+  function addLineLabel(
+    targetLayer,
+    start,
+    end,
+    text,
+    offsetCm = HOF_SLEEVE_LABEL_OFFSET_CM,
+    side = 1
+  ) {
     if (!targetLayer || !start || !end || !text) return;
     const startSvg = toSvgCoords(start);
     const endSvg = toSvgCoords(end);
     const dx = endSvg.x - startSvg.x;
     const dy = endSvg.y - startSvg.y;
     const length = Math.hypot(dx, dy) || 1;
-    const mid = { x: (startSvg.x + endSvg.x) / 2, y: (startSvg.y + endSvg.y) / 2 };
+    const mid = {
+      x: (startSvg.x + endSvg.x) / 2,
+      y: (startSvg.y + endSvg.y) / 2,
+    };
     const normal = {
       x: (-dy / length) * offsetCm * CM_TO_MM * side,
       y: (dx / length) * offsetCm * CM_TO_MM * side,
@@ -3633,7 +4638,10 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     } else if (angleDeg > 90) {
       angleDeg -= 180;
     }
-    textEl.setAttribute("transform", `rotate(${angleDeg}, ${labelPoint.x}, ${labelPoint.y})`);
+    textEl.setAttribute(
+      "transform",
+      `rotate(${angleDeg}, ${labelPoint.x}, ${labelPoint.y})`
+    );
     targetLayer.appendChild(textEl);
     bounds.include(labelPoint.x, labelPoint.y);
   }
@@ -3668,7 +4676,8 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
   }
 
   function drawArcPath(targetLayer, arcInfo) {
-    if (!targetLayer || !arcInfo || !arcInfo.startPoint || !arcInfo.endPoint) return null;
+    if (!targetLayer || !arcInfo || !arcInfo.startPoint || !arcInfo.endPoint)
+      return null;
     return drawCurveCm(
       targetLayer,
       arcInfo.startPoint,
@@ -3679,8 +4688,18 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     );
   }
 
-  function drawBezierSegment(targetLayer, start, end, startHandle, endHandle, name) {
-    return drawCurveCm(targetLayer, start, startHandle, endHandle, end, { name, dashed: false });
+  function drawBezierSegment(
+    targetLayer,
+    start,
+    end,
+    startHandle,
+    endHandle,
+    name
+  ) {
+    return drawCurveCm(targetLayer, start, startHandle, endHandle, end, {
+      name,
+      dashed: false,
+    });
   }
 
   function drawBezierChain(targetLayer, nodes, name) {
@@ -3700,7 +4719,9 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
       const c1Svg = toSvgCoords(c1);
       const c2Svg = toSvgCoords(c2);
       const endSvg = toSvgCoords(p3);
-      commands.push(`C ${c1Svg.x} ${c1Svg.y} ${c2Svg.x} ${c2Svg.y} ${endSvg.x} ${endSvg.y}`);
+      commands.push(
+        `C ${c1Svg.x} ${c1Svg.y} ${c2Svg.x} ${c2Svg.y} ${endSvg.x} ${endSvg.y}`
+      );
     }
     const pathEl = path(commands.join(" "), {
       fill: "none",
@@ -3743,7 +4764,10 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
 
   function buildLineLabelOptions(name, lengthCm, labelsLayer) {
     if (!labelsLayer) return { name };
-    const value = Number.isFinite(lengthCm) && lengthCm > 0 ? formatHofenbitzerValue(lengthCm) : "-";
+    const value =
+      Number.isFinite(lengthCm) && lengthCm > 0
+        ? formatHofenbitzerValue(lengthCm)
+        : "-";
     return {
       name,
       labelLayer: labelsLayer,
@@ -3752,20 +4776,56 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     };
   }
 
-  function addNotchOnPath(startPt, endPt, startHandle, endHandle, distanceCm, targetLayer, notchName, offsetNormalCm) {
+  function addNotchOnPath(
+    startPt,
+    endPt,
+    startHandle,
+    endHandle,
+    distanceCm,
+    targetLayer,
+    notchName,
+    offsetNormalCm
+  ) {
     if (!startPt || !endPt || !targetLayer) return null;
     const distance = distanceCm || 0;
     if (!Number.isFinite(distance) || distance <= 0) return null;
-    const totalLen = approximateBezierLength(startPt, startHandle || startPt, endHandle || endPt, endPt);
+    const totalLen = approximateBezierLength(
+      startPt,
+      startHandle || startPt,
+      endHandle || endPt,
+      endPt
+    );
     if (!Number.isFinite(totalLen) || totalLen <= 0) return null;
     const clampedDist = Math.min(distance, totalLen);
-    const t = findParameterForLength(startPt, startHandle || startPt, endHandle || endPt, endPt, clampedDist, totalLen);
+    const t = findParameterForLength(
+      startPt,
+      startHandle || startPt,
+      endHandle || endPt,
+      endPt,
+      clampedDist,
+      totalLen
+    );
     if (!Number.isFinite(t)) return null;
-    const point = evaluateBezierPoint(startPt, startHandle || startPt, endHandle || endPt, endPt, t);
-    const tangent = evaluateBezierTangent(startPt, startHandle || startPt, endHandle || endPt, endPt, t);
+    const point = evaluateBezierPoint(
+      startPt,
+      startHandle || startPt,
+      endHandle || endPt,
+      endPt,
+      t
+    );
+    const tangent = evaluateBezierTangent(
+      startPt,
+      startHandle || startPt,
+      endHandle || endPt,
+      endPt,
+      t
+    );
     const norm = normalizeVector([-tangent[1], tangent[0]]);
     const offset = offsetNormalCm || 0;
-    const basePoint = [point[0] + norm[0] * offset, point[1] + norm[1] * offset];
+    const basePoint = [
+      point[0] + norm[0] * offset,
+      point[1] + norm[1] * offset,
+    ];
     drawNotchAtPoint(targetLayer, basePoint, norm, notchName);
     return { point: basePoint, normal: norm };
   }
@@ -3773,8 +4833,14 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
   function drawNotchAtPoint(layer, center, normal, notchName) {
     if (!layer || !center || !normal) return;
     const notchHalf = 0.25;
-    const notchStart = [center[0] - normal[0] * notchHalf, center[1] - normal[1] * notchHalf];
-    const notchEnd = [center[0] + normal[0] * notchHalf, center[1] + normal[1] * notchHalf];
+    const notchStart = [
+      center[0] - normal[0] * notchHalf,
+      center[1] - normal[1] * notchHalf,
+    ];
+    const notchEnd = [
+      center[0] + normal[0] * notchHalf,
+      center[1] + normal[1] * notchHalf,
+    ];
     drawDashedLine(layer, notchStart, notchEnd, { name: notchName || "" });
   }
 
@@ -3859,7 +4925,13 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     return [x, targetY];
   }
 
-  function evaluateBezierPointWithHandles(start, startHandle, endHandle, end, t) {
+  function evaluateBezierPointWithHandles(
+    start,
+    startHandle,
+    endHandle,
+    end,
+    t
+  ) {
     const p0 = start || [0, 0];
     const p1 = startHandle || p0;
     const p2 = endHandle || end || [0, 0];
@@ -3867,16 +4939,37 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     return evaluateBezierPoint(p0, p1, p2, p3, t);
   }
 
-  function findBezierHorizontalIntersection(start, startHandle, endHandle, end, targetY) {
-    if (!start || !end || targetY === null || targetY === undefined) return null;
+  function findBezierHorizontalIntersection(
+    start,
+    startHandle,
+    endHandle,
+    end,
+    targetY
+  ) {
+    if (!start || !end || targetY === null || targetY === undefined)
+      return null;
     const steps = 40;
     let prevT = 0;
-    let prevPoint = evaluateBezierPointWithHandles(start, startHandle, endHandle, end, 0);
+    let prevPoint = evaluateBezierPointWithHandles(
+      start,
+      startHandle,
+      endHandle,
+      end,
+      0
+    );
     for (let i = 1; i <= steps; i += 1) {
       const t = i / steps;
-      const point = evaluateBezierPointWithHandles(start, startHandle, endHandle, end, t);
+      const point = evaluateBezierPointWithHandles(
+        start,
+        startHandle,
+        endHandle,
+        end,
+        t
+      );
       if ((prevPoint[1] - targetY) * (point[1] - targetY) <= 0) {
-        const ratio = Math.abs((targetY - prevPoint[1]) / (point[1] - prevPoint[1] || 1));
+        const ratio = Math.abs(
+          (targetY - prevPoint[1]) / (point[1] - prevPoint[1] || 1)
+        );
         return [
           prevPoint[0] + (point[0] - prevPoint[0]) * ratio,
           targetY,
@@ -3895,7 +4988,10 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     const dy = lineEnd[1] - lineStart[1];
     const lenSq = dx * dx + dy * dy;
     if (lenSq === 0) return null;
-    const t = ((targetPoint[0] - lineStart[0]) * dx + (targetPoint[1] - lineStart[1]) * dy) / lenSq;
+    const t =
+      ((targetPoint[0] - lineStart[0]) * dx +
+        (targetPoint[1] - lineStart[1]) * dy) /
+      lenSq;
     const clampedT = Math.max(0, Math.min(1, t));
     const proj = [lineStart[0] + dx * clampedT, lineStart[1] + dy * clampedT];
     return { projectPoint: proj, t: clampedT };
@@ -3917,11 +5013,34 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     return [x, y];
   }
 
-  function addPerpendicularFromLine(capLayer, markerLayer, numberLayer, lineStart, lineEnd, targetPoint, labelChar, pathName) {
-    if (!capLayer || !markerLayer || !numberLayer || !lineStart || !lineEnd || !targetPoint) return;
-    const projection = computePerpendicularProjection(lineStart, lineEnd, targetPoint);
+  function addPerpendicularFromLine(
+    capLayer,
+    markerLayer,
+    numberLayer,
+    lineStart,
+    lineEnd,
+    targetPoint,
+    labelChar,
+    pathName
+  ) {
+    if (
+      !capLayer ||
+      !markerLayer ||
+      !numberLayer ||
+      !lineStart ||
+      !lineEnd ||
+      !targetPoint
+    )
+      return;
+    const projection = computePerpendicularProjection(
+      lineStart,
+      lineEnd,
+      targetPoint
+    );
     if (!projection || !projection.projectPoint) return;
-    drawDashedLine(capLayer, projection.projectPoint, targetPoint, { name: pathName || "" });
+    drawDashedLine(capLayer, projection.projectPoint, targetPoint, {
+      name: pathName || "",
+    });
     placeMarker(projection.projectPoint, labelChar || "");
   }
 
@@ -3940,13 +5059,38 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     };
   }
 
-  function addCapMarkers(capLayer, markerLayer, numberLayer, mark1, mark2, mark4Point, derivedValues) {
+  function addCapMarkers(
+    capLayer,
+    markerLayer,
+    numberLayer,
+    mark1,
+    mark2,
+    mark4Point,
+    derivedValues
+  ) {
     if (!capLayer || !markerLayer || !numberLayer) return;
-    const points = computeCapMarkerPoints(mark1, mark2, mark4Point, derivedValues);
+    const points = computeCapMarkerPoints(
+      mark1,
+      mark2,
+      mark4Point,
+      derivedValues
+    );
     if (!points) return;
     const segments = [
-      { start: mark4Point, end: points.mark11, label: 11, drawLine: true, name: "4-11" },
-      { start: mark4Point, end: points.mark12, label: 12, drawLine: true, name: "4-12" },
+      {
+        start: mark4Point,
+        end: points.mark11,
+        label: 11,
+        drawLine: true,
+        name: "4-11",
+      },
+      {
+        start: mark4Point,
+        end: points.mark12,
+        label: 12,
+        drawLine: true,
+        name: "4-12",
+      },
       { start: mark2, end: points.mark13, label: 13, drawLine: false },
       { start: mark1, end: points.mark14, label: 14, drawLine: false },
     ];
@@ -3967,12 +5111,43 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     }
   }
 
-  function addPerpendicularCapPoints(capLayer, markerLayer, numberLayer, mark1, mark2, mark4Point, derivedValues) {
+  function addPerpendicularCapPoints(
+    capLayer,
+    markerLayer,
+    numberLayer,
+    mark1,
+    mark2,
+    mark4Point,
+    derivedValues
+  ) {
     if (!capLayer || !markerLayer || !numberLayer) return;
-    const points = computeCapMarkerPoints(mark1, mark2, mark4Point, derivedValues);
+    const points = computeCapMarkerPoints(
+      mark1,
+      mark2,
+      mark4Point,
+      derivedValues
+    );
     if (!points) return;
-    addPerpendicularFromLine(capLayer, markerLayer, numberLayer, mark1, mark4Point, points.mark11, "a", "a-11");
-    addPerpendicularFromLine(capLayer, markerLayer, numberLayer, mark2, mark4Point, points.mark12, "b", "12-b");
+    addPerpendicularFromLine(
+      capLayer,
+      markerLayer,
+      numberLayer,
+      mark1,
+      mark4Point,
+      points.mark11,
+      "a",
+      "a-11"
+    );
+    addPerpendicularFromLine(
+      capLayer,
+      markerLayer,
+      numberLayer,
+      mark2,
+      mark4Point,
+      points.mark12,
+      "b",
+      "12-b"
+    );
   }
 
   function addBackCapNotches(pathNodes, layer, derivedValues) {
@@ -3997,10 +5172,23 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
       if (!startPt || !endPt) continue;
       const startHandle = prev.right || startPt;
       const endHandle = curr.left || endPt;
-      const segLenCm = approximateBezierLength(startPt, startHandle, endHandle, endPt);
+      const segLenCm = approximateBezierLength(
+        startPt,
+        startHandle,
+        endHandle,
+        endPt
+      );
       if (!Number.isFinite(segLenCm) || segLenCm <= 0) continue;
       if (remaining <= segLenCm) {
-        addNotchOnPath(startPt, endPt, startHandle, endHandle, remaining, layer, notchName);
+        addNotchOnPath(
+          startPt,
+          endPt,
+          startHandle,
+          endHandle,
+          remaining,
+          layer,
+          notchName
+        );
         return;
       }
       remaining -= segLenCm;
@@ -4008,43 +5196,100 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
   }
 
   function addCapArcs(layerHandles, mark1, mark2, mark4Point, derivedValues) {
-    if (!layerHandles || !mark1 || !mark2 || !mark4Point || !derivedValues) return;
+    if (!layerHandles || !mark1 || !mark2 || !mark4Point || !derivedValues)
+      return;
     const capLayer = layerHandles.capShaping;
     const sleeveBlockLayer = layerHandles.sleeveBlock;
     if (!capLayer) return;
-    const points = computeCapMarkerPoints(mark1, mark2, mark4Point, derivedValues);
+    const points = computeCapMarkerPoints(
+      mark1,
+      mark2,
+      mark4Point,
+      derivedValues
+    );
     if (!points || !points.mark11 || !points.mark12 || !points.mark14) return;
 
     const mid1114 = midpoint(points.mark11, points.mark14);
 
-    const baselineDir = normalizeVector([mark2[0] - mark1[0], mark2[1] - mark1[1]]);
-    const arc1StartHandle = [mark1[0] + baselineDir[0] * 3, mark1[1] + baselineDir[1] * 3];
+    const baselineDir = normalizeVector([
+      mark2[0] - mark1[0],
+      mark2[1] - mark1[1],
+    ]);
+    const arc1StartHandle = [
+      mark1[0] + baselineDir[0] * 3,
+      mark1[1] + baselineDir[1] * 3,
+    ];
 
-    const towards14Dir = normalizeVector([points.mark14[0] - mid1114[0], points.mark14[1] - mid1114[1]]);
-    const arc1EndHandle = [mid1114[0] + towards14Dir[0] * 4, mid1114[1] + towards14Dir[1] * 4];
+    const towards14Dir = normalizeVector([
+      points.mark14[0] - mid1114[0],
+      points.mark14[1] - mid1114[1],
+    ]);
+    const arc1EndHandle = [
+      mid1114[0] + towards14Dir[0] * 4,
+      mid1114[1] + towards14Dir[1] * 4,
+    ];
 
-    const frontDirMidTo11 = normalizeVector([points.mark11[0] - mid1114[0], points.mark11[1] - mid1114[1]]);
-    const frontSecondStartHandle = [mid1114[0] + frontDirMidTo11[0] * 3, mid1114[1] + frontDirMidTo11[1] * 3];
-    const dir4To12 = normalizeVector([mark4Point[0] - points.mark12[0], mark4Point[1] - points.mark12[1]]);
-    const frontSecondEndHandle = [mark4Point[0] + dir4To12[0] * 3.3, mark4Point[1] + dir4To12[1] * 3.3];
+    const frontDirMidTo11 = normalizeVector([
+      points.mark11[0] - mid1114[0],
+      points.mark11[1] - mid1114[1],
+    ]);
+    const frontSecondStartHandle = [
+      mid1114[0] + frontDirMidTo11[0] * 3,
+      mid1114[1] + frontDirMidTo11[1] * 3,
+    ];
+    const dir4To12 = normalizeVector([
+      mark4Point[0] - points.mark12[0],
+      mark4Point[1] - points.mark12[1],
+    ]);
+    const frontSecondEndHandle = [
+      mark4Point[0] + dir4To12[0] * 3.3,
+      mark4Point[1] + dir4To12[1] * 3.3,
+    ];
     const frontNodes = [
       { anchor: mark1, right: arc1StartHandle },
       { anchor: mid1114, left: arc1EndHandle, right: frontSecondStartHandle },
       { anchor: mark4Point, left: frontSecondEndHandle },
     ];
     drawBezierChain(capLayer, frontNodes, "Front Cap");
-    addNotchOnPath(mark1, mid1114, arc1StartHandle, arc1EndHandle, derivedValues.fAP || 0, capLayer, "Front Cap Notch");
+    addNotchOnPath(
+      mark1,
+      mid1114,
+      arc1StartHandle,
+      arc1EndHandle,
+      derivedValues.fAP || 0,
+      capLayer,
+      "Front Cap Notch"
+    );
     if (sleeveBlockLayer) {
       drawBezierChain(sleeveBlockLayer, frontNodes, "Front Cap");
-      addNotchOnPath(mark1, mid1114, arc1StartHandle, arc1EndHandle, derivedValues.fAP || 0, sleeveBlockLayer, "Front Cap Notch");
+      addNotchOnPath(
+        mark1,
+        mid1114,
+        arc1StartHandle,
+        arc1EndHandle,
+        derivedValues.fAP || 0,
+        sleeveBlockLayer,
+        "Front Cap Notch"
+      );
     }
 
     let mid1213 = midpoint(points.mark12, points.mark13);
     if (!mid1213) mid1213 = mid1114;
-    const intersection1213_24 = lineIntersection(points.mark12, points.mark13, mark2, mark4Point);
+    const intersection1213_24 = lineIntersection(
+      points.mark12,
+      points.mark13,
+      mark2,
+      mark4Point
+    );
     if (intersection1213_24) {
-      const baselineForwardDir = normalizeVector([mark2[0] - mark1[0], mark2[1] - mark1[1]]);
-      let line1213Dir = normalizeVector([points.mark13[0] - points.mark12[0], points.mark13[1] - points.mark12[1]]);
+      const baselineForwardDir = normalizeVector([
+        mark2[0] - mark1[0],
+        mark2[1] - mark1[1],
+      ]);
+      let line1213Dir = normalizeVector([
+        points.mark13[0] - points.mark12[0],
+        points.mark13[1] - points.mark12[1],
+      ]);
       if (Math.abs(line1213Dir[1]) < 1e-6) {
         line1213Dir = [0, 1];
       } else if (line1213Dir[1] < 0) {
@@ -4059,7 +5304,10 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
         intersection1213_24[1] + line1213Dir[1] * 2.95,
       ];
 
-      const handleMark2 = [mark2[0] - baselineForwardDir[0] * 3.5, mark2[1] - baselineForwardDir[1] * 3.5];
+      const handleMark2 = [
+        mark2[0] - baselineForwardDir[0] * 3.5,
+        mark2[1] - baselineForwardDir[1] * 3.5,
+      ];
       const handleIntersectionLower = [
         intersection1213_24[0] - line1213Dir[0] * 1.5,
         intersection1213_24[1] - line1213Dir[1] * 1.5,
@@ -4067,7 +5315,11 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
 
       const backNodesCustom = [
         { anchor: mark2, right: handleMark2 },
-        { anchor: intersection1213_24, left: handleIntersectionLower, right: handleIntersectionUpper },
+        {
+          anchor: intersection1213_24,
+          left: handleIntersectionLower,
+          right: handleIntersectionUpper,
+        },
         { anchor: mark4Point, left: handleMark4 },
       ];
       drawBezierChain(capLayer, backNodesCustom, "Back Cap");
@@ -4077,39 +5329,96 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
         addBackCapNotches(backNodesCustom, sleeveBlockLayer, derivedValues);
       }
       const frontLength =
-        approximateBezierLength(mark1, arc1StartHandle, arc1EndHandle, mid1114) +
-        approximateBezierLength(mid1114, frontSecondStartHandle, frontSecondEndHandle, mark4Point);
+        approximateBezierLength(
+          mark1,
+          arc1StartHandle,
+          arc1EndHandle,
+          mid1114
+        ) +
+        approximateBezierLength(
+          mid1114,
+          frontSecondStartHandle,
+          frontSecondEndHandle,
+          mark4Point
+        );
       const backLengthCustom =
-        approximateBezierLength(mark2, handleMark2, handleIntersectionLower, intersection1213_24) +
-        approximateBezierLength(intersection1213_24, handleIntersectionUpper, handleMark4, mark4Point);
+        approximateBezierLength(
+          mark2,
+          handleMark2,
+          handleIntersectionLower,
+          intersection1213_24
+        ) +
+        approximateBezierLength(
+          intersection1213_24,
+          handleIntersectionUpper,
+          handleMark4,
+          mark4Point
+        );
       derivedValues.CapCurveLengthCm = frontLength + backLengthCustom;
     } else {
-      const baselineBackDir = normalizeVector([mark1[0] - mark2[0], mark1[1] - mark2[1]]);
-      const arc2StartHandle = [mark2[0] + baselineBackDir[0] * 4.3, mark2[1] + baselineBackDir[1] * 4.3];
-      const dirTo13 = normalizeVector([points.mark13[0] - mid1213[0], points.mark13[1] - mid1213[1]]);
-      const arc2EndHandleFallback = [mid1213[0] + dirTo13[0] * 4, mid1213[1] + dirTo13[1] * 4];
+      const baselineBackDir = normalizeVector([
+        mark1[0] - mark2[0],
+        mark1[1] - mark2[1],
+      ]);
+      const arc2StartHandle = [
+        mark2[0] + baselineBackDir[0] * 4.3,
+        mark2[1] + baselineBackDir[1] * 4.3,
+      ];
+      const dirTo13 = normalizeVector([
+        points.mark13[0] - mid1213[0],
+        points.mark13[1] - mid1213[1],
+      ]);
+      const arc2EndHandleFallback = [
+        mid1213[0] + dirTo13[0] * 4,
+        mid1213[1] + dirTo13[1] * 4,
+      ];
 
-      const projectionB = computePerpendicularProjection(mark4Point, mark2, points.mark12);
-      const mid12b = projectionB && projectionB.projectPoint ? midpoint(points.mark12, projectionB.projectPoint) : midpoint(points.mark12, mark4Point);
-      const dirTo12 = normalizeVector([points.mark12[0] - mid1213[0], points.mark12[1] - mid1213[1]]);
-      const dir4To12 = normalizeVector([points.mark12[0] - mark4Point[0], points.mark12[1] - mark4Point[1]]);
-      const arc3EndHandle = [mark4Point[0] + dir4To12[0] * 3.3, mark4Point[1] + dir4To12[1] * 3.3];
+      const projectionB = computePerpendicularProjection(
+        mark4Point,
+        mark2,
+        points.mark12
+      );
+      const mid12b =
+        projectionB && projectionB.projectPoint
+          ? midpoint(points.mark12, projectionB.projectPoint)
+          : midpoint(points.mark12, mark4Point);
+      const dirTo12 = normalizeVector([
+        points.mark12[0] - mid1213[0],
+        points.mark12[1] - mid1213[1],
+      ]);
+      const dir4To12 = normalizeVector([
+        points.mark12[0] - mark4Point[0],
+        points.mark12[1] - mark4Point[1],
+      ]);
+      const arc3EndHandle = [
+        mark4Point[0] + dir4To12[0] * 3.3,
+        mark4Point[1] + dir4To12[1] * 3.3,
+      ];
       const targetPoint = mid12b || midpoint(mid1213, mark4Point);
       const f0 = 0.125;
       const f1 = 0.375;
       const f2 = 0.375;
       const f3 = 0.125;
-      const restX = f0 * mid1213[0] + f2 * arc3EndHandle[0] + f3 * mark4Point[0];
-      const restY = f0 * mid1213[1] + f2 * arc3EndHandle[1] + f3 * mark4Point[1];
+      const restX =
+        f0 * mid1213[0] + f2 * arc3EndHandle[0] + f3 * mark4Point[0];
+      const restY =
+        f0 * mid1213[1] + f2 * arc3EndHandle[1] + f3 * mark4Point[1];
       const vecX = targetPoint[0] - restX - f1 * mid1213[0];
       const vecY = targetPoint[1] - restY - f1 * mid1213[1];
       let startLenPt = (vecX * dirTo12[0] + vecY * dirTo12[1]) / f1;
       if (!Number.isFinite(startLenPt) || startLenPt <= 0) startLenPt = 3;
-      const arc3StartHandleFallback = [mid1213[0] + dirTo12[0] * startLenPt, mid1213[1] + dirTo12[1] * startLenPt];
+      const arc3StartHandleFallback = [
+        mid1213[0] + dirTo12[0] * startLenPt,
+        mid1213[1] + dirTo12[1] * startLenPt,
+      ];
 
       const backNodesFallback = [
         { anchor: mark2, right: arc2StartHandle },
-        { anchor: mid1213, left: arc2EndHandleFallback, right: arc3StartHandleFallback },
+        {
+          anchor: mid1213,
+          left: arc2EndHandleFallback,
+          right: arc3StartHandleFallback,
+        },
         { anchor: mark4Point, left: arc3EndHandle },
       ];
       drawBezierChain(capLayer, backNodesFallback, "Back Cap");
@@ -4119,11 +5428,31 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
         addBackCapNotches(backNodesFallback, sleeveBlockLayer, derivedValues);
       }
       const frontLength =
-        approximateBezierLength(mark1, arc1StartHandle, arc1EndHandle, mid1114) +
-        approximateBezierLength(mid1114, frontSecondStartHandle, frontSecondEndHandle, mark4Point);
+        approximateBezierLength(
+          mark1,
+          arc1StartHandle,
+          arc1EndHandle,
+          mid1114
+        ) +
+        approximateBezierLength(
+          mid1114,
+          frontSecondStartHandle,
+          frontSecondEndHandle,
+          mark4Point
+        );
       const backLengthFallback =
-        approximateBezierLength(mark2, arc2StartHandle, arc2EndHandleFallback, mid1213) +
-        approximateBezierLength(mid1213, arc3StartHandleFallback, arc3EndHandle, mark4Point);
+        approximateBezierLength(
+          mark2,
+          arc2StartHandle,
+          arc2EndHandleFallback,
+          mid1213
+        ) +
+        approximateBezierLength(
+          mid1213,
+          arc3StartHandleFallback,
+          arc3EndHandle,
+          mark4Point
+        );
       derivedValues.CapCurveLengthCm = frontLength + backLengthFallback;
     }
   }
@@ -4131,11 +5460,13 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
   function calculateMark3RadiusCm(derivedValues) {
     if (!derivedValues) return 0;
     const fAh =
-      derivedValues.fAhConstruction != null && Number.isFinite(derivedValues.fAhConstruction)
+      derivedValues.fAhConstruction != null &&
+      Number.isFinite(derivedValues.fAhConstruction)
         ? derivedValues.fAhConstruction
         : derivedValues.fAh;
     const capEase =
-      derivedValues.CapEaseCm != null && Number.isFinite(derivedValues.CapEaseCm)
+      derivedValues.CapEaseCm != null &&
+      Number.isFinite(derivedValues.CapEaseCm)
         ? derivedValues.CapEaseCm
         : 0;
     const radius = 0.97 * (fAh || 0) + 0.25 * (capEase || 0);
@@ -4145,11 +5476,13 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
   function calculateMark4RadiusCm(derivedValues) {
     if (!derivedValues) return 0;
     const bAh =
-      derivedValues.bAhConstruction != null && Number.isFinite(derivedValues.bAhConstruction)
+      derivedValues.bAhConstruction != null &&
+      Number.isFinite(derivedValues.bAhConstruction)
         ? derivedValues.bAhConstruction
         : derivedValues.bAh;
     const capEase =
-      derivedValues.CapEaseCm != null && Number.isFinite(derivedValues.CapEaseCm)
+      derivedValues.CapEaseCm != null &&
+      Number.isFinite(derivedValues.CapEaseCm)
         ? derivedValues.CapEaseCm
         : 0;
     const radius = 0.97 * (bAh || 0) + 0.75 * (capEase || 0);
@@ -4158,10 +5491,18 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
 
   function polarPoint(centerPt, radius, angle) {
     if (!centerPt || !Number.isFinite(radius)) return null;
-    return [centerPt[0] + radius * Math.cos(angle), centerPt[1] + radius * Math.sin(angle)];
+    return [
+      centerPt[0] + radius * Math.cos(angle),
+      centerPt[1] + radius * Math.sin(angle),
+    ];
   }
 
-  function buildMark3Arc(centerPt, derivedValues, layoutBounds, targetLengthCm) {
+  function buildMark3Arc(
+    centerPt,
+    derivedValues,
+    layoutBounds,
+    targetLengthCm
+  ) {
     if (!centerPt || !derivedValues) return null;
     const radiusCm =
       layoutBounds && typeof layoutBounds.arcRadiusCm === "number"
@@ -4169,10 +5510,16 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
         : calculateMark3RadiusCm(derivedValues);
     if (!Number.isFinite(radiusCm) || radiusCm <= 0) return null;
 
-    const desiredLengthCm = Number.isFinite(targetLengthCm) && targetLengthCm > 0 ? targetLengthCm : HOF_SLEEVE_ARC_TARGET_CM;
+    const desiredLengthCm =
+      Number.isFinite(targetLengthCm) && targetLengthCm > 0
+        ? targetLengthCm
+        : HOF_SLEEVE_ARC_TARGET_CM;
     let sweepAngle = desiredLengthCm / radiusCm;
     const maxSweep = HOF_SLEEVE_ARC_END - HOF_SLEEVE_ARC_MIN_START;
-    sweepAngle = Math.min(Math.max(sweepAngle, HOF_SLEEVE_ARC_MIN_SWEEP), maxSweep);
+    sweepAngle = Math.min(
+      Math.max(sweepAngle, HOF_SLEEVE_ARC_MIN_SWEEP),
+      maxSweep
+    );
     let startAngle = HOF_SLEEVE_ARC_END - sweepAngle;
     if (startAngle < HOF_SLEEVE_ARC_MIN_START) {
       startAngle = HOF_SLEEVE_ARC_MIN_START;
@@ -4186,8 +5533,14 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     const handleLength = (4 / 3) * radiusCm * Math.tan(sweepAngle / 4);
     const startTangent = [-Math.sin(startAngle), Math.cos(startAngle)];
     const endTangent = [-Math.sin(endAngle), Math.cos(endAngle)];
-    const startHandle = [startPoint[0] + startTangent[0] * handleLength, startPoint[1] + startTangent[1] * handleLength];
-    const endHandle = [endPoint[0] - endTangent[0] * handleLength, endPoint[1] - endTangent[1] * handleLength];
+    const startHandle = [
+      startPoint[0] + startTangent[0] * handleLength,
+      startPoint[1] + startTangent[1] * handleLength,
+    ];
+    const endHandle = [
+      endPoint[0] - endTangent[0] * handleLength,
+      endPoint[1] - endTangent[1] * handleLength,
+    ];
     const totalLengthCm = sweepAngle * radiusCm;
 
     return {
@@ -4212,11 +5565,18 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     const ratioDown = HOF_SLEEVE_ARC_DOWN_RATIO;
     const ratioSum = ratioUp + ratioDown;
     if (!Number.isFinite(ratioSum) || ratioSum <= 0) return;
-    let desiredLengthCm = arcInfo.totalLengthCm || arcInfo.targetLengthCm || HOF_SLEEVE_ARC_TARGET_CM;
-    if (!Number.isFinite(desiredLengthCm) || desiredLengthCm <= 0) desiredLengthCm = HOF_SLEEVE_ARC_TARGET_CM;
+    let desiredLengthCm =
+      arcInfo.totalLengthCm ||
+      arcInfo.targetLengthCm ||
+      HOF_SLEEVE_ARC_TARGET_CM;
+    if (!Number.isFinite(desiredLengthCm) || desiredLengthCm <= 0)
+      desiredLengthCm = HOF_SLEEVE_ARC_TARGET_CM;
     let sweepAngle = desiredLengthCm / radiusCm;
     const maxSweep = HOF_SLEEVE_ARC_END - HOF_SLEEVE_ARC_MIN_START;
-    sweepAngle = Math.min(Math.max(sweepAngle, HOF_SLEEVE_ARC_MIN_SWEEP), maxSweep);
+    sweepAngle = Math.min(
+      Math.max(sweepAngle, HOF_SLEEVE_ARC_MIN_SWEEP),
+      maxSweep
+    );
     const upSweep = sweepAngle * (ratioUp / ratioSum);
     const downSweep = sweepAngle - upSweep;
     let startAngle = mark4Angle - downSweep;
@@ -4245,7 +5605,8 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
   }
 
   function updateArcGeometry(arcInfo, startAngle, endAngle) {
-    if (!arcInfo || !arcInfo.center || !Number.isFinite(arcInfo.radiusCm)) return;
+    if (!arcInfo || !arcInfo.center || !Number.isFinite(arcInfo.radiusCm))
+      return;
     arcInfo.startAngle = startAngle;
     arcInfo.endAngle = endAngle;
     const startPoint = polarPoint(arcInfo.center, arcInfo.radiusCm, startAngle);
@@ -4253,12 +5614,19 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     arcInfo.startPoint = startPoint;
     arcInfo.endPoint = endPoint;
     let sweepAngle = endAngle - startAngle;
-    if (sweepAngle < HOF_SLEEVE_ARC_MIN_SWEEP) sweepAngle = HOF_SLEEVE_ARC_MIN_SWEEP;
+    if (sweepAngle < HOF_SLEEVE_ARC_MIN_SWEEP)
+      sweepAngle = HOF_SLEEVE_ARC_MIN_SWEEP;
     const handleLength = (4 / 3) * arcInfo.radiusCm * Math.tan(sweepAngle / 4);
     const startTangent = [-Math.sin(startAngle), Math.cos(startAngle)];
     const endTangent = [-Math.sin(endAngle), Math.cos(endAngle)];
-    arcInfo.startHandle = [startPoint[0] + startTangent[0] * handleLength, startPoint[1] + startTangent[1] * handleLength];
-    arcInfo.endHandle = [endPoint[0] - endTangent[0] * handleLength, endPoint[1] - endTangent[1] * handleLength];
+    arcInfo.startHandle = [
+      startPoint[0] + startTangent[0] * handleLength,
+      startPoint[1] + startTangent[1] * handleLength,
+    ];
+    arcInfo.endHandle = [
+      endPoint[0] - endTangent[0] * handleLength,
+      endPoint[1] - endTangent[1] * handleLength,
+    ];
     arcInfo.totalLengthCm = sweepAngle * (arcInfo.radiusCm || 0);
   }
 
@@ -4266,7 +5634,12 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     const dx = centerB[0] - centerA[0];
     const dy = centerB[1] - centerA[1];
     const d = Math.sqrt(dx * dx + dy * dy);
-    if (!Number.isFinite(d) || d > radiusA + radiusB || d < Math.abs(radiusA - radiusB)) return null;
+    if (
+      !Number.isFinite(d) ||
+      d > radiusA + radiusB ||
+      d < Math.abs(radiusA - radiusB)
+    )
+      return null;
     const a = (radiusA * radiusA - radiusB * radiusB + d * d) / (2 * d);
     const hSq = radiusA * radiusA - a * a;
     if (hSq < 0) return null;
@@ -4303,7 +5676,10 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     let bestDiff = Infinity;
     points.forEach((pt) => {
       if (!pt) return;
-      const angle = Math.atan2(pt[1] - arcInfo.center[1], pt[0] - arcInfo.center[0]);
+      const angle = Math.atan2(
+        pt[1] - arcInfo.center[1],
+        pt[0] - arcInfo.center[0]
+      );
       const diff = Math.abs(angle - targetAngle);
       if (diff < bestDiff) {
         bestDiff = diff;
@@ -4317,10 +5693,16 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     if (!mark2 || !arcInfo || !derivedValues) return null;
     const radiusCm = calculateMark4RadiusCm(derivedValues);
     if (!Number.isFinite(radiusCm) || radiusCm <= 0) return null;
-    const intersections = intersectCircles(arcInfo.center, arcInfo.radiusCm, mark2, radiusCm);
+    const intersections = intersectCircles(
+      arcInfo.center,
+      arcInfo.radiusCm,
+      mark2,
+      radiusCm
+    );
     if (!intersections || intersections.length === 0) return null;
     let targetPoint = selectPointOnArc(intersections, arcInfo);
-    if (!targetPoint) targetPoint = selectPreferredArcPoint(intersections, arcInfo);
+    if (!targetPoint)
+      targetPoint = selectPreferredArcPoint(intersections, arcInfo);
     if (!targetPoint) return null;
     return {
       point: targetPoint.point,
@@ -4329,14 +5711,26 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     };
   }
 
-  function buildVerticalAndSquares(layerHandles, mark1, mark2, mark4Point, derivedValues) {
-    if (!layerHandles || !mark1 || !mark2 || !mark4Point || !derivedValues) return;
+  function buildVerticalAndSquares(
+    layerHandles,
+    mark1,
+    mark2,
+    mark4Point,
+    derivedValues
+  ) {
+    if (!layerHandles || !mark1 || !mark2 || !mark4Point || !derivedValues)
+      return;
     const sleeveBlockLayer = layerHandles.sleeveBlock || null;
     const sleeveLengthCm = derivedValues.SlL || 0;
     if (!Number.isFinite(sleeveLengthCm) || sleeveLengthCm <= 0) return;
     const verticalEnd = [mark4Point[0], mark4Point[1] - sleeveLengthCm];
     const sleeveLengthLabel = { name: "Sleeve Length" };
-    drawDashedLine(layerHandles.sleeveBlock || layerHandles.foundation, mark4Point, verticalEnd, sleeveLengthLabel);
+    drawDashedLine(
+      layerHandles.sleeveBlock || layerHandles.foundation,
+      mark4Point,
+      verticalEnd,
+      sleeveLengthLabel
+    );
     placeMarker(verticalEnd, 5);
 
     const mark6 = [mark4Point[0], mark4Point[1] - sleeveLengthCm * 0.6];
@@ -4353,8 +5747,12 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
 
     drawDashedLine(layerHandles.foundation, mark1, mark1Down5, { name: "1-7" });
     drawDashedLine(layerHandles.foundation, mark2, mark2Down5, { name: "2-8" });
-    drawDashedLine(layerHandles.foundation, mark1Down5, mark2Down5, { name: "7-8" });
-    drawDashedLine(layerHandles.foundation, mark1Down6, mark2Down6, { name: "9-10" });
+    drawDashedLine(layerHandles.foundation, mark1Down5, mark2Down5, {
+      name: "7-8",
+    });
+    drawDashedLine(layerHandles.foundation, mark1Down6, mark2Down6, {
+      name: "9-10",
+    });
 
     const hemOptions = {
       name: "Hem Line",
@@ -4367,7 +5765,11 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     let hemLineStartSleeve = mark1Down5;
     let hemLineEndSleeve = mark2Down5;
 
-    const elbowLabel = buildLineLabelOptions("Elbow Line", derivedValues.SlW, layerHandles.labels);
+    const elbowLabel = buildLineLabelOptions(
+      "Elbow Line",
+      derivedValues.SlW,
+      layerHandles.labels
+    );
     let elbowLineStart = null;
     let elbowLineEnd = null;
     let sleeveWidthStart = null;
@@ -4390,13 +5792,23 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
         hemLineEndSleeve = right17;
         placeMarker(left16, 16);
         placeMarker(right17, 17);
-        drawDashedLine(layerHandles.foundation, left16, mark1, { name: "Left Sleeve Length" });
-        drawDashedLine(layerHandles.foundation, right17, mark2, { name: "Right Sleeve Length" });
+        drawDashedLine(layerHandles.foundation, left16, mark1, {
+          name: "Left Sleeve Length",
+        });
+        drawDashedLine(layerHandles.foundation, right17, mark2, {
+          name: "Right Sleeve Length",
+        });
         if (elbowLineY !== null) {
           if (!leftSleeveCurve) {
             const leftStartHandle = [left16[0], left16[1] + 5];
-            const dir1To16 = normalizeVector([left16[0] - mark1[0], left16[1] - mark1[1]]);
-            const mark1Handle = [mark1[0] + dir1To16[0] * 12.47, mark1[1] + dir1To16[1] * 12.47];
+            const dir1To16 = normalizeVector([
+              left16[0] - mark1[0],
+              left16[1] - mark1[1],
+            ]);
+            const mark1Handle = [
+              mark1[0] + dir1To16[0] * 12.47,
+              mark1[1] + dir1To16[1] * 12.47,
+            ];
             leftSleeveCurve = {
               start: left16,
               startHandle: leftStartHandle,
@@ -4412,10 +5824,18 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
             elbowLineY
           );
           if (!leftIntersection) {
-            leftIntersection = findHorizontalIntersection(leftSleeveCurve.start, leftSleeveCurve.end, elbowLineY);
+            leftIntersection = findHorizontalIntersection(
+              leftSleeveCurve.start,
+              leftSleeveCurve.end,
+              elbowLineY
+            );
           }
           if (!leftIntersection) {
-            leftIntersection = projectHorizontalOntoLine(leftSleeveCurve.start, leftSleeveCurve.end, elbowLineY);
+            leftIntersection = projectHorizontalOntoLine(
+              leftSleeveCurve.start,
+              leftSleeveCurve.end,
+              elbowLineY
+            );
           }
           if (leftIntersection) {
             leftElbowIntersection = leftIntersection;
@@ -4425,8 +5845,14 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
         if (elbowLineY !== null) {
           if (!rightSleeveCurve) {
             const rightStartHandle = [right17[0], right17[1] + 5];
-            const dir2To17 = normalizeVector([right17[0] - mark2[0], right17[1] - mark2[1]]);
-            const mark2Handle = [mark2[0] + dir2To17[0] * 12.47, mark2[1] + dir2To17[1] * 12.47];
+            const dir2To17 = normalizeVector([
+              right17[0] - mark2[0],
+              right17[1] - mark2[1],
+            ]);
+            const mark2Handle = [
+              mark2[0] + dir2To17[0] * 12.47,
+              mark2[1] + dir2To17[1] * 12.47,
+            ];
             rightSleeveCurve = {
               start: right17,
               startHandle: rightStartHandle,
@@ -4442,10 +5868,18 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
             elbowLineY
           );
           if (!rightIntersection) {
-            rightIntersection = findHorizontalIntersection(rightSleeveCurve.start, rightSleeveCurve.end, elbowLineY);
+            rightIntersection = findHorizontalIntersection(
+              rightSleeveCurve.start,
+              rightSleeveCurve.end,
+              elbowLineY
+            );
           }
           if (!rightIntersection) {
-            rightIntersection = projectHorizontalOntoLine(rightSleeveCurve.start, rightSleeveCurve.end, elbowLineY);
+            rightIntersection = projectHorizontalOntoLine(
+              rightSleeveCurve.start,
+              rightSleeveCurve.end,
+              elbowLineY
+            );
           }
           if (rightIntersection) {
             rightElbowIntersection = rightIntersection;
@@ -4468,10 +5902,18 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
             sleeveWidthY
           );
           if (!leftWidthIntersection) {
-            leftWidthIntersection = projectHorizontalOntoLine(leftSleeveCurve.start, leftSleeveCurve.end, sleeveWidthY);
+            leftWidthIntersection = projectHorizontalOntoLine(
+              leftSleeveCurve.start,
+              leftSleeveCurve.end,
+              sleeveWidthY
+            );
           }
           if (!rightWidthIntersection) {
-            rightWidthIntersection = projectHorizontalOntoLine(rightSleeveCurve.start, rightSleeveCurve.end, sleeveWidthY);
+            rightWidthIntersection = projectHorizontalOntoLine(
+              rightSleeveCurve.start,
+              rightSleeveCurve.end,
+              sleeveWidthY
+            );
           }
           if (leftWidthIntersection && rightWidthIntersection) {
             sleeveWidthStart = leftWidthIntersection;
@@ -4481,10 +5923,18 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
       }
     }
     if (!leftElbowIntersection && elbowLineY != null) {
-      leftElbowIntersection = findHorizontalIntersection(mark1Down6, mark1, elbowLineY);
+      leftElbowIntersection = findHorizontalIntersection(
+        mark1Down6,
+        mark1,
+        elbowLineY
+      );
     }
     if (!rightElbowIntersection && elbowLineY != null) {
-      rightElbowIntersection = findHorizontalIntersection(mark2Down6, mark2, elbowLineY);
+      rightElbowIntersection = findHorizontalIntersection(
+        mark2Down6,
+        mark2,
+        elbowLineY
+      );
     }
     if (leftElbowIntersection) elbowLineStart = leftElbowIntersection;
     if (rightElbowIntersection) elbowLineEnd = rightElbowIntersection;
@@ -4494,7 +5944,12 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     placeMarker(mark1Down6, 9);
     placeMarker(mark2Down6, 10);
 
-    drawSolidLine(layerHandles.sleeveBlock, hemLineStartSleeve, hemLineEndSleeve, hemOptions);
+    drawSolidLine(
+      layerHandles.sleeveBlock,
+      hemLineStartSleeve,
+      hemLineEndSleeve,
+      hemOptions
+    );
 
     if (sleeveBlockLayer && leftSleeveCurve) {
       const leftArc = drawBezierSegment(
@@ -4526,14 +5981,28 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     if (!elbowLineStart) elbowLineStart = mark1Down6;
     if (!elbowLineEnd) elbowLineEnd = mark2Down6;
     if (sleeveBlockLayer && elbowLineStart && elbowLineEnd) {
-      drawDashedLine(sleeveBlockLayer, elbowLineStart, elbowLineEnd, elbowLabel);
+      drawDashedLine(
+        sleeveBlockLayer,
+        elbowLineStart,
+        elbowLineEnd,
+        elbowLabel
+      );
     }
 
     let measuredSleeveWidth = null;
     if (sleeveWidthStart && sleeveWidthEnd) {
       measuredSleeveWidth = pointDistanceCm(sleeveWidthStart, sleeveWidthEnd);
-      const sleeveWidthLabel = buildLineLabelOptions("Sleeve Width", measuredSleeveWidth, layerHandles.labels);
-      drawDashedLine(sleeveBlockLayer, sleeveWidthStart, sleeveWidthEnd, sleeveWidthLabel);
+      const sleeveWidthLabel = buildLineLabelOptions(
+        "Sleeve Width",
+        measuredSleeveWidth,
+        layerHandles.labels
+      );
+      drawDashedLine(
+        sleeveBlockLayer,
+        sleeveWidthStart,
+        sleeveWidthEnd,
+        sleeveWidthLabel
+      );
     } else if (mark1Down5 && mark2Down5) {
       measuredSleeveWidth = pointDistanceCm(mark1Down5, mark2Down5);
     }
@@ -4561,15 +6030,34 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
   const mark2 = [baselineLengthCm, 0];
   const arcRadiusCm = calculateMark3RadiusCm(derived);
   const layoutStub = { arcRadiusCm };
-  let upwardArc = buildMark3Arc(mark1, derived, layoutStub, HOF_SLEEVE_ARC_TARGET_CM);
-  let mark4 = upwardArc ? buildMark4Intersection(mark2, upwardArc, derived) : null;
+  let upwardArc = buildMark3Arc(
+    mark1,
+    derived,
+    layoutStub,
+    HOF_SLEEVE_ARC_TARGET_CM
+  );
+  let mark4 = upwardArc
+    ? buildMark4Intersection(mark2, upwardArc, derived)
+    : null;
 
-  if ((!mark4 || !mark4.point || !upwardArc) && HOF_SLEEVE_ARC_MAX_CM > HOF_SLEEVE_ARC_TARGET_CM) {
-    upwardArc = buildMark3Arc(mark1, derived, layoutStub, HOF_SLEEVE_ARC_MAX_CM);
-    mark4 = upwardArc ? buildMark4Intersection(mark2, upwardArc, derived) : null;
+  if (
+    (!mark4 || !mark4.point || !upwardArc) &&
+    HOF_SLEEVE_ARC_MAX_CM > HOF_SLEEVE_ARC_TARGET_CM
+  ) {
+    upwardArc = buildMark3Arc(
+      mark1,
+      derived,
+      layoutStub,
+      HOF_SLEEVE_ARC_MAX_CM
+    );
+    mark4 = upwardArc
+      ? buildMark4Intersection(mark2, upwardArc, derived)
+      : null;
   }
 
-  const capLineLabel = `Cap Line (${formatHofenbitzerValue(baselineLengthCm)} cm)`;
+  const capLineLabel = `Cap Line (${formatHofenbitzerValue(
+    baselineLengthCm
+  )} cm)`;
   if (layers.sleeveBlock) {
     drawDashedLine(layers.sleeveBlock, mark1, mark2, {
       name: "Cap Line",
@@ -4586,12 +6074,32 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
       rebalanceArcAroundMark4(upwardArc, mark4.angle);
       const backLineCm = pointDistanceCm(mark2, mark4.point);
       const frontLineCm = pointDistanceCm(mark1, mark4.point);
-      drawDashedLine(layers.foundation, mark2, mark4.point, { name: "Back Line" });
-      drawDashedLine(layers.foundation, mark1, mark4.point, { name: "Front Line" });
+      drawDashedLine(layers.foundation, mark2, mark4.point, {
+        name: "Back Line",
+      });
+      drawDashedLine(layers.foundation, mark1, mark4.point, {
+        name: "Front Line",
+      });
       placeMarker(mark4.point, 4);
       buildVerticalAndSquares(layers, mark1, mark2, mark4.point, derived);
-      addCapMarkers(layers.capShaping, layers.markers, layers.numbers, mark1, mark2, mark4.point, derived);
-      addPerpendicularCapPoints(layers.capShaping, layers.markers, layers.numbers, mark1, mark2, mark4.point, derived);
+      addCapMarkers(
+        layers.capShaping,
+        layers.markers,
+        layers.numbers,
+        mark1,
+        mark2,
+        mark4.point,
+        derived
+      );
+      addPerpendicularCapPoints(
+        layers.capShaping,
+        layers.markers,
+        layers.numbers,
+        mark1,
+        mark2,
+        mark4.point,
+        derived
+      );
       addCapArcs(layers, mark1, mark2, mark4.point, derived);
       const prevMeasured = hofSleeveUi.lastMeasured || {};
       hofSleeveUi.lastMeasured = {
@@ -4736,7 +6244,10 @@ function generateHofenbitzerBasicSkirt(params = {}) {
     if (opts.name) {
       attrs["data-name"] = opts.name;
     }
-    const curveEl = path(`M ${s.x} ${s.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${e.x} ${e.y}`, attrs);
+    const curveEl = path(
+      `M ${s.x} ${s.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${e.x} ${e.y}`,
+      attrs
+    );
     target.appendChild(curveEl);
     return curveEl;
   }
@@ -4767,7 +6278,10 @@ function generateHofenbitzerBasicSkirt(params = {}) {
     } else if (angleDeg > 90) {
       angleDeg -= 180;
     }
-    textEl.setAttribute("transform", `rotate(${angleDeg}, ${svgPoint.x}, ${svgPoint.y})`);
+    textEl.setAttribute(
+      "transform",
+      `rotate(${angleDeg}, ${svgPoint.x}, ${svgPoint.y})`
+    );
     labelsLayer.appendChild(textEl);
     bounds.include(svgPoint.x, svgPoint.y);
   }
@@ -4806,7 +6320,14 @@ function generateHofenbitzerBasicSkirt(params = {}) {
     drawLineCm(patternLayer, start, end, patternOpts);
   }
 
-  function copyCurveToPattern(start, startHandle, endHandle, end, opts = {}, overrides = {}) {
+  function copyCurveToPattern(
+    start,
+    startHandle,
+    endHandle,
+    end,
+    opts = {},
+    overrides = {}
+  ) {
     if (!patternLayer) return;
     const patternOpts = { ...opts, ...overrides };
     if (patternOpts.patternName) {
@@ -4816,7 +6337,13 @@ function generateHofenbitzerBasicSkirt(params = {}) {
     drawCurveCm(patternLayer, start, startHandle, endHandle, end, patternOpts);
   }
 
-  function drawConstructionLine(layer, start, end, opts = {}, patternCopy = null) {
+  function drawConstructionLine(
+    layer,
+    start,
+    end,
+    opts = {},
+    patternCopy = null
+  ) {
     const line = drawLineCm(layer, start, end, opts);
     if (patternCopy) {
       const overrides = patternCopy === true ? {} : patternCopy;
@@ -4825,7 +6352,15 @@ function generateHofenbitzerBasicSkirt(params = {}) {
     return line;
   }
 
-  function drawConstructionCurve(layer, start, startHandle, endHandle, end, opts = {}, patternCopy = null) {
+  function drawConstructionCurve(
+    layer,
+    start,
+    startHandle,
+    endHandle,
+    end,
+    opts = {},
+    patternCopy = null
+  ) {
     const curve = drawCurveCm(layer, start, startHandle, endHandle, end, opts);
     if (patternCopy) {
       const overrides = patternCopy === true ? {} : patternCopy;
@@ -4834,7 +6369,8 @@ function generateHofenbitzerBasicSkirt(params = {}) {
     return curve;
   }
 
-  const safeNumber = (value, fallback = 0) => (Number.isFinite(value) ? value : fallback);
+  const safeNumber = (value, fallback = 0) =>
+    Number.isFinite(value) ? value : fallback;
   const lerpPoint = (a, b, t) => ({
     x: a.x + (b.x - a.x) * t,
     y: a.y + (b.y - a.y) * t,
@@ -4852,10 +6388,15 @@ function generateHofenbitzerBasicSkirt(params = {}) {
   };
 
   const derived = computeHofSkirtDerived(params);
-  const profile = normalizeHofSkirtProfile(params.HipProfile || HOFENBITZER_SKIRT_DEFAULTS.HipProfile);
+  const profile = normalizeHofSkirtProfile(
+    params.HipProfile || HOFENBITZER_SKIRT_DEFAULTS.HipProfile
+  );
   const moL = safeNumber(params.MoL, HOFENBITZER_SKIRT_DEFAULTS.MoL);
   const hiD = safeNumber(params.HiD, HOFENBITZER_SKIRT_DEFAULTS.HiD);
-  const hiW = safeNumber(derived.HiW, (HOFENBITZER_SKIRT_DEFAULTS.HiC + HOFENBITZER_SKIRT_DEFAULTS.HipEase) / 2);
+  const hiW = safeNumber(
+    derived.HiW,
+    (HOFENBITZER_SKIRT_DEFAULTS.HiC + HOFENBITZER_SKIRT_DEFAULTS.HipEase) / 2
+  );
   const waistCirc = safeNumber(params.WaC, HOFENBITZER_SKIRT_DEFAULTS.WaC);
   const waistShaping = Number.isFinite(derived.WaistShaping)
     ? derived.WaistShaping
@@ -4880,13 +6421,22 @@ function generateHofenbitzerBasicSkirt(params = {}) {
   const waistLineY = 0;
   const frontHipIntersection = horizontalIntersection(P11, P9, waistLineY);
   const frontDartAnchorOffset = waistCirc / 10;
-  const P13 = { x: frontHipIntersection.x - frontDartAnchorOffset, y: waistLineY };
+  const P13 = {
+    x: frontHipIntersection.x - frontDartAnchorOffset,
+    y: waistLineY,
+  };
   const P13dashHalf = 2.5;
   const P13dashOffset = profile === "Curvy" ? 0.7 : 0.5;
   const P13TopY = P13.y + P13dashOffset;
   const P13dashLeft = { x: P13.x - P13dashHalf, y: P13TopY };
   const P13dashRight = { x: P13.x + P13dashHalf, y: P13TopY };
-  const frontDartLength = Math.max(10, safeNumber(params.FrontDartLength, HOFENBITZER_SKIRT_DEFAULTS.FrontDartLength));
+  const frontDartLength = Math.max(
+    10,
+    safeNumber(
+      params.FrontDartLength,
+      HOFENBITZER_SKIRT_DEFAULTS.FrontDartLength
+    )
+  );
   const P13Base = { x: P13.x, y: P13.y - frontDartLength };
   const halfFrontDart = Math.max(0, derived.FrontDart) / 2;
   const P13TopLeft = { x: P13.x - halfFrontDart, y: P13TopY };
@@ -4897,8 +6447,18 @@ function generateHofenbitzerBasicSkirt(params = {}) {
   const rawBackDart1 = Math.max(0, derived.BackDart1);
   const rawBackDart2 = Math.max(0, derived.BackDart2);
   const hasSecondBackDart = rawBackDart2 > 0.05;
-  const P14 = lerpPoint(cbWaistPoint, backHipWaistPoint, hasSecondBackDart ? 1 / 3 : 0.5);
-  const backDartLength1 = Math.max(0, safeNumber(params.BackDartLength1, HOFENBITZER_SKIRT_DEFAULTS.BackDartLength1));
+  const P14 = lerpPoint(
+    cbWaistPoint,
+    backHipWaistPoint,
+    hasSecondBackDart ? 1 / 3 : 0.5
+  );
+  const backDartLength1 = Math.max(
+    0,
+    safeNumber(
+      params.BackDartLength1,
+      HOFENBITZER_SKIRT_DEFAULTS.BackDartLength1
+    )
+  );
   const P14Base = { x: P14.x, y: P14.y - backDartLength1 };
   const halfBackDart1 = rawBackDart1 / 2;
   const P14Left = { x: P14.x - halfBackDart1, y: P14.y };
@@ -4925,7 +6485,13 @@ function generateHofenbitzerBasicSkirt(params = {}) {
   let P15dashRight = null;
   if (hasSecondBackDart) {
     const halfBackDart2 = rawBackDart2 / 2;
-    const backDartLength2 = Math.max(0, safeNumber(params.BackDartLength2, HOFENBITZER_SKIRT_DEFAULTS.BackDartLength2));
+    const backDartLength2 = Math.max(
+      0,
+      safeNumber(
+        params.BackDartLength2,
+        HOFENBITZER_SKIRT_DEFAULTS.BackDartLength2
+      )
+    );
     const hipCurveWaistPoint = { x: P12.x, y: P12.y };
     const firstBackDartLeft = P14UpperLeft || P14Left;
     const midX = (firstBackDartLeft.x + hipCurveWaistPoint.x) / 2;
@@ -4966,11 +6532,39 @@ function generateHofenbitzerBasicSkirt(params = {}) {
   drawLineCm(guideLayer, P7, P10, { name: "Waist Shaping Guide" });
 
   if (halfSideDart > 0) {
-    drawConstructionLine(dartsLayer, P10, P11, { name: "Side Dart Left" }, false);
-    drawConstructionLine(dartsLayer, P10, P12, { name: "Side Dart Right" }, false);
+    drawConstructionLine(
+      dartsLayer,
+      P10,
+      P11,
+      { name: "Side Dart Left" },
+      false
+    );
+    drawConstructionLine(
+      dartsLayer,
+      P10,
+      P12,
+      { name: "Side Dart Right" },
+      false
+    );
     const hipHandlePoint = { x: P7.x, y: P9.y + 10.5 };
-    drawConstructionCurve(shapingLayer, P11, { x: P11.x, y: P11.y }, hipHandlePoint, P9, { name: "Front Hip Curve" }, true);
-    drawConstructionCurve(shapingLayer, P12, { x: P12.x, y: P12.y }, hipHandlePoint, P9, { name: "Back Hip Curve" }, true);
+    drawConstructionCurve(
+      shapingLayer,
+      P11,
+      { x: P11.x, y: P11.y },
+      hipHandlePoint,
+      P9,
+      { name: "Front Hip Curve" },
+      true
+    );
+    drawConstructionCurve(
+      shapingLayer,
+      P12,
+      { x: P12.x, y: P12.y },
+      hipHandlePoint,
+      P9,
+      { name: "Back Hip Curve" },
+      true
+    );
   }
 
   const waistGuideLeft = { x: P10.x - 6, y: P10.y };
@@ -4978,39 +6572,109 @@ function generateHofenbitzerBasicSkirt(params = {}) {
   const waistGuideOpts = { dashed: true, name: "Upper Waist Shaping Guide" };
   drawLineCm(guideLayer, waistGuideLeft, waistGuideRight, waistGuideOpts);
 
-  drawLineCm(dartsLayer, P13dashLeft, P13dashRight, { dashed: true, name: "Front Dart Guide" });
-  drawLineCm(dartsLayer, P13, P13Base, { dashed: true, name: "Front Dart Centre" });
+  drawLineCm(dartsLayer, P13dashLeft, P13dashRight, {
+    dashed: true,
+    name: "Front Dart Guide",
+  });
+  drawLineCm(dartsLayer, P13, P13Base, {
+    dashed: true,
+    name: "Front Dart Centre",
+  });
   if (halfFrontDart > 0) {
-    drawConstructionLine(dartsLayer, P13TopLeft, P13Base, { name: "Front Dart Left" }, true);
-    drawConstructionLine(dartsLayer, P13TopRight, P13Base, { name: "Front Dart Right" }, true);
-    addLineLabel("Front Dart", P13TopLeft, P13TopRight, { offset: labelOffsetCm, side: 1 });
+    drawConstructionLine(
+      dartsLayer,
+      P13TopLeft,
+      P13Base,
+      { name: "Front Dart Left" },
+      true
+    );
+    drawConstructionLine(
+      dartsLayer,
+      P13TopRight,
+      P13Base,
+      { name: "Front Dart Right" },
+      true
+    );
+    addLineLabel("Front Dart", P13TopLeft, P13TopRight, {
+      offset: labelOffsetCm,
+      side: 1,
+    });
   }
 
   if (!hasSecondBackDart && singleBackDashLeft && singleBackDashRight) {
-    drawLineCm(dartsLayer, singleBackDashLeft, singleBackDashRight, { dashed: true, name: "Back Waist Raise" });
+    drawLineCm(dartsLayer, singleBackDashLeft, singleBackDashRight, {
+      dashed: true,
+      name: "Back Waist Raise",
+    });
   }
   if (hasSecondBackDart && P15dashLeft && P15dashRight) {
-    drawLineCm(dartsLayer, P15dashLeft, P15dashRight, { dashed: true, name: "Back Waist Raise" });
+    drawLineCm(dartsLayer, P15dashLeft, P15dashRight, {
+      dashed: true,
+      name: "Back Waist Raise",
+    });
   }
   if (hasSecondBackDart && P15 && P15Base) {
-    drawLineCm(dartsLayer, P15, P15Base, { dashed: true, name: "2nd Back Dart Centre" });
+    drawLineCm(dartsLayer, P15, P15Base, {
+      dashed: true,
+      name: "2nd Back Dart Centre",
+    });
   }
   if (hasSecondBackDart && P15Left && P15Right && P15Base) {
-    drawConstructionLine(dartsLayer, P15Left, P15Base, { name: "Second Back Dart Left" }, true);
-    drawConstructionLine(dartsLayer, P15Right, P15Base, { name: "Second Back Dart Right" }, true);
-    addLineLabel("2nd Back Dart", P15Left, P15Right, { offset: labelOffsetCm, side: 1 });
+    drawConstructionLine(
+      dartsLayer,
+      P15Left,
+      P15Base,
+      { name: "Second Back Dart Left" },
+      true
+    );
+    drawConstructionLine(
+      dartsLayer,
+      P15Right,
+      P15Base,
+      { name: "Second Back Dart Right" },
+      true
+    );
+    addLineLabel("2nd Back Dart", P15Left, P15Right, {
+      offset: labelOffsetCm,
+      side: 1,
+    });
   }
 
-  drawLineCm(dartsLayer, P14, P14Base, { dashed: true, name: "1st Back Dart Centre" });
-  drawConstructionLine(dartsLayer, P14UpperLeft, P14Base, { name: "First Back Dart Left" }, true);
-  drawConstructionLine(dartsLayer, P14UpperRight, P14Base, { name: "First Back Dart Right" }, true);
-  addLineLabel("1st Back Dart", P14UpperLeft, P14UpperRight, { offset: labelOffsetCm, side: 1 });
-
+  drawLineCm(dartsLayer, P14, P14Base, {
+    dashed: true,
+    name: "1st Back Dart Centre",
+  });
+  drawConstructionLine(
+    dartsLayer,
+    P14UpperLeft,
+    P14Base,
+    { name: "First Back Dart Left" },
+    true
+  );
+  drawConstructionLine(
+    dartsLayer,
+    P14UpperRight,
+    P14Base,
+    { name: "First Back Dart Right" },
+    true
+  );
+  addLineLabel("1st Back Dart", P14UpperLeft, P14UpperRight, {
+    offset: labelOffsetCm,
+    side: 1,
+  });
 
   if (P1 && P13TopLeft) {
     const frontCurveStartHandle = { x: P1.x + 10.6, y: P1.y + 0.3 };
     const frontCurveEndHandle = { x: P13TopLeft.x - 0.54, y: P13TopLeft.y };
-    drawConstructionCurve(shapingLayer, P1, frontCurveStartHandle, frontCurveEndHandle, P13TopLeft, { name: "Front Waist Curve" }, true);
+    drawConstructionCurve(
+      shapingLayer,
+      P1,
+      frontCurveStartHandle,
+      frontCurveEndHandle,
+      P13TopLeft,
+      { name: "Front Waist Curve" },
+      true
+    );
   }
 
   if (P13TopRight && P11) {
@@ -5031,25 +6695,59 @@ function generateHofenbitzerBasicSkirt(params = {}) {
   if (!hasSecondBackDart && P12 && P14UpperLeft) {
     const backCurveStartHandle = { x: P12.x + 0.4, y: P12.y - 0.2 };
     const backCurveEndHandle = { x: P14UpperLeft.x - 2.95, y: P14UpperLeft.y };
-    drawConstructionCurve(shapingLayer, P12, backCurveStartHandle, backCurveEndHandle, P14UpperLeft, { name: "Back Waist Curve" }, true);
+    drawConstructionCurve(
+      shapingLayer,
+      P12,
+      backCurveStartHandle,
+      backCurveEndHandle,
+      P14UpperLeft,
+      { name: "Back Waist Curve" },
+      true
+    );
     if (P14UpperRight && P4) {
       const backRightHandle = { x: P14UpperRight.x + 0.5, y: P14UpperRight.y };
       const backCfHandle = { x: P4.x - 4.25, y: P4.y };
-      drawConstructionCurve(shapingLayer, P14UpperRight, backRightHandle, backCfHandle, P4, { name: "Back Waist Transition" }, true);
+      drawConstructionCurve(
+        shapingLayer,
+        P14UpperRight,
+        backRightHandle,
+        backCfHandle,
+        P4,
+        { name: "Back Waist Transition" },
+        true
+      );
     }
   } else if (hasSecondBackDart) {
     if (P12 && P15Left) {
       const backCurveStartHandle2 = { x: P12.x + 0.4, y: P12.y - 0.2 };
       const backCurveEndHandle2 = { x: P15Left.x - 0.6, y: P15Left.y };
-      drawConstructionCurve(shapingLayer, P12, backCurveStartHandle2, backCurveEndHandle2, P15Left, { name: "Back Waist Curve" }, true);
+      drawConstructionCurve(
+        shapingLayer,
+        P12,
+        backCurveStartHandle2,
+        backCurveEndHandle2,
+        P15Left,
+        { name: "Back Waist Curve" },
+        true
+      );
     }
     if (P15Right && P14UpperLeft) {
       const startHandle = { x: P15Right.x + 0.6, y: P15Right.y };
       const endHandle = { x: P14UpperLeft.x - 2.4, y: P14UpperLeft.y };
-      drawConstructionCurve(shapingLayer, P15Right, startHandle, endHandle, P14UpperLeft, { name: "Back Waist Transition" }, true);
+      drawConstructionCurve(
+        shapingLayer,
+        P15Right,
+        startHandle,
+        endHandle,
+        P14UpperLeft,
+        { name: "Back Waist Transition" },
+        true
+      );
     }
     if (patternLayer && P4 && P14UpperRight) {
-      drawLineCm(patternLayer, P4, P14UpperRight, { name: "Back Waist CF Segment" });
+      drawLineCm(patternLayer, P4, P14UpperRight, {
+        name: "Back Waist CF Segment",
+      });
     }
   }
 
@@ -5069,7 +6767,23 @@ function generateHofenbitzerBasicSkirt(params = {}) {
     window.hofenbitzerSkirtDraft = {
       params,
       derived,
-      points: { P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15 },
+      points: {
+        P1,
+        P2,
+        P3,
+        P4,
+        P5,
+        P6,
+        P7,
+        P8,
+        P9,
+        P10,
+        P11,
+        P12,
+        P13,
+        P14,
+        P15,
+      },
     };
   }
 
@@ -5126,7 +6840,9 @@ function readHofenbitzerParams() {
     let resolvedEase = 0;
     if (ref.easeInput) {
       const easeValue = Number.parseFloat(ref.easeInput.value);
-      resolvedEase = Number.isFinite(easeValue) ? easeValue : def.easeDefault || 0;
+      resolvedEase = Number.isFinite(easeValue)
+        ? easeValue
+        : def.easeDefault || 0;
     }
     measurements[def.id] = {
       measurement: resolvedMeasurement,
@@ -5161,7 +6877,9 @@ function readHofenbitzerParams() {
       "hofenbitzerBackShoulderEase",
       HOFENBITZER_DEFAULTS.BackShoulderEase
     ),
-    fitIndex: Number.isFinite(fitIndex) ? fitIndex : HOFENBITZER_DEFAULT_FIT_INDEX,
+    fitIndex: Number.isFinite(fitIndex)
+      ? fitIndex
+      : HOFENBITZER_DEFAULT_FIT_INDEX,
     showGuides: getCheckbox("hofenbitzerShowGuides", true),
     showMarkers: getCheckbox("hofenbitzerShowMarkers", true),
   };
@@ -5208,18 +6926,39 @@ function readAldrichParams() {
     shoulder: getNumber("aldrichShoulder", ALDRICH_DEFAULTS.shoulder),
     backWidth: getNumber("aldrichBackWidth", ALDRICH_DEFAULTS.backWidth),
     chest: getNumber("aldrichChest", ALDRICH_DEFAULTS.chest),
-    armscyeDepth: getNumber("aldrichArmscyeDepth", ALDRICH_DEFAULTS.armscyeDepth),
+    armscyeDepth: getNumber(
+      "aldrichArmscyeDepth",
+      ALDRICH_DEFAULTS.armscyeDepth
+    ),
     neckSize: getNumber("aldrichNeckSize", ALDRICH_DEFAULTS.neckSize),
-    frontNeckDart: getNumber("aldrichFrontNeckDart", ALDRICH_DEFAULTS.frontNeckDart),
-    frontWaistDart: getNumber("aldrichFrontWaistDart", ALDRICH_DEFAULTS.frontWaistDart),
-    backWaistDart: getNumber("aldrichBackWaistDart", ALDRICH_DEFAULTS.backWaistDart),
-    frontSideWaistDart: getNumber("aldrichFrontSideWaistDart", ALDRICH_DEFAULTS.frontSideWaistDart),
-    backSideWaistDart: getNumber("aldrichBackSideWaistDart", ALDRICH_DEFAULTS.backSideWaistDart),
+    frontNeckDart: getNumber(
+      "aldrichFrontNeckDart",
+      ALDRICH_DEFAULTS.frontNeckDart
+    ),
+    frontWaistDart: getNumber(
+      "aldrichFrontWaistDart",
+      ALDRICH_DEFAULTS.frontWaistDart
+    ),
+    backWaistDart: getNumber(
+      "aldrichBackWaistDart",
+      ALDRICH_DEFAULTS.backWaistDart
+    ),
+    frontSideWaistDart: getNumber(
+      "aldrichFrontSideWaistDart",
+      ALDRICH_DEFAULTS.frontSideWaistDart
+    ),
+    backSideWaistDart: getNumber(
+      "aldrichBackSideWaistDart",
+      ALDRICH_DEFAULTS.backSideWaistDart
+    ),
     frontWaistDartBackOff: getNumber(
       "aldrichFrontWaistDartBackOff",
       ALDRICH_DEFAULTS.frontWaistDartBackOff
     ),
-    bustWaistDiff: getNumber("aldrichBustWaistDiff", ALDRICH_DEFAULTS.bustWaistDiff),
+    bustWaistDiff: getNumber(
+      "aldrichBustWaistDiff",
+      ALDRICH_DEFAULTS.bustWaistDiff
+    ),
     closeWaistShaping: getCheckbox("aldrichCloseWaist", true),
     reducedDarting: getCheckbox("aldrichReducedDarting", false),
     showGuides: getCheckbox("aldrichShowGuides", true),
@@ -5238,7 +6977,6 @@ function setInputNumber(id, value, precision = 2) {
 function getAldrichReductionFactor() {
   const reducedToggle = document.getElementById("aldrichReducedDarting");
   return reducedToggle && reducedToggle.checked ? 0.75 : 1;
-
 }
 
 function applyAldrichDartDistribution(diff, options = {}) {
@@ -5248,8 +6986,10 @@ function applyAldrichDartDistribution(diff, options = {}) {
   const { front = 0, back = 0, frontSide = 0, backSide = 0 } = darts;
   const force = options.force === true;
   const skipDiffField = options.skipDiffField === true;
-  const resetDartFlags = options.resetDartFlags === true || options.resetManual === true;
-  const resetDiffFlag = options.resetDiffFlag === true || options.resetManual === true;
+  const resetDartFlags =
+    options.resetDartFlags === true || options.resetManual === true;
+  const resetDiffFlag =
+    options.resetDiffFlag === true || options.resetManual === true;
 
   if (force || !aldrichAutoState.frontWaistDartEdited) {
     setInputNumber("aldrichFrontWaistDart", front);
@@ -5263,7 +7003,11 @@ function applyAldrichDartDistribution(diff, options = {}) {
   if (force || !aldrichAutoState.backSideWaistDartEdited) {
     setInputNumber("aldrichBackSideWaistDart", backSide);
   }
-  if (!skipDiffField && (force || !aldrichAutoState.bustWaistDiffEdited) && Number.isFinite(diff)) {
+  if (
+    !skipDiffField &&
+    (force || !aldrichAutoState.bustWaistDiffEdited) &&
+    Number.isFinite(diff)
+  ) {
     setInputNumber("aldrichBustWaistDiff", Math.abs(diff));
   }
 
@@ -5290,7 +7034,10 @@ function updateAldrichDerivedFields(options = {}) {
     aldrichAutoState.bustWaistDiffEdited = false;
   }
   const frontNeck = computeAldrichFrontNeckDart(bust);
-  if (Number.isFinite(frontNeck) && (force || !aldrichAutoState.frontNeckDartEdited)) {
+  if (
+    Number.isFinite(frontNeck) &&
+    (force || !aldrichAutoState.frontNeckDartEdited)
+  ) {
     setInputNumber("aldrichFrontNeckDart", frontNeck);
   }
   const diff = computeAldrichWaistDiff(bust, waist, bustEase, waistEase);
@@ -5666,7 +7413,9 @@ function cloneInputState(state = {}) {
 
 function captureInputState(patternKey) {
   const config = PATTERN_CONFIGS[patternKey];
-  const section = config?.elementId ? document.getElementById(config.elementId) : null;
+  const section = config?.elementId
+    ? document.getElementById(config.elementId)
+    : null;
   const state = {};
   if (!section) return state;
   section.querySelectorAll("input, select, textarea").forEach((el) => {
@@ -5710,7 +7459,11 @@ function getDraftStore(patternKey) {
 function getActiveDraft(patternKey) {
   const store = getDraftStore(patternKey);
   if (!store) return null;
-  return store.drafts.find((draft) => draft.id === store.activeId) || store.drafts[0] || null;
+  return (
+    store.drafts.find((draft) => draft.id === store.activeId) ||
+    store.drafts[0] ||
+    null
+  );
 }
 
 function renderDraftList(patternKey) {
@@ -5741,7 +7494,9 @@ function renderDraftList(patternKey) {
     selectBtn.type = "button";
     selectBtn.className = "draft-entry__select";
     selectBtn.textContent = draft.name;
-    selectBtn.addEventListener("click", () => selectDraft(patternKey, draft.id));
+    selectBtn.addEventListener("click", () =>
+      selectDraft(patternKey, draft.id)
+    );
     const meta = document.createElement("span");
     meta.className = "draft-entry__meta";
     meta.textContent = draft.visible ? "Visible" : "Hidden";
@@ -5749,7 +7504,9 @@ function renderDraftList(patternKey) {
     toggleBtn.type = "button";
     toggleBtn.className = "draft-entry__toggle";
     toggleBtn.textContent = draft.visible ? "Hide" : "Show";
-    toggleBtn.addEventListener("click", () => toggleDraftVisibility(patternKey, draft.id));
+    toggleBtn.addEventListener("click", () =>
+      toggleDraftVisibility(patternKey, draft.id)
+    );
     row.appendChild(selectBtn);
     row.appendChild(meta);
     row.appendChild(toggleBtn);
@@ -5772,7 +7529,9 @@ function renderDraftPreviews(patternKey, liveSvg = null) {
     store.activeId = store.drafts[0].id;
   }
   if (store.activeId) {
-    const activeDraftExists = store.drafts.some((draft) => draft.id === store.activeId && draft.visible);
+    const activeDraftExists = store.drafts.some(
+      (draft) => draft.id === store.activeId && draft.visible
+    );
     if (!activeDraftExists) {
       const firstVisible = store.drafts.find((draft) => draft.visible);
       if (firstVisible) {
@@ -5825,9 +7584,13 @@ function applyDraftColor(svgNode, color, emphasize = false) {
   if (!svgNode) return;
   const accent = color || "#2563eb";
   const strokeColor = emphasize ? accent : mixColor(accent, "#ffffff", 0.2);
-  const fillColor = emphasize ? mixColor(accent, "#ffffff", 0.1) : mixColor(accent, "#ffffff", 0.45);
+  const fillColor = emphasize
+    ? mixColor(accent, "#ffffff", 0.1)
+    : mixColor(accent, "#ffffff", 0.45);
   svgNode.style.opacity = emphasize ? 1 : 0.95;
-  const strokeTargets = svgNode.querySelectorAll("path,line,polyline,polygon,rect,circle,ellipse");
+  const strokeTargets = svgNode.querySelectorAll(
+    "path,line,polyline,polygon,rect,circle,ellipse"
+  );
   strokeTargets.forEach((node) => {
     const stroke = node.getAttribute("stroke");
     if (stroke && stroke.toLowerCase() !== "none") {
@@ -5855,7 +7618,8 @@ function isMarkerNumberText(node) {
   if (!node) return false;
   let current = node;
   while (current && current !== current.ownerSVGElement) {
-    const layerName = current.getAttribute && current.getAttribute("data-layer");
+    const layerName =
+      current.getAttribute && current.getAttribute("data-layer");
     if (layerName && /numbers|letters/i.test(layerName)) {
       return true;
     }
@@ -5993,18 +7757,29 @@ function initApp() {
   let initialPattern = "armstrong";
   if (typeof window !== "undefined" && window.localStorage) {
     try {
-      const storedPattern = window.localStorage.getItem("patternhub:lastPattern");
+      const storedPattern = window.localStorage.getItem(
+        "patternhub:lastPattern"
+      );
       if (storedPattern && PATTERN_CONFIGS[storedPattern]) {
         initialPattern = storedPattern;
       }
     } catch (errLoadPattern) {
-      console.warn("Unable to read pattern selection from storage:", errLoadPattern);
+      console.warn(
+        "Unable to read pattern selection from storage:",
+        errLoadPattern
+      );
     }
   }
-  if (patternSelect && patternSelect.value !== initialPattern && PATTERN_CONFIGS[initialPattern]) {
+  if (
+    patternSelect &&
+    patternSelect.value !== initialPattern &&
+    PATTERN_CONFIGS[initialPattern]
+  ) {
     patternSelect.value = initialPattern;
   }
-  activePatternKey = patternSelect ? patternSelect.value || initialPattern : initialPattern;
+  activePatternKey = patternSelect
+    ? patternSelect.value || initialPattern
+    : initialPattern;
   armstrongControls = document.getElementById("armstrongControls");
   patternPlaceholder = document.getElementById("patternPlaceholder");
   enhancePatternSelect();
@@ -6018,15 +7793,20 @@ function initApp() {
   initDraftManager();
   Object.entries(PATTERN_CONFIGS).forEach(([key, config]) => {
     if (!config) return;
-    const downloadButton = config.downloadId ? document.getElementById(config.downloadId) : null;
+    const downloadButton = config.downloadId
+      ? document.getElementById(config.downloadId)
+      : null;
     if (downloadButton) {
       downloadButton.addEventListener("click", () => {
         ensurePatternSelection(key);
         if (!currentSvg) regen();
-        if (currentSvg) downloadSVG(currentSvg, config.filename || `${key}.svg`);
+        if (currentSvg)
+          downloadSVG(currentSvg, config.filename || `${key}.svg`);
       });
     }
-    const downloadAllButton = config.downloadAllId ? document.getElementById(config.downloadAllId) : null;
+    const downloadAllButton = config.downloadAllId
+      ? document.getElementById(config.downloadAllId)
+      : null;
     if (downloadAllButton) {
       downloadAllButton.addEventListener("click", () => {
         ensurePatternSelection(key);
@@ -6034,7 +7814,9 @@ function initApp() {
       });
     }
 
-    const shareButton = config.shareId ? document.getElementById(config.shareId) : null;
+    const shareButton = config.shareId
+      ? document.getElementById(config.shareId)
+      : null;
     if (shareButton) {
       const defaultShareLabel = shareButton.textContent;
       shareButton.addEventListener("click", async () => {
@@ -6047,9 +7829,14 @@ function initApp() {
               url: SHARE_URL || window.location.href,
             });
           } else if (navigator.clipboard) {
-            await navigator.clipboard.writeText(SHARE_URL || window.location.href);
+            await navigator.clipboard.writeText(
+              SHARE_URL || window.location.href
+            );
             shareButton.textContent = "Link Copied!";
-            setTimeout(() => (shareButton.textContent = defaultShareLabel), 1500);
+            setTimeout(
+              () => (shareButton.textContent = defaultShareLabel),
+              1500
+            );
           } else {
             window.open(SHARE_URL || window.location.href, "_blank");
           }
@@ -6059,7 +7846,9 @@ function initApp() {
       });
     }
 
-    const duplicateButton = config.duplicateId ? document.getElementById(config.duplicateId) : null;
+    const duplicateButton = config.duplicateId
+      ? document.getElementById(config.duplicateId)
+      : null;
     if (duplicateButton) {
       duplicateButton.addEventListener("click", () => {
         ensurePatternSelection(key);
@@ -6067,7 +7856,9 @@ function initApp() {
       });
     }
 
-    const manageButton = config.layerButtonId ? document.getElementById(config.layerButtonId) : null;
+    const manageButton = config.layerButtonId
+      ? document.getElementById(config.layerButtonId)
+      : null;
     if (manageButton) {
       manageButton.addEventListener("click", () => {
         ensurePatternSelection(key);
@@ -6182,7 +7973,9 @@ function enhancePatternSelect() {
         heading.textContent = child.label;
         group.appendChild(heading);
       }
-      Array.from(child.children).forEach((option) => appendOption(group, option));
+      Array.from(child.children).forEach((option) =>
+        appendOption(group, option)
+      );
       menu.appendChild(group);
     } else if (child.tagName === "OPTION") {
       appendOption(defaultGroup, child);
@@ -6195,7 +7988,9 @@ function enhancePatternSelect() {
 
   const syncSelection = () => {
     const selectedOption = select.options[select.selectedIndex];
-    toggle.textContent = selectedOption ? selectedOption.textContent : "Select a draft";
+    toggle.textContent = selectedOption
+      ? selectedOption.textContent
+      : "Select a draft";
     optionButtons.forEach((btn) => {
       const isSelected = btn.dataset.value === select.value;
       btn.classList.toggle("is-selected", isSelected);
@@ -6275,7 +8070,9 @@ function enhanceMiniDropdownSelect(select, options = {}) {
 
   const sync = () => {
     const selectedOption = select.options[select.selectedIndex];
-    toggle.textContent = selectedOption ? selectedOption.textContent : placeholder;
+    toggle.textContent = selectedOption
+      ? selectedOption.textContent
+      : placeholder;
     buttons.forEach((btn) => {
       const isSelected = btn.dataset.value === select.value;
       btn.classList.toggle("is-selected", isSelected);
@@ -6365,7 +8162,9 @@ function updatePatternVisibility() {
   let hasVisibleSection = false;
 
   Object.entries(PATTERN_CONFIGS).forEach(([key, config]) => {
-    const section = config.elementId ? document.getElementById(config.elementId) : null;
+    const section = config.elementId
+      ? document.getElementById(config.elementId)
+      : null;
     if (!section) return;
     if (key === selectedValue) {
       section.hidden = false;
@@ -6442,12 +8241,18 @@ function hydrateLayerTools(svg) {
   layerManager.layers = [];
   layerManager.list.innerHTML = "";
   if (!svg) {
-    layerManager.list.appendChild(renderLayerEmptyState("Generate a draft to manage layers."));
+    layerManager.list.appendChild(
+      renderLayerEmptyState("Generate a draft to manage layers.")
+    );
     return;
   }
-  const nodes = Array.from(svg.querySelectorAll('g[inkscape\\:groupmode="layer"]'));
+  const nodes = Array.from(
+    svg.querySelectorAll('g[inkscape\\:groupmode="layer"]')
+  );
   if (!nodes.length) {
-    layerManager.list.appendChild(renderLayerEmptyState("No SVG layers found for this draft."));
+    layerManager.list.appendChild(
+      renderLayerEmptyState("No SVG layers found for this draft.")
+    );
     return;
   }
   nodes.forEach((node) => {
@@ -6481,10 +8286,14 @@ function buildLayerEntry(node) {
   const baseId = node.dataset.baseLayerId || id;
   const copyIndex = parseInt(node.dataset.copyIndex || "", 10);
   const label =
-    node.getAttribute("inkscape:label") || node.getAttribute("data-layer") || id || "Layer";
+    node.getAttribute("inkscape:label") ||
+    node.getAttribute("data-layer") ||
+    id ||
+    "Layer";
   const visible = isLayerNodeVisible(node);
   const locked =
-    node.getAttribute("display") === "none" && node.getAttribute("data-layer-user-hidden") !== "true";
+    node.getAttribute("display") === "none" &&
+    node.getAttribute("data-layer-user-hidden") !== "true";
   return {
     id,
     baseId,
@@ -6512,10 +8321,14 @@ function buildLayerListItem(entry) {
   checkbox.type = "checkbox";
   checkbox.checked = !entry.locked && entry.visible;
   checkbox.disabled = entry.locked;
-  checkbox.addEventListener("change", () => setLayerVisibility(entry.id, checkbox.checked));
+  checkbox.addEventListener("change", () =>
+    setLayerVisibility(entry.id, checkbox.checked)
+  );
   const name = document.createElement("span");
   name.textContent =
-    entry.isCopy && entry.copyIndex ? `${entry.name} (Copy ${entry.copyIndex})` : entry.name;
+    entry.isCopy && entry.copyIndex
+      ? `${entry.name} (Copy ${entry.copyIndex})`
+      : entry.name;
   toggleLabel.appendChild(checkbox);
   toggleLabel.appendChild(name);
   row.appendChild(toggleLabel);
@@ -6560,7 +8373,9 @@ function isLayerNodeVisible(node) {
 }
 
 function getExistingCopyCount(baseId) {
-  return layerManager.layers.filter((layer) => layer.baseId === baseId && layer.isCopy).length;
+  return layerManager.layers.filter(
+    (layer) => layer.baseId === baseId && layer.isCopy
+  ).length;
 }
 
 function generateCopyId(baseId, index) {
@@ -6568,7 +8383,9 @@ function generateCopyId(baseId, index) {
 }
 
 function findLastLayerElement(baseId) {
-  const related = layerManager.layers.filter((layer) => layer.baseId === baseId);
+  const related = layerManager.layers.filter(
+    (layer) => layer.baseId === baseId
+  );
   if (!related.length) return null;
   return related[related.length - 1].element;
 }
@@ -6581,12 +8398,14 @@ function pickDuplicateColor(index) {
 
 function recolorLayer(group, color) {
   if (!group || !color) return;
-  group.querySelectorAll("path,line,polyline,polygon,rect,circle,ellipse").forEach((node) => {
-    const stroke = node.getAttribute("stroke");
-    if (stroke && stroke.toLowerCase() !== "none") {
-      node.setAttribute("stroke", color);
-    }
-  });
+  group
+    .querySelectorAll("path,line,polyline,polygon,rect,circle,ellipse")
+    .forEach((node) => {
+      const stroke = node.getAttribute("stroke");
+      if (stroke && stroke.toLowerCase() !== "none") {
+        node.setAttribute("stroke", color);
+      }
+    });
   group.querySelectorAll("text").forEach((node) => {
     const fill = node.getAttribute("fill");
     if (!fill || fill.toLowerCase() !== "none") {
@@ -6716,7 +8535,9 @@ function exportVisibleLayers() {
     return;
   }
   const exportSvg = currentSvg.cloneNode(true);
-  const exportLayers = Array.from(exportSvg.querySelectorAll('g[inkscape\\:groupmode="layer"]'));
+  const exportLayers = Array.from(
+    exportSvg.querySelectorAll('g[inkscape\\:groupmode="layer"]')
+  );
   let kept = 0;
   exportLayers.forEach((node) => {
     if (node.getAttribute("data-layer-user-hidden") === "true") {
@@ -6751,7 +8572,9 @@ function getText(id, fallback) {
   const input = document.getElementById(id);
   if (!input) return fallback;
   const value = input.value;
-  return value !== undefined && value !== null && value !== "" ? value : fallback;
+  return value !== undefined && value !== null && value !== ""
+    ? value
+    : fallback;
 }
 
 function slugifyId(name, prefix = "") {
@@ -6776,7 +8599,15 @@ function applyLayerVisibility(layers, params) {
   const showGuides = params.showGuides !== false;
   const showMarkers = params.showMarkers !== false;
   const guideDisplay = showGuides ? null : "none";
-  [layers.foundation, layers.foundationFront, layers.foundationBack, layers.dartsParent, layers.dartsLayer, layers.shapingLayer, layers.capShaping].forEach((layer) => {
+  [
+    layers.foundation,
+    layers.foundationFront,
+    layers.foundationBack,
+    layers.dartsParent,
+    layers.dartsLayer,
+    layers.shapingLayer,
+    layers.capShaping,
+  ].forEach((layer) => {
     if (!layer) return;
     if (guideDisplay) {
       layer.setAttribute("display", guideDisplay);
@@ -6890,7 +8721,11 @@ function adjustScaleAtPoint(requestedScale, anchor) {
   const target = getPreviewTarget();
   if (!target) return;
   const previousScale = previewZoomState.scale;
-  const clampedScale = clamp(requestedScale, previewZoomState.minScale, previewZoomState.maxScale);
+  const clampedScale = clamp(
+    requestedScale,
+    previewZoomState.minScale,
+    previewZoomState.maxScale
+  );
   if (!anchor) {
     anchor = {
       x: (preview?.clientWidth || 0) / 2,
@@ -6898,8 +8733,8 @@ function adjustScaleAtPoint(requestedScale, anchor) {
     };
   }
   previewZoomState.scale = clampedScale;
-  previewZoomState.translateX += (anchor.x) * (previousScale - clampedScale);
-  previewZoomState.translateY += (anchor.y) * (previousScale - clampedScale);
+  previewZoomState.translateX += anchor.x * (previousScale - clampedScale);
+  previewZoomState.translateY += anchor.y * (previousScale - clampedScale);
   applyPreviewTransform();
 }
 
@@ -6931,11 +8766,18 @@ function handlePreviewPointerDown(event) {
 }
 
 function handlePreviewPointerMove(event) {
-  if (draftDragState.pointerId === event.pointerId && handleDraftDragMove(event)) {
+  if (
+    draftDragState.pointerId === event.pointerId &&
+    handleDraftDragMove(event)
+  ) {
     return;
   }
   if (!preview || !previewPointers.has(event.pointerId)) return;
-  if (event.pointerType === "mouse" && event.buttons !== undefined && (event.buttons & 1) === 0) {
+  if (
+    event.pointerType === "mouse" &&
+    event.buttons !== undefined &&
+    (event.buttons & 1) === 0
+  ) {
     previewPointers.delete(event.pointerId);
     return;
   }
@@ -7031,7 +8873,12 @@ function handlePanModifierKeyUp(event) {
 }
 
 function handlePreviewNudge(event) {
-  const arrows = { ArrowUp: true, ArrowDown: true, ArrowLeft: true, ArrowRight: true };
+  const arrows = {
+    ArrowUp: true,
+    ArrowDown: true,
+    ArrowLeft: true,
+    ArrowRight: true,
+  };
   if (!arrows[event.key]) return;
   const patternKey = getCurrentPatternKey();
   const draft = getActiveDraft(patternKey);
@@ -7066,8 +8913,12 @@ function startDraftDrag(event, draftId) {
   draftDragState.draftId = draftId;
   draftDragState.startX = event.clientX;
   draftDragState.startY = event.clientY;
-  draftDragState.startOffsetX = Number.isFinite(draft?.offsetX) ? draft.offsetX : 0;
-  draftDragState.startOffsetY = Number.isFinite(draft?.offsetY) ? draft.offsetY : 0;
+  draftDragState.startOffsetX = Number.isFinite(draft?.offsetX)
+    ? draft.offsetX
+    : 0;
+  draftDragState.startOffsetY = Number.isFinite(draft?.offsetY)
+    ? draft.offsetY
+    : 0;
   try {
     wrapper.setPointerCapture(event.pointerId);
   } catch (e) {}
@@ -7077,7 +8928,8 @@ function startDraftDrag(event, draftId) {
 }
 
 function handleDraftDragMove(event) {
-  if (!draftDragState.draftId || draftDragState.pointerId !== event.pointerId) return false;
+  if (!draftDragState.draftId || draftDragState.pointerId !== event.pointerId)
+    return false;
   const dx = event.clientX - draftDragState.startX;
   const dy = event.clientY - draftDragState.startY;
   const store = getDraftStore(getCurrentPatternKey());
@@ -7114,7 +8966,11 @@ function getDraftIdFromEvent(event) {
 
 function getDraftWrapperElement(draftId) {
   if (!draftId) return null;
-  return previewViewport?.querySelector?.(`.preview-draft[data-draft-id="${draftId}"]`) || null;
+  return (
+    previewViewport?.querySelector?.(
+      `.preview-draft[data-draft-id="${draftId}"]`
+    ) || null
+  );
 }
 
 function isPanPointer(event) {
@@ -7235,7 +9091,13 @@ function computeAldrichWaistDartsFromDiff(diff, options = {}) {
   };
 }
 
-function computeAldrichWaistDarts(bust, waist, bustEase, waistEase, options = {}) {
+function computeAldrichWaistDarts(
+  bust,
+  waist,
+  bustEase,
+  waistEase,
+  options = {}
+) {
   const diff = computeAldrichWaistDiff(bust, waist, bustEase, waistEase);
   return computeAldrichWaistDartsFromDiff(diff, options);
 }
@@ -7258,7 +9120,12 @@ function computeAldrichPointBDistance(bust) {
   return 3;
 }
 
-function clampHandleToChordCm(baseXcm, baseYcm, chordCm, ratio = ALDRICH_HANDLE_RATIO_CAP) {
+function clampHandleToChordCm(
+  baseXcm,
+  baseYcm,
+  chordCm,
+  ratio = ALDRICH_HANDLE_RATIO_CAP
+) {
   const baseLen = Math.hypot(baseXcm, baseYcm);
   if (!Number.isFinite(chordCm) || chordCm <= 0) {
     return { x: 0, y: 0 };
@@ -7355,8 +9222,10 @@ function bezierPointCoords(p0, p1, p2, p3, t) {
   const c = 3 * mt * t2;
   const d = t * t2;
   return {
-    x: a * (p0?.x || 0) + b * (p1?.x || 0) + c * (p2?.x || 0) + d * (p3?.x || 0),
-    y: a * (p0?.y || 0) + b * (p1?.y || 0) + c * (p2?.y || 0) + d * (p3?.y || 0),
+    x:
+      a * (p0?.x || 0) + b * (p1?.x || 0) + c * (p2?.x || 0) + d * (p3?.x || 0),
+    y:
+      a * (p0?.y || 0) + b * (p1?.y || 0) + c * (p2?.y || 0) + d * (p3?.y || 0),
   };
 }
 
