@@ -4628,9 +4628,10 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     placeMarker(upwardArc.endPoint, 3);
   }
 
-  // Center the view horizontally around the midpoint of 1–2 so widening/narrowing stays anchored
+  // Center the view around the midpoint of 1–2 so widening/narrowing stays anchored
   const baselineMid = midpoint(mark1, mark2);
   if (baselineMid) {
+    const originalBounds = { ...bounds };
     const baselineMidSvg = {
       x: origin.x + (baselineMid[0] || 0) * CM_TO_MM,
       y: origin.y - (baselineMid[1] || 0) * CM_TO_MM,
@@ -4642,6 +4643,17 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     if (Number.isFinite(maxSpan) && maxSpan > 0) {
       bounds.minX = baselineMidSvg.x - maxSpan;
       bounds.maxX = baselineMidSvg.x + maxSpan;
+    }
+    // If symmetry produced an invalid box, fall back to original bounds
+    if (
+      !Number.isFinite(bounds.minX) ||
+      !Number.isFinite(bounds.maxX) ||
+      !Number.isFinite(bounds.minY) ||
+      !Number.isFinite(bounds.maxY) ||
+      bounds.maxX <= bounds.minX ||
+      bounds.maxY <= bounds.minY
+    ) {
+      Object.assign(bounds, originalBounds);
     }
   }
 
