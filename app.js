@@ -4628,6 +4628,23 @@ function generateHofenbitzerWideBasicSleeve(params = {}) {
     placeMarker(upwardArc.endPoint, 3);
   }
 
+  // Center the view horizontally around the midpoint of 1–2 so widening/narrowing stays anchored
+  const baselineMid = midpoint(mark1, mark2);
+  if (baselineMid) {
+    const baselineMidSvg = {
+      x: origin.x + (baselineMid[0] || 0) * CM_TO_MM,
+      y: origin.y - (baselineMid[1] || 0) * CM_TO_MM,
+    };
+    bounds.include(baselineMidSvg.x, baselineMidSvg.y);
+    const leftSpan = baselineMidSvg.x - bounds.minX;
+    const rightSpan = bounds.maxX - baselineMidSvg.x;
+    const maxSpan = Math.max(leftSpan, rightSpan, 0);
+    if (Number.isFinite(maxSpan) && maxSpan > 0) {
+      bounds.minX = baselineMidSvg.x - maxSpan;
+      bounds.maxX = baselineMidSvg.x + maxSpan;
+    }
+  }
+
   applyLayerVisibility(layers, params);
   fitSvgToBounds(svg, bounds);
   return svg;
@@ -5440,6 +5457,18 @@ const previewZoomState = {
   maxScale: 3,
   pinchStartDistance: 0,
   pinchStartScale: 1,
+  wheelStep: 1.02, // make zoom steps small for smoother feel
+  pinchStepClamp: 0.04, // cap pinch delta per move
+};
+// Arrow key nudge size: 1/64" feels less jumpy than 1/32"
+const NUDGE_STEP_PX = 96 / 64;
+const draftDragState = {
+  pointerId: null,
+  draftId: null,
+  startX: 0,
+  startY: 0,
+  startOffsetX: 0,
+  startOffsetY: 0,
 };
 
 function createDraftStore() {
@@ -5460,6 +5489,7 @@ let armstrongControls = null;
 let patternPlaceholder = null;
 let appInitialized = false;
 let aldrichAutoInitialized = false;
+let panOverrideActive = false; // Space-hold pans instead of dragging drafts
 const aldrichAutoState = {
   frontNeckDartEdited: false,
   frontWaistDartEdited: false,
@@ -5608,6 +5638,8 @@ function createDraft(patternKey, inputState = {}) {
     visible: true,
     createdAt: Date.now(),
     color: DRAFT_COLOR_PALETTE[(draftNumber - 1) % DRAFT_COLOR_PALETTE.length],
+    offsetX: 0,
+    offsetY: 0,
   };
 }
 
@@ -5751,6 +5783,7 @@ function renderDraftPreviews(patternKey, liveSvg = null) {
     const wrapper = document.createElement("div");
     wrapper.className = "preview-draft";
     wrapper.dataset.draftId = draft.id;
+    applyDraftOffset(wrapper, draft);
     applyDraftColor(svgNode, draft.color, isActive);
     wrapper.appendChild(svgNode);
     target.appendChild(wrapper);
@@ -5797,6 +5830,13 @@ function applyDraftColor(svgNode, color, emphasize = false) {
     const isMarker = isMarkerNumberText(node);
     node.setAttribute("fill", isMarker ? "#ffffff" : strokeColor);
   });
+}
+
+function applyDraftOffset(wrapper, draft) {
+  if (!wrapper || !draft) return;
+  const x = Number.isFinite(draft.offsetX) ? draft.offsetX : 0;
+  const y = Number.isFinite(draft.offsetY) ? draft.offsetY : 0;
+  wrapper.style.transform = `translate(${x}px, ${y}px)`;
 }
 
 function isMarkerNumberText(node) {
@@ -5879,6 +5919,8 @@ function duplicateCurrentDraft(patternKey) {
   persistActiveDraftInputs(patternKey);
   const newDraft = createDraft(patternKey, activeDraft.inputState);
   if (!newDraft) return;
+  newDraft.offsetX = activeDraft.offsetX || 0;
+  newDraft.offsetY = activeDraft.offsetY || 0;
   newDraft.svgMarkup = recolorSvgMarkup(activeDraft.svgMarkup, newDraft.color);
   store.drafts.push(newDraft);
   store.activeId = newDraft.id;
@@ -6850,7 +6892,13 @@ function adjustScaleAtPoint(requestedScale, anchor) {
 }
 
 function handlePreviewPointerDown(event) {
-  if (!preview || event.pointerType !== "touch") return;
+  if (!preview || !isPanPointer(event)) return;
+  const draftId = getDraftIdFromEvent(event);
+  if (draftId && !panOverrideActive) {
+    if (startDraftDrag(event, draftId)) {
+      return;
+    }
+  }
   const target = getPreviewTarget();
   if (!target) return;
   event.preventDefault();
@@ -6871,7 +6919,14 @@ function handlePreviewPointerDown(event) {
 }
 
 function handlePreviewPointerMove(event) {
-  if (!preview || event.pointerType !== "touch") return;
+  if (draftDragState.pointerId === event.pointerId && handleDraftDragMove(event)) {
+    return;
+  }
+  if (!preview || !previewPointers.has(event.pointerId)) return;
+  if (event.pointerType === "mouse" && event.buttons !== undefined && (event.buttons & 1) === 0) {
+    previewPointers.delete(event.pointerId);
+    return;
+  }
   const pointer = previewPointers.get(event.pointerId);
   if (!pointer) return;
   event.preventDefault();
@@ -6891,7 +6946,11 @@ function handlePreviewPointerMove(event) {
     }
     const distance = getPointerDistance();
     if (distance > 0 && previewZoomState.pinchStartDistance) {
-      const scaleFactor = distance / previewZoomState.pinchStartDistance;
+      let scaleFactor = distance / previewZoomState.pinchStartDistance;
+      if (previewZoomState.pinchStepClamp) {
+        const maxDelta = previewZoomState.pinchStepClamp;
+        scaleFactor = clamp(scaleFactor, 1 - maxDelta, 1 + maxDelta);
+      }
       const requestedScale = previewZoomState.pinchStartScale * scaleFactor;
       const anchor = getPinchAnchor();
       adjustScaleAtPoint(requestedScale, anchor);
@@ -6904,7 +6963,11 @@ function handlePreviewPointerMove(event) {
 }
 
 function handlePreviewPointerUp(event) {
-  if (!preview || event.pointerType !== "touch") return;
+  if (draftDragState.pointerId === event.pointerId) {
+    endDraftDrag(event);
+    return;
+  }
+  if (!preview) return;
   if (previewPointers.has(event.pointerId) && preview.releasePointerCapture) {
     try {
       preview.releasePointerCapture(event.pointerId);
@@ -6920,14 +6983,127 @@ function handlePreviewPointerUp(event) {
 }
 
 function handlePreviewWheel(event) {
-  if (!preview || !event.ctrlKey) return;
+  if (!preview) return;
   const target = getPreviewTarget();
   if (!target) return;
   event.preventDefault();
-  const zoomDelta = event.deltaY < 0 ? 1.05 : 0.95;
+  const step = previewZoomState.wheelStep || 1.02;
+  const zoomDelta = event.deltaY < 0 ? step : 1 / step;
   const requestedScale = previewZoomState.scale * zoomDelta;
   const anchor = getRelativePointerPosition(event, preview);
   adjustScaleAtPoint(requestedScale, anchor);
+}
+
+function handlePanModifierKeyDown(event) {
+  if (event.code === "Space") {
+    panOverrideActive = true;
+    event.preventDefault();
+  }
+}
+
+function handlePanModifierKeyUp(event) {
+  if (event.code === "Space") {
+    panOverrideActive = false;
+  }
+}
+
+function handlePreviewNudge(event) {
+  const arrows = { ArrowUp: true, ArrowDown: true, ArrowLeft: true, ArrowRight: true };
+  if (!arrows[event.key]) return;
+  const patternKey = getCurrentPatternKey();
+  const draft = getActiveDraft(patternKey);
+  if (!draft) return;
+  event.preventDefault();
+  switch (event.key) {
+    case "ArrowUp":
+      draft.offsetY -= NUDGE_STEP_PX;
+      break;
+    case "ArrowDown":
+      draft.offsetY += NUDGE_STEP_PX;
+      break;
+    case "ArrowLeft":
+      draft.offsetX -= NUDGE_STEP_PX;
+      break;
+    case "ArrowRight":
+      draft.offsetX += NUDGE_STEP_PX;
+      break;
+  }
+  const wrapper = getDraftWrapperElement(draft.id);
+  if (wrapper) {
+    applyDraftOffset(wrapper, draft);
+  }
+}
+
+function startDraftDrag(event, draftId) {
+  const wrapper = event.target?.closest?.(".preview-draft");
+  if (!wrapper) return false;
+  const store = getDraftStore(getCurrentPatternKey());
+  const draft = store?.drafts.find((d) => d.id === draftId);
+  draftDragState.pointerId = event.pointerId;
+  draftDragState.draftId = draftId;
+  draftDragState.startX = event.clientX;
+  draftDragState.startY = event.clientY;
+  draftDragState.startOffsetX = Number.isFinite(draft?.offsetX) ? draft.offsetX : 0;
+  draftDragState.startOffsetY = Number.isFinite(draft?.offsetY) ? draft.offsetY : 0;
+  try {
+    wrapper.setPointerCapture(event.pointerId);
+  } catch (e) {}
+  wrapper.style.cursor = "grabbing";
+  event.preventDefault();
+  return true;
+}
+
+function handleDraftDragMove(event) {
+  if (!draftDragState.draftId || draftDragState.pointerId !== event.pointerId) return false;
+  const dx = event.clientX - draftDragState.startX;
+  const dy = event.clientY - draftDragState.startY;
+  const store = getDraftStore(getCurrentPatternKey());
+  const draft = store?.drafts.find((d) => d.id === draftDragState.draftId);
+  const wrapper = event.target?.closest?.(".preview-draft");
+  const offsetX = draftDragState.startOffsetX + dx;
+  const offsetY = draftDragState.startOffsetY + dy;
+  if (draft) {
+    draft.offsetX = offsetX;
+    draft.offsetY = offsetY;
+  }
+  if (wrapper) {
+    applyDraftOffset(wrapper, draft || { offsetX, offsetY });
+  }
+  return true;
+}
+
+function endDraftDrag(event) {
+  const wrapper = event.target?.closest?.(".preview-draft");
+  if (wrapper) {
+    wrapper.style.cursor = "grab";
+    try {
+      wrapper.releasePointerCapture(event.pointerId);
+    } catch (e) {}
+  }
+  draftDragState.pointerId = null;
+  draftDragState.draftId = null;
+}
+
+function getDraftIdFromEvent(event) {
+  const wrapper = event.target?.closest?.(".preview-draft");
+  return wrapper?.dataset?.draftId || null;
+}
+
+function getDraftWrapperElement(draftId) {
+  if (!draftId) return null;
+  return previewViewport?.querySelector?.(`.preview-draft[data-draft-id="${draftId}"]`) || null;
+}
+
+function isPanPointer(event) {
+  if (!event) return false;
+  const type = event.pointerType || "";
+  if (type === "mouse") {
+    if (event.buttons !== undefined) {
+      return (event.buttons & 1) === 1;
+    }
+    return event.button === 0;
+  }
+  return type === "touch" || type === "pen" || !type;
 }
 
 function getPointerDistance() {
@@ -6950,12 +7126,20 @@ function initPreviewInteractions() {
   if (!preview || previewZoomInitialized) return;
   previewZoomInitialized = true;
   preview.style.touchAction = "none";
+  preview.style.cursor = "grab";
   preview.addEventListener("pointerdown", handlePreviewPointerDown);
   preview.addEventListener("pointermove", handlePreviewPointerMove);
   ["pointerup", "pointercancel", "pointerleave"].forEach((type) => {
     preview.addEventListener(type, handlePreviewPointerUp);
   });
   preview.addEventListener("wheel", handlePreviewWheel, { passive: false });
+  preview.addEventListener("dblclick", (event) => {
+    event.preventDefault();
+    resetPreviewZoom();
+  });
+  document.addEventListener("keydown", handlePreviewNudge);
+  document.addEventListener("keydown", handlePanModifierKeyDown);
+  document.addEventListener("keyup", handlePanModifierKeyUp);
   if (typeof window !== "undefined") {
     window.addEventListener("resize", applyPreviewTransform);
   }
