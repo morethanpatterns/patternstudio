@@ -7006,6 +7006,17 @@ function handlePreviewWheel(event) {
   adjustScaleAtPoint(requestedScale, anchor);
 }
 
+function zoomByStep(direction = 1) {
+  const step = previewZoomState.wheelStep || 1.02;
+  const delta = direction > 0 ? step : 1 / step;
+  const requestedScale = previewZoomState.scale * delta;
+  const anchor = {
+    x: (preview?.clientWidth || 0) / 2,
+    y: (preview?.clientHeight || 0) / 2,
+  };
+  adjustScaleAtPoint(requestedScale, anchor);
+}
+
 function handlePanModifierKeyDown(event) {
   if (event.code === "Space") {
     panOverrideActive = true;
@@ -7149,6 +7160,12 @@ function initPreviewInteractions() {
     event.preventDefault();
     resetPreviewZoom();
   });
+  const zoomInBtn = document.getElementById("zoomIn");
+  const zoomOutBtn = document.getElementById("zoomOut");
+  const zoomResetBtn = document.getElementById("zoomReset");
+  if (zoomInBtn) zoomInBtn.addEventListener("click", () => zoomByStep(1));
+  if (zoomOutBtn) zoomOutBtn.addEventListener("click", () => zoomByStep(-1));
+  if (zoomResetBtn) zoomResetBtn.addEventListener("click", resetPreviewZoom);
   document.addEventListener("keydown", handlePreviewNudge);
   document.addEventListener("keydown", handlePanModifierKeyDown);
   document.addEventListener("keyup", handlePanModifierKeyUp);
